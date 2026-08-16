@@ -1,0 +1,22 @@
+{
+  "name": "@bubble-wars/server",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@bubble-wars/shared": "*",
+    "matter-js": "^0.20.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/matter-js": "^0.19.7",
+    "@types/node": "^22.13.4",
+    "@types/ws": "^8.5.14",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
+  }
+}

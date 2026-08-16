@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Bubble Wars — Soap Tank Battles</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Nunito:wght@600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <div id="game-container"></div>
+
+    <!-- Start / Menu Screen Overlay -->
+    <div id="join-modal" class="overlay" style="background: radial-gradient(circle at center, rgba(10, 36, 64, 0.85) 0%, rgba(6, 20, 38, 0.96) 100%);">
+      <div class="relative z-10 flex h-full flex-col items-center justify-center gap-6 px-4 py-6 text-center" style="max-width: 860px; width: 92%;">
+        <div class="panel-soft" style="padding: 6px 16px; font-size: 11px; font-weight: 800; letter-spacing: 0.2em; color: var(--color-foam); text-transform: uppercase;">
+          МЫЛЬНАЯ АРЕНА РЕАЛЬНОГО ВРЕМЕНИ · УПРУГАЯ ФИЗИКА · ТОЛКАЕМЫЕ ПРЕПЯТСТВИЯ
+        </div>
+
+        <div class="text-center">
+          <div style="margin-bottom: 8px; display: flex; justify-content: center;">
+            <svg width="120" height="76" viewBox="0 0 120 76" class="floaty">
+              <defs>
+                <radialGradient id="bt" cx="35%" cy="30%" r="80%">
+                  <stop offset="0%" stop-color="rgba(255,255,255,0.85)" />
+                  <stop offset="45%" stop-color="rgba(53,224,255,0.25)" />
+                  <stop offset="100%" stop-color="rgba(53,224,255,0.55)" />
+                </radialGradient>
+              </defs>
+              <circle cx="44" cy="42" r="27" fill="url(#bt)" stroke="#7ceaff" stroke-width="2.5" />
+              <circle cx="35" cy="32" r="6" fill="rgba(255,255,255,0.9)" />
+              <circle cx="66" cy="36" r="10" fill="url(#bt)" stroke="#ff6ec7" stroke-width="2" />
+              <circle cx="80" cy="32" r="6" fill="none" stroke="#ffe36e" stroke-width="2" />
+              <circle cx="93" cy="28" r="4.5" fill="none" stroke="#ffe36e" stroke-width="1.8" />
+              <circle cx="104" cy="24" r="3" fill="none" stroke="#ffe36e" stroke-width="1.5" />
+            </svg>
+          </div>
+          <h1 class="title-bubble floaty" style="font-size: 64px; line-height: 1; margin: 4px 0;">
+            BUBBLE WARS
+          </h1>
+          <p style="margin-top: 10px; font-size: 15px; font-weight: 700; color: var(--color-foam); max-width: 500px; margin-left: auto; margin-right: auto;">
+            Танки из мыльных пузырей. Упругая физика, радужные снаряды и громкие «чпок» — лопни соперников раньше, чем лопнут тебя!
+          </p>
+        </div>
+
+        <div style="display: flex; gap: 16px; width: 100%; max-width: 780px; flex-wrap: wrap;">
+          <div class="panel rise-in" style="flex: 1; min-width: 300px; padding: 24px; text-align: left;">
+            <div style="font-family: var(--font-disp); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; color: rgba(154, 220, 240, 0.7); text-transform: uppercase;">
+              ПИЛОТ ПУЗЫРЯ
+            </div>
+            <input
+              id="player-name-input"
+              class="name-input"
+              style="width: 100%; padding: 12px 16px; margin-top: 10px; font-size: 16px;"
+              value="SoapWarrior"
+              maxlength="14"
+              placeholder="Ваш позывной"
+              autocomplete="off"
+              required
+            />
+
+            <div style="margin-top: 14px;">
+              <div style="font-family: var(--font-disp); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; color: rgba(154, 220, 240, 0.7); text-transform: uppercase; margin-bottom: 6px;">
+                ЦВЕТ ПУЗЫРЯ
+              </div>
+              <div class="color-picker-row">
+                <button type="button" class="color-dot active" data-color="cyan" style="--c: #00f0ff; background: radial-gradient(circle at 35% 30%, #fff, #00f0ff 60%, #0077ff);"></button>
+                <button type="button" class="color-dot" data-color="coral" style="--c: #ff3366; background: radial-gradient(circle at 35% 30%, #fff, #ff3366 60%, #ff0055);"></button>
+                <button type="button" class="color-dot" data-color="lime" style="--c: #39ff14; background: radial-gradient(circle at 35% 30%, #fff, #39ff14 60%, #00cc66);"></button>
+                <button type="button" class="color-dot" data-color="violet" style="--c: #b026ff; background: radial-gradient(circle at 35% 30%, #fff, #b026ff 60%, #6600cc);"></button>
+                <button type="button" class="color-dot" data-color="amber" style="--c: #ffaa00; background: radial-gradient(circle at 35% 30%, #fff, #ffaa00 60%, #ff6600);"></button>
+              </div>
+            </div>
+
+            <button id="btn-play" class="btn-bubble" style="width: 100%; padding: 14px; font-size: 20px; margin-top: 14px;">
+              В БОЙ
+            </button>
+            <div style="margin-top: 8px; text-align: center; font-size: 11px; font-weight: 700; color: rgba(154, 220, 240, 0.5);">
+              Enter — быстрый старт
+            </div>
+          </div>
+
+          <div class="panel rise-in" style="flex: 1; min-width: 300px; padding: 24px; text-align: left; animation-delay: 0.1s;">
+            <div style="font-family: var(--font-disp); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; color: rgba(154, 220, 240, 0.7); text-transform: uppercase;">
+              УПРАВЛЕНИЕ
+            </div>
+            <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; font-weight: 700; color: rgba(216, 243, 255, 0.85);">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="keycap">W</span><span class="keycap">A</span><span class="keycap">S</span><span class="keycap">D</span>
+                <span>движение танка (с инерцией)</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="keycap">Мышь</span>
+                <span>поворот башни</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="keycap">ЛКМ</span><span class="keycap">Space</span>
+                <span>огонь мыльными снарядами</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="keycap">M</span>
+                <span>вкл/выкл звук</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- In-Game HUD -->
+    <div id="game-hud" class="hud-container hidden">
+      <!-- Top Bar: Logo Badge, Ping, Mute Button -->
+      <div style="position: absolute; top: 12px; left: 14px; right: 14px; display: flex; justify-content: space-between; align-items: center; z-index: 20; pointer-events: none;">
+        <div class="panel-soft" style="display: flex; align-items: center; gap: 8px; padding: 6px 14px;">
+          <svg width="22" height="22" viewBox="0 0 26 26">
+            <circle cx="10" cy="14" r="8" fill="none" stroke="#35e0ff" stroke-width="2" />
+            <circle cx="7.4" cy="11.4" r="2" fill="rgba(255,255,255,0.85)" />
+            <circle cx="19" cy="8" r="4.5" fill="none" stroke="#ff6ec7" stroke-width="1.8" />
+            <circle cx="17.6" cy="6.6" r="1.1" fill="rgba(255,255,255,0.85)" />
+          </svg>
+          <span style="font-family: var(--font-disp); font-size: 13px; font-weight: 700; letter-spacing: 0.12em; color: var(--color-foam);">BUBBLE WARS</span>
+          <span id="hud-ping" style="font-size: 10px; font-weight: 700; color: rgba(154, 220, 240, 0.6); margin-left: 4px;">0 ms</span>
+        </div>
+
+        <div style="pointer-events: auto; display: flex; gap: 8px;">
+          <button id="btn-mute" class="btn-icon" title="Звук (M)">🔊</button>
+        </div>
+      </div>
+
+      <!-- Top Center: Live Leaderboard Badges -->
+      <div id="leaderboard-container" style="position: absolute; top: 56px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 20; pointer-events: none;">
+        <!-- Filled dynamically -->
+      </div>
+
+      <!-- Top Right: Kill Feed -->
+      <div id="kill-feed" style="position: absolute; top: 110px; right: 14px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; z-index: 20; pointer-events: none;"></div>
+
+      <!-- Bottom Left: Player Bubble Hull & HP -->
+      <div style="position: absolute; bottom: 16px; left: 16px; width: 280px; z-index: 20; pointer-events: none;">
+        <div class="panel" style="padding: 12px 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+            <span style="font-family: var(--font-disp); font-size: 11px; font-weight: 700; letter-spacing: 0.18em; color: rgba(154, 220, 240, 0.8);">
+              КОРПУС-ПУЗЫРЬ
+            </span>
+            <span id="hud-health-text" style="font-family: var(--font-disp); font-size: 14px; font-weight: 700; color: #ffffff;">
+              100<span style="color: rgba(154, 220, 240, 0.5);">/100</span>
+            </span>
+          </div>
+
+          <div style="height: 16px; border-radius: 999px; overflow: hidden; background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 255, 255, 0.12);">
+            <div id="hud-health-fill" class="hp-fill" style="height: 100%; width: 100%; border-radius: 999px;"></div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; font-weight: 700; color: rgba(154, 220, 240, 0.7);">
+            <span>Фраги: <strong id="hud-kills" style="color: #fff;">0</strong></span>
+            <span>Очки: <strong id="hud-score" style="color: var(--color-soap-gold);">0</strong></span>
+            <span id="hud-player-name" style="color: var(--color-aqua);">Player</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Right: Controls Hint -->
+      <div style="position: absolute; bottom: 16px; right: 16px; display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.06); background: rgba(0, 0, 0, 0.3); font-size: 11px; font-weight: 700; color: rgba(154, 220, 240, 0.6); z-index: 10; pointer-events: none;">
+        <span style="display: flex; gap: 3px;">
+          <span class="keycap">W</span><span class="keycap">A</span><span class="keycap">S</span><span class="keycap">D</span>
+        </span>
+        <span>движение</span>
+        <span>·</span>
+        <span>ЛКМ — огонь</span>
+      </div>
+
+      <!-- Death / Respawn Overlay -->
+      <div id="death-modal" class="overlay hidden">
+        <div class="panel rise-in" style="width: 400px; padding: 32px; text-align: center; pointer-events: auto;">
+          <div style="font-family: var(--font-disp); font-size: 32px; font-weight: 700; color: var(--color-danger); text-shadow: 0 0 22px rgba(255, 84, 112, 0.6);">
+            Ваш пузырь лопнул!
+          </div>
+          <div style="margin-top: 16px; font-size: 14px; font-weight: 700; color: rgba(154, 220, 240, 0.75);">
+            Набранные очки: <strong id="death-final-score" style="color: var(--color-soap-gold); font-size: 20px;">0</strong>
+          </div>
+          <button id="btn-respawn" class="btn-bubble" style="width: 100%; padding: 14px; font-size: 20px; margin-top: 20px;">
+            ВОЗРОДИТЬСЯ
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
