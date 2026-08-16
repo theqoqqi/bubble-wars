@@ -12,7 +12,7 @@ import {
 
 export class NetworkManager {
   private ws: WebSocket | null = null;
-  private serverUrl: string;
+  public serverUrl: string;
   public playerId: string | null = null;
   public latency: number = 0;
   private pingInterval: number | null = null;
@@ -24,17 +24,71 @@ export class NetworkManager {
   public onDisconnectCallback: (() => void) | null = null;
 
   constructor() {
+    this.serverUrl = this.resolveServerUrl();
+  }
+
+  public setServerUrl(url: string): void {
+    let clean = url.trim();
+    if (!clean.startsWith('ws://') && !clean.startsWith('wss://')) {
+      const isHttps = window.location.protocol === 'https:';
+      clean = `${isHttps ? 'wss://' : 'ws://'}${clean}`;
+    }
+    this.serverUrl = clean;
+    localStorage.setItem('bubble_server_url', clean);
+  }
+
+  public resolveServerUrl(): string {
+    // 1. URL Query param override (e.g. ?server=ws://123.45.67.89:3000 or ?server=wss://game.domain.com)
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryServer = urlParams.get('server');
+      if (queryServer) {
+        let clean = queryServer.trim();
+        if (!clean.startsWith('ws://') && !clean.startsWith('wss://')) {
+          clean = `${window.location.protocol === 'https:' ? 'wss://' : 'ws://'}${clean}`;
+        }
+        localStorage.setItem('bubble_server_url', clean);
+        return clean;
+      }
+    } catch {
+      /* ignore */
+    }
+
+    // 2. LocalStorage override
+    try {
+      const saved = localStorage.getItem('bubble_server_url');
+      if (saved) return saved;
+    } catch {
+      /* ignore */
+    }
+
+    // 3. Vite environment variable (VITE_WS_URL)
+    const envUrl = (import.meta as any).env?.VITE_WS_URL;
+    if (envUrl && typeof envUrl === 'string') {
+      return envUrl.trim();
+    }
+
+    // 4. Smart host / protocol fallback
+    const isHttps = window.location.protocol === 'https:';
+    const proto = isHttps ? 'wss:' : 'ws:';
     const host = window.location.hostname || 'localhost';
-    this.serverUrl = `ws://${host}:3000`;
+
+    // If client is served from the same server / port or reverse proxy
+    if (window.location.port === '3000' || (isHttps && !window.location.port)) {
+      return `${proto}//${window.location.host}`;
+    }
+
+    return `${proto}//${host}:3000`;
   }
 
   public connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
+        console.log('[Network] Connecting to Bubble Wars Server:', this.serverUrl);
         this.ws = new WebSocket(this.serverUrl);
 
         this.ws.onopen = () => {
-          console.log('[Network] Connected to Bubble Wars Server:', this.serverUrl);
+          console.log('[Network] Successfully connected to:', this.serverUrl);
           this.startPingLoop();
           resolve();
         };
@@ -50,7 +104,7 @@ export class NetworkManager {
         };
 
         this.ws.onerror = (err) => {
-          console.error('[Network] WebSocket error:', err);
+          console.error('[Network] WebSocket error on', this.serverUrl, err);
           reject(err);
         };
       } catch (e) {

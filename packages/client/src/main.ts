@@ -34,12 +34,22 @@ window.addEventListener('DOMContentLoaded', () => {
   const gameHud = document.getElementById('game-hud');
   const joinForm = document.getElementById('join-form') as HTMLFormElement;
   const nameInput = document.getElementById('player-name-input') as HTMLInputElement;
-  const colorBtns = document.querySelectorAll('.color-btn');
+  const serverInput = document.getElementById('server-url-input') as HTMLInputElement;
   const hudPlayerName = document.getElementById('hud-player-name');
   const btnMute = document.getElementById('btn-mute');
   const btnPlay = document.getElementById('btn-play');
   const btnRespawn = document.getElementById('btn-respawn');
   const colorDots = document.querySelectorAll('.color-dot, .color-btn');
+
+  // Pre-fill server address input
+  if (serverInput) {
+    serverInput.value = networkManager.serverUrl;
+    serverInput.addEventListener('input', () => {
+      if (serverInput.value.trim()) {
+        networkManager.setServerUrl(serverInput.value.trim());
+      }
+    });
+  }
 
   // Color selection
   colorDots.forEach((btn) => {
@@ -65,6 +75,10 @@ window.addEventListener('DOMContentLoaded', () => {
     const name = nameInput?.value.trim() || 'BubbleHero';
     if (hudPlayerName) hudPlayerName.textContent = name;
 
+    if (serverInput && serverInput.value.trim()) {
+      networkManager.setServerUrl(serverInput.value.trim());
+    }
+
     try {
       await networkManager.connect();
       networkManager.join(name, selectedColor);
@@ -72,7 +86,7 @@ window.addEventListener('DOMContentLoaded', () => {
       if (joinModal) joinModal.classList.add('hidden');
       if (gameHud) gameHud.classList.remove('hidden');
     } catch (err) {
-      alert('Не удалось подключиться к серверу Bubble Wars. Убедитесь, что сервер запущен!');
+      alert(`Не удалось подключиться к серверу Bubble Wars (${networkManager.serverUrl}).\nУбедитесь, что сервер запущен и доступен!`);
       console.error('Connection failed:', err);
     }
   };
