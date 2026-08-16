@@ -26,6 +26,8 @@ export class ArenaScene extends Phaser.Scene {
   private hudManager!: HudManager;
   private gameRenderer!: GameRenderer;
 
+  private unsubscribers: Array<() => void> = [];
+
   private isPlayerAlive: boolean = true;
   private shake: number = 0;
   private playerFlash: number = 0;
@@ -41,26 +43,28 @@ export class ArenaScene extends Phaser.Scene {
     this.hudManager = new HudManager();
     this.gameRenderer = new GameRenderer('game-container');
 
-    // Setup Network Listeners
-    networkManager.onWelcomeCallback = (data) => {
-      if (data.obstacles) {
-        for (const o of data.obstacles) {
-          this.clientObstacles.set(o.id, {
-            id: o.id,
-            x: o.x,
-            y: o.y,
-            targetX: o.x,
-            targetY: o.y,
-            r: o.r,
-            hue: o.hue,
-          });
+    // Setup Network Listeners via Typed EventEmitter
+    this.unsubscribers.push(
+      networkManager.on('welcome', (data) => {
+        if (data.obstacles) {
+          for (const o of data.obstacles) {
+            this.clientObstacles.set(o.id, {
+              id: o.id,
+              x: o.x,
+              y: o.y,
+              targetX: o.x,
+              targetY: o.y,
+              r: o.r,
+              hue: o.hue,
+            });
+          }
         }
-      }
-    };
-    networkManager.onWorldStateCallback = (data) => this.handleWorldState(data);
-    networkManager.onBubblePopCallback = (event) => this.handleBubblePop(event);
-    networkManager.onKillCallback = (data) => this.handleKillEvent(data);
-    networkManager.onGameOverCallback = (data: GameOverMessage) => this.handleGameOver(data);
+      }),
+      networkManager.on('world_state', (data) => this.handleWorldState(data)),
+      networkManager.on('bubble_pop', (event) => this.handleBubblePop(event)),
+      networkManager.on('kill', (data) => this.handleKillEvent(data)),
+      networkManager.on('game_over', (data) => this.handleGameOver(data))
+    );
   }
 
   public update(time: number, delta: number): void {

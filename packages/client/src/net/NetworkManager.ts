@@ -1,8 +1,9 @@
 import {
   BubblePopEvent,
   ClientMessage,
+  EventBus,
+  GameOverMessage,
   KillEventMessage,
-  LeaderboardEntry,
   PlayerInput,
   ServerMessage,
   TankColor,
@@ -10,21 +11,24 @@ import {
   WorldStateMessage,
 } from '@bubble-wars/shared';
 
-export class NetworkManager {
+export interface NetworkEvents {
+  welcome: WelcomeMessage;
+  world_state: WorldStateMessage;
+  bubble_pop: BubblePopEvent;
+  kill: KillEventMessage;
+  game_over: GameOverMessage;
+  disconnect: void;
+}
+
+export class NetworkManager extends EventBus<NetworkEvents> {
   private ws: WebSocket | null = null;
   public serverUrl: string;
   public playerId: string | null = null;
   public latency: number = 0;
   private pingInterval: number | null = null;
 
-  public onWelcomeCallback: ((data: WelcomeMessage) => void) | null = null;
-  public onWorldStateCallback: ((data: WorldStateMessage) => void) | null = null;
-  public onBubblePopCallback: ((event: BubblePopEvent) => void) | null = null;
-  public onKillCallback: ((data: KillEventMessage) => void) | null = null;
-  public onGameOverCallback: ((data: any) => void) | null = null;
-  public onDisconnectCallback: (() => void) | null = null;
-
   constructor() {
+    super();
     this.serverUrl = this.resolveServerUrl();
   }
 
@@ -101,7 +105,7 @@ export class NetworkManager {
         this.ws.onclose = () => {
           console.warn('[Network] Disconnected from server');
           this.stopPingLoop();
-          if (this.onDisconnectCallback) this.onDisconnectCallback();
+          this.emit('disconnect');
         };
 
         this.ws.onerror = (err) => {
@@ -134,27 +138,27 @@ export class NetworkManager {
       switch (msg.type) {
         case 'welcome': {
           this.playerId = msg.playerId;
-          if (this.onWelcomeCallback) this.onWelcomeCallback(msg);
+          this.emit('welcome', msg);
           break;
         }
 
         case 'world_state': {
-          if (this.onWorldStateCallback) this.onWorldStateCallback(msg);
+          this.emit('world_state', msg);
           break;
         }
 
         case 'bubble_pop': {
-          if (this.onBubblePopCallback) this.onBubblePopCallback(msg.event);
+          this.emit('bubble_pop', msg.event);
           break;
         }
 
         case 'kill': {
-          if (this.onKillCallback) this.onKillCallback(msg);
+          this.emit('kill', msg);
           break;
         }
 
         case 'game_over': {
-          if (this.onGameOverCallback) this.onGameOverCallback(msg);
+          this.emit('game_over', msg);
           break;
         }
 
