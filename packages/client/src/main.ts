@@ -111,4 +111,32 @@ window.addEventListener('DOMContentLoaded', () => {
       if (deathModal) deathModal.classList.add('hidden');
     });
   }
+
+  // Game Over Rematch button
+  const btnRematch = document.getElementById('btn-rematch');
+  if (btnRematch) {
+    btnRematch.addEventListener('click', () => {
+      networkManager.rematch();
+      const gameoverModal = document.getElementById('gameover-modal');
+      if (gameoverModal) gameoverModal.classList.add('hidden');
+    });
+  }
+
+  // Game Over Menu button
+  const btnGameOverMenu = document.getElementById('btn-gameover-menu');
+  if (btnGameOverMenu) {
+    btnGameOverMenu.addEventListener('click', () => {
+      networkManager.disconnect();
+      const arenaScene = game.scene.getScene('ArenaScene') as ArenaScene;
+      if (arenaScene) {
+        arenaScene.leaveGame();
+      }
+      const gameoverModal = document.getElementById('gameover-modal');
+      if (gameoverModal) gameoverModal.classList.add('hidden');
+      const deathModal = document.getElementById('death-modal');
+      if (deathModal) deathModal.classList.add('hidden');
+      if (gameHud) gameHud.classList.add('hidden');
+      if (joinModal) joinModal.classList.remove('hidden');
+    });
+  }
 });

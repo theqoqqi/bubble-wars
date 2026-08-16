@@ -21,6 +21,7 @@ export class NetworkManager {
   public onWorldStateCallback: ((data: WorldStateMessage) => void) | null = null;
   public onBubblePopCallback: ((event: BubblePopEvent) => void) | null = null;
   public onKillCallback: ((data: KillEventMessage) => void) | null = null;
+  public onGameOverCallback: ((data: any) => void) | null = null;
   public onDisconnectCallback: (() => void) | null = null;
 
   constructor() {
@@ -113,6 +114,19 @@ export class NetworkManager {
     });
   }
 
+  public disconnect(): void {
+    this.stopPingLoop();
+    if (this.ws) {
+      try {
+        this.ws.close();
+      } catch {
+        /* ignore */
+      }
+      this.ws = null;
+    }
+    this.playerId = null;
+  }
+
   private handleMessage(dataStr: string): void {
     try {
       const msg: ServerMessage = JSON.parse(dataStr);
@@ -136,6 +150,11 @@ export class NetworkManager {
 
         case 'kill': {
           if (this.onKillCallback) this.onKillCallback(msg);
+          break;
+        }
+
+        case 'game_over': {
+          if (this.onGameOverCallback) this.onGameOverCallback(msg);
           break;
         }
 
@@ -167,6 +186,12 @@ export class NetworkManager {
   public respawn(): void {
     this.sendMessage({
       type: 'respawn',
+    });
+  }
+
+  public rematch(): void {
+    this.sendMessage({
+      type: 'rematch',
     });
   }
 

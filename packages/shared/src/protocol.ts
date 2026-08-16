@@ -30,11 +30,16 @@ export interface RespawnMessage {
   type: 'respawn';
 }
 
+export interface RematchMessage {
+  type: 'rematch';
+}
+
 export type ClientMessage =
   | JoinMessage
   | InputMessage
   | PingMessage
-  | RespawnMessage;
+  | RespawnMessage
+  | RematchMessage;
 
 // Server -> Client
 export interface WelcomeMessage {
@@ -42,11 +47,13 @@ export interface WelcomeMessage {
   playerId: string;
   arena: ArenaBounds;
   obstacles: ObstacleSnapshot[];
+  fragLimit: number;
 }
 
 export interface WorldStateMessage {
   type: 'world_state';
   tick: number;
+  fragLimit: number;
   tanks: TankSnapshot[];
   projectiles: ProjectileSnapshot[];
   obstacles: ObstacleSnapshot[];
@@ -75,9 +82,22 @@ export interface KillEventMessage {
   verb: string;
 }
 
+export interface GameOverMessage {
+  type: 'game_over';
+  winnerId: string;
+  winnerName: string;
+  winnerColor: TankColor;
+  winnerHue: number;
+  winnerIsBot: boolean;
+  winnerKills: number;
+  fragLimit: number;
+  leaderboard: LeaderboardEntry[];
+}
+
 export type ServerMessage =
   | WelcomeMessage
   | WorldStateMessage
   | BubblePopMessage
   | PongMessage
-  | KillEventMessage;
+  | KillEventMessage
+  | GameOverMessage;

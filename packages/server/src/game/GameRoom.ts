@@ -24,6 +24,10 @@ interface ConnectedPlayer {
 
 export class GameRoom {
   public physics: PhysicsWorld;
+  public botCount: number = GAME_CONFIG.BOT.SPAWN_COUNT;
+  public fragLimit: number = 10;
+  public isMatchOver: boolean = false;
+  public matchOverTime: number = 0;
   private players: Map<string, ConnectedPlayer> = new Map();
   private bots: BotPlayer[] = [];
   private projectiles: ServerProjectile[] = [];
@@ -128,6 +132,10 @@ export class GameRoom {
                     victimHue: tank.hue,
                     verb,
                   });
+
+                  if (!this.isMatchOver && killer.kills >= this.fragLimit) {
+                    this.triggerGameOver(killer);
+                  }
                 }
 
                 // Big pop explosion on tank death
@@ -200,6 +208,40 @@ export class GameRoom {
     }
   }
 
+  public triggerGameOver(winner: ServerTank): void {
+    if (this.isMatchOver) return;
+    this.isMatchOver = true;
+    this.matchOverTime = Date.now();
+
+    const allTanks = this.getAllTanks();
+    const leaderboard: LeaderboardEntry[] = allTanks
+      .map((t) => ({
+        id: t.id,
+        name: t.name,
+        score: t.score,
+        kills: t.kills,
+        deaths: t.deaths,
+        isBot: t.isBot,
+        color: t.color,
+        hue: t.hue,
+      }))
+      .sort((a, b) => b.kills - a.kills || b.score - a.score);
+
+    console.log(`🏆 [Game Over] Winner: "${winner.name}" with ${winner.kills} kills!`);
+
+    this.broadcast({
+      type: 'game_over',
+      winnerId: winner.id,
+      winnerName: winner.name,
+      winnerColor: winner.color,
+      winnerHue: winner.hue,
+      winnerIsBot: winner.isBot,
+      winnerKills: winner.kills,
+      fragLimit: this.fragLimit,
+      leaderboard,
+    });
+  }
+
   public handlePlayerJoin(ws: WebSocket, name: string, preferredColor?: TankColor): ConnectedPlayer {
     const id = `player_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
     const cleanName = (name || 'Bubble Warrior').trim().slice(0, 16);
@@ -228,15 +270,23 @@ export class GameRoom {
 
     this.players.set(id, player);
 
-    // Send welcome with obstacles
+    // Send welcome with obstacles and fragLimit
     this.sendTo(ws, {
       type: 'welcome',
       playerId: id,
       arena: GAME_CONFIG.ARENA,
       obstacles: this.physics.getObstacleSnapshots(),
+      fragLimit: this.fragLimit,
     });
 
     return player;
+  }
+
+  public handlePlayerRematch(playerId: string): void {
+    if (this.isMatchOver) {
+      console.log(`🔄 [Rematch] Player ${playerId} requested rematch. Resetting arena!`);
+      this.resetArena();
+    }
   }
 
   public handlePlayerInput(playerId: string, input: PlayerInput): void {
@@ -364,6 +414,7 @@ export class GameRoom {
     const worldStateMsg: ServerMessage = {
       type: 'world_state',
       tick: this.tickCount,
+      fragLimit: this.fragLimit,
       tanks: allTanks.map((t) => t.toSnapshot()),
       projectiles: this.projectiles.map((p) => p.toSnapshot()),
       obstacles: this.physics.getObstacleSnapshots(),
@@ -371,6 +422,11 @@ export class GameRoom {
     };
 
     this.broadcast(worldStateMsg);
+
+    // Auto-restart next match after 12s if game over
+    if (this.isMatchOver && now - this.matchOverTime > 12000) {
+      this.resetArena();
+    }
   }
 
   private sendTo(ws: WebSocket, msg: ServerMessage): void {
@@ -386,6 +442,108 @@ export class GameRoom {
         player.ws.send(data);
       }
     }
+  }
+
+  public setBotCount(targetCount: number): number {
+    const count = Math.max(0, Math.min(15, Math.floor(targetCount)));
+
+    while (this.bots.length < count) {
+      const idx = this.bots.length;
+      const pos = this.physics.getRandomSpawnPosition(300);
+      const bot = new BotPlayer(`bot_${Date.now()}_${idx + 1}`, pos.x, pos.y, idx);
+      this.bots.push(bot);
+      this.physics.addBody(bot.tank.body);
+    }
+
+    while (this.bots.length > count) {
+      const removed = this.bots.pop();
+      if (removed) {
+        this.physics.removeBody(removed.tank.body);
+        this.pendingPopEvents.push({
+          id: `bot_remove_${removed.tank.id}_${Date.now()}`,
+          x: removed.tank.body.position.x,
+          y: removed.tank.body.position.y,
+          radius: GAME_CONFIG.TANK.BODY_RADIUS * 2,
+          hue: removed.tank.hue,
+          color: removed.tank.color,
+          isKill: false,
+        });
+      }
+    }
+
+    return this.bots.length;
+  }
+
+  public setFragLimit(limit: number): number {
+    this.fragLimit = Math.max(1, Math.min(100, Math.floor(limit)));
+    return this.fragLimit;
+  }
+
+  public resetArena(): void {
+    this.isMatchOver = false;
+    this.matchOverTime = 0;
+
+    // Reset all tank scores and respawn
+    for (const player of this.players.values()) {
+      player.tank.score = 0;
+      player.tank.kills = 0;
+      player.tank.deaths = 0;
+      const pos = this.physics.getRandomSpawnPosition(300);
+      player.tank.respawn(pos.x, pos.y);
+    }
+
+    for (const bot of this.bots) {
+      bot.tank.score = 0;
+      bot.tank.kills = 0;
+      bot.tank.deaths = 0;
+      const pos = this.physics.getRandomSpawnPosition(300);
+      bot.tank.respawn(pos.x, pos.y);
+    }
+
+    // Clear projectiles
+    for (const proj of this.projectiles) {
+      this.physics.removeBody(proj.body);
+    }
+    this.projectiles = [];
+  }
+
+  public kickPlayer(id: string): boolean {
+    const player = this.players.get(id);
+    if (player) {
+      try {
+        player.ws.close(4001, 'Kicked by administrator');
+      } catch {
+        /* ignore */
+      }
+      this.handlePlayerDisconnect(id);
+      return true;
+    }
+    return false;
+  }
+
+  public getAdminState() {
+    const allTanks = this.getAllTanks();
+    return {
+      botCount: this.bots.length,
+      fragLimit: this.fragLimit || 10,
+      playersCount: this.players.size,
+      botsCount: this.bots.length,
+      projectilesCount: this.projectiles.length,
+      uptimeSeconds: Math.floor(process.uptime()),
+      tanks: allTanks.map((t) => ({
+        id: t.id,
+        name: t.name,
+        color: t.color,
+        hue: t.hue,
+        score: t.score,
+        kills: t.kills,
+        deaths: t.deaths,
+        isBot: t.isBot,
+        isDead: t.isDead,
+        hp: t.hp,
+        maxHp: t.maxHp,
+      })),
+    };
   }
 
   public cleanup(): void {

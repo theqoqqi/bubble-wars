@@ -172,6 +172,7 @@ export class ArenaScene extends Phaser.Scene {
     networkManager.onWorldStateCallback = (data) => this.handleWorldState(data);
     networkManager.onBubblePopCallback = (event) => this.handleBubblePop(event);
     networkManager.onKillCallback = (data) => this.handleKillEvent(data);
+    networkManager.onGameOverCallback = (data) => this.handleGameOver(data);
   }
 
   private resizeCanvas(): void {
@@ -615,6 +616,12 @@ export class ArenaScene extends Phaser.Scene {
       }
     }
 
+    // Update Frag Limit in HUD
+    const fragLimitEl = document.getElementById('hud-frag-limit');
+    if (fragLimitEl && data.fragLimit) {
+      fragLimitEl.textContent = `${data.fragLimit}`;
+    }
+
     // Update Leaderboard & Ping in DOM
     this.updateLeaderboardDOM(data.leaderboard);
     const pingEl = document.getElementById('hud-ping');
@@ -713,6 +720,58 @@ export class ArenaScene extends Phaser.Scene {
     }, 4000);
   }
 
+  private handleGameOver(data: any): void {
+    const modal = document.getElementById('gameover-modal');
+    const titleEl = document.getElementById('gameover-title');
+    const subtitleEl = document.getElementById('gameover-subtitle');
+    const crownEl = document.getElementById('gameover-crown');
+    const leaderboardEl = document.getElementById('gameover-leaderboard');
+
+    const myId = networkManager.playerId;
+    const isWinner = data.winnerId === myId;
+
+    if (titleEl) {
+      titleEl.textContent = isWinner ? 'ПОБЕДА' : 'ПОРАЖЕНИЕ';
+      titleEl.style.color = isWinner ? '#fff' : 'var(--color-danger)';
+      titleEl.style.textShadow = isWinner
+        ? '0 0 24px rgba(53, 224, 255, 0.8)'
+        : '0 0 24px rgba(255, 84, 112, 0.8)';
+    }
+
+    if (subtitleEl) {
+      subtitleEl.textContent = isWinner
+        ? `Вся арена в мыльной пене — вы чемпион с ${data.winnerKills} фрагами!`
+        : `Победил ${data.winnerName} (${data.winnerKills} фрагов). Реванш?`;
+    }
+
+    if (crownEl) {
+      crownEl.style.filter = `drop-shadow(0 0 14px ${hsla(data.winnerHue || 48, 90, 65, 0.9)})`;
+      crownEl.setAttribute('stroke', hsla(data.winnerHue || 48, 95, 65, 1));
+    }
+
+    if (leaderboardEl && data.leaderboard) {
+      leaderboardEl.innerHTML = data.leaderboard
+        .map((pl: any, i: number) => `
+          <div style="display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 10px; ${
+            pl.id === myId ? 'background: rgba(53, 224, 255, 0.15); border: 1px solid rgba(53, 224, 255, 0.4);' : 'background: rgba(0, 0, 0, 0.3);'
+          }">
+            <span style="font-family: var(--font-disp); font-size: 13px; font-weight: 700; width: 18px; color: rgba(154, 220, 240, 0.6);">${i + 1}</span>
+            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${hsla(pl.hue, 90, 65, 1)}; box-shadow: 0 0 8px ${hsla(pl.hue, 90, 65, 0.8)};"></span>
+            <span style="flex: 1; text-align: left; font-size: 13px; font-weight: 800; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${pl.name}</span>
+            <span style="font-family: var(--font-disp); font-size: 15px; font-weight: 700; color: var(--color-soap-gold);">${pl.kills} фр.</span>
+            <span style="font-size: 11px; font-weight: 700; opacity: 0.5;">${pl.deaths} см.</span>
+          </div>
+        `)
+        .join('');
+    }
+
+    // Hide death modal if visible
+    this.hideDeathModal();
+
+    // Show Game Over modal
+    if (modal) modal.classList.remove('hidden');
+  }
+
   private updatePlayerHUD(snap: TankSnapshot): void {
     const hpFill = document.getElementById('hud-health-fill');
     const hpText = document.getElementById('hud-health-text');
@@ -784,5 +843,18 @@ export class ArenaScene extends Phaser.Scene {
   private hideDeathModal(): void {
     const modal = document.getElementById('death-modal');
     if (modal) modal.classList.add('hidden');
+  }
+
+  public leaveGame(): void {
+    this.keys.clear();
+    this.mouse.down = false;
+    this.tanks.clear();
+    this.projectiles.clear();
+    this.particles = [];
+    this.hideDeathModal();
+    const gameoverModal = document.getElementById('gameover-modal');
+    if (gameoverModal) gameoverModal.classList.add('hidden');
+    const leaderboardContainer = document.getElementById('leaderboard-container');
+    if (leaderboardContainer) leaderboardContainer.innerHTML = '';
   }
 }
