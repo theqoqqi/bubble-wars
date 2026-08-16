@@ -48,9 +48,10 @@ COPY --from=builder /app/packages/shared/package.json ./packages/shared/package.
 COPY --from=builder /app/packages/server/package.json ./packages/server/package.json
 COPY --from=builder /app/packages/client/package.json ./packages/client/package.json
 
-# Copy compiled production artifacts
+# Copy compiled production artifacts and static public templates
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/packages/server/dist ./packages/server/dist
+COPY --from=builder /app/packages/server/public ./packages/server/public
 COPY --from=builder /app/packages/client/dist ./packages/client/dist
 
 # Run as non-root user for security
