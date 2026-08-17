@@ -103,6 +103,7 @@ export class CollisionHandler {
     projectileBody: Matter.Body,
     tank: ServerTank
   ): void {
+    if (this.context.isMatchOver()) return;
     if (!tank || tank.id === projectile.ownerId || tank.isDead) return;
 
     projectile.isDestroyed = true;

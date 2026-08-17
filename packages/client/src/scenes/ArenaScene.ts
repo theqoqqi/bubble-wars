@@ -29,6 +29,7 @@ export class ArenaScene extends Phaser.Scene {
   private unsubscribers: Array<() => void> = [];
 
   private isPlayerAlive: boolean = true;
+  private isMatchOver: boolean = false;
   private shake: number = 0;
   private playerFlash: number = 0;
   private gameTime: number = 0;
@@ -74,8 +75,8 @@ export class ArenaScene extends Phaser.Scene {
     const myId = networkManager.playerId;
     const myTank = myId ? this.tanks.get(myId) : null;
 
-    // 1. Gather & Send Player Input
-    if (myTank && !myTank.isDead) {
+    // 1. Gather & Send Player Input (only when alive and match is active)
+    if (myTank && !myTank.isDead && !this.isMatchOver) {
       const input = this.inputManager.getInput();
       networkManager.sendInput(input);
     }
@@ -273,6 +274,12 @@ export class ArenaScene extends Phaser.Scene {
     }
     this.hudManager.updateLeaderboard(data.leaderboard, myId);
     this.hudManager.updatePing(networkManager.latency);
+
+    // If new match has begun, automatically dismiss game over modal
+    if (this.isMatchOver && data.isMatchOver === false) {
+      this.isMatchOver = false;
+      this.hudManager.hideGameOverModal();
+    }
   }
 
   private handleBubblePop(event: BubblePopEvent): void {
@@ -291,10 +298,13 @@ export class ArenaScene extends Phaser.Scene {
 
   private handleGameOver(data: GameOverMessage): void {
     const myId = networkManager.playerId;
+    this.isMatchOver = true;
+    this.hudManager.hideDeathModal();
     this.hudManager.showGameOverModal(data, myId);
   }
 
   public leaveGame(): void {
+    this.isMatchOver = false;
     if (this.inputManager) this.inputManager.reset();
     if (this.hudManager) this.hudManager.reset();
     if (this.particleSystem) this.particleSystem.clear();

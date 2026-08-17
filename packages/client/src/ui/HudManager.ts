@@ -109,6 +109,10 @@ export class HudManager {
   }
 
   public showDeathModal(score: number): void {
+    // Never show death modal if gameover modal is already open
+    if (this.gameoverModal && !this.gameoverModal.classList.contains('hidden')) {
+      return;
+    }
     if (this.deathFinalScore) this.deathFinalScore.textContent = `${score}`;
     if (this.deathModal) this.deathModal.classList.remove('hidden');
   }
@@ -117,7 +121,12 @@ export class HudManager {
     if (this.deathModal) this.deathModal.classList.add('hidden');
   }
 
+  public hideGameOverModal(): void {
+    if (this.gameoverModal) this.gameoverModal.classList.add('hidden');
+  }
+
   public showGameOverModal(data: GameOverMessage, myId: string | null): void {
+    this.hideDeathModal();
     const isWinner = data.winnerId === myId;
 
     if (this.gameoverTitle) {
@@ -159,12 +168,7 @@ export class HudManager {
         .join('');
     }
 
-    this.hideDeathModal();
     if (this.gameoverModal) this.gameoverModal.classList.remove('hidden');
-  }
-
-  public hideGameOverModal(): void {
-    if (this.gameoverModal) this.gameoverModal.classList.add('hidden');
   }
 
   public reset(): void {

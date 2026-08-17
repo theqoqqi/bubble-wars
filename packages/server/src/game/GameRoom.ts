@@ -85,7 +85,17 @@ export class GameRoom {
     this.isMatchOver = true;
     this.matchOverTime = Date.now();
 
+    // Clear all existing projectiles so no damage/clashes occur after match ends
+    for (const proj of this.projectiles) {
+      this.physics.removeBody(proj.body);
+    }
+    this.projectiles = [];
+
     const allTanks = this.getAllTanks();
+    for (const tank of allTanks) {
+      Matter.Body.setVelocity(tank.body, { x: 0, y: 0 });
+    }
+
     const leaderboard = this.buildLeaderboard(allTanks);
 
     console.log(`🏆 [Game Over] Winner: "${winner.name}" with ${winner.kills} kills!`);
@@ -151,6 +161,7 @@ export class GameRoom {
   }
 
   public handlePlayerInput(playerId: string, input: PlayerInput): void {
+    if (this.isMatchOver) return;
     const player = this.players.get(playerId);
     if (player) {
       player.input = input;
@@ -158,6 +169,7 @@ export class GameRoom {
   }
 
   public handlePlayerRespawn(playerId: string): void {
+    if (this.isMatchOver) return;
     const player = this.players.get(playerId);
     if (player && player.tank.isDead) {
       const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
@@ -205,47 +217,53 @@ export class GameRoom {
     const dt = deltaMs / 1000;
     const allTanks = this.getAllTanks();
 
-    // 1. Process human player inputs
-    for (const player of this.players.values()) {
-      const projectile = player.tank.applyInput(player.input, now);
-      if (projectile) {
-        this.projectiles.push(projectile);
-        this.physics.addBody(projectile.body);
-      }
-      player.tank.update(deltaMs);
-    }
-
-    // 2. Process bot AI & inputs
-    for (const bot of this.bots) {
-      if (bot.tank.isDead) {
-        if (now - bot.tank.deathTime >= GAME_CONFIG.TANK.RESPAWN_DELAY_MS) {
-          const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
-          bot.tank.respawn(pos.x, pos.y);
-        }
-      } else {
-        const botInput = bot.updateAI(allTanks, this.physics, dt);
-        const projectile = bot.tank.applyInput(botInput, now);
+    if (!this.isMatchOver) {
+      // 1. Process human player inputs
+      for (const player of this.players.values()) {
+        const projectile = player.tank.applyInput(player.input, now);
         if (projectile) {
           this.projectiles.push(projectile);
           this.physics.addBody(projectile.body);
         }
+        player.tank.update(deltaMs);
       }
-      bot.tank.update(deltaMs);
-    }
-          const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
-          const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
-          const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
 
-    // 3. Step physics simulation
-    this.physics.step(deltaMs);
-
-    // 4. Projectiles lifetime & cleanup
-    for (let i = this.projectiles.length - 1; i >= 0; i--) {
-      const proj = this.projectiles[i];
-      if (proj.isDestroyed || proj.isExpired(now)) {
-        this.physics.removeBody(proj.body);
-        this.projectiles.splice(i, 1);
+      // 2. Process bot AI & inputs
+      for (const bot of this.bots) {
+        if (bot.tank.isDead) {
+          if (now - bot.tank.deathTime >= GAME_CONFIG.TANK.RESPAWN_DELAY_MS) {
+            const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
+            bot.tank.respawn(pos.x, pos.y);
+          }
+        } else {
+          const botInput = bot.updateAI(allTanks, this.physics, dt);
+          const projectile = bot.tank.applyInput(botInput, now);
+          if (projectile) {
+            this.projectiles.push(projectile);
+            this.physics.addBody(projectile.body);
+          }
+        }
+        bot.tank.update(deltaMs);
       }
+
+      // 3. Step physics simulation
+      this.physics.step(deltaMs);
+
+      // 4. Projectiles lifetime & cleanup
+      for (let i = this.projectiles.length - 1; i >= 0; i--) {
+        const proj = this.projectiles[i];
+        if (proj.isDestroyed || proj.isExpired(now)) {
+          this.physics.removeBody(proj.body);
+          this.projectiles.splice(i, 1);
+        }
+      }
+    } else {
+      // Game over state: stop tanks, update visual decay, gentle obstacle step
+      for (const tank of allTanks) {
+        Matter.Body.setVelocity(tank.body, { x: 0, y: 0 });
+        tank.update(deltaMs);
+      }
+      this.physics.step(deltaMs);
     }
 
     // 5. Send pending pop events
@@ -267,6 +285,7 @@ export class GameRoom {
       type: 'world_state',
       tick: this.tickCount,
       fragLimit: this.fragLimit,
+      isMatchOver: this.isMatchOver,
       tanks: allTanks.map((t) => t.toSnapshot()),
       projectiles: this.projectiles.map((p) => p.toSnapshot()),
       obstacles: this.physics.getObstacleSnapshots(),

@@ -54,6 +54,7 @@ export interface WorldStateMessage {
   type: 'world_state';
   tick: number;
   fragLimit: number;
+  isMatchOver?: boolean;
   tanks: TankSnapshot[];
   projectiles: ProjectileSnapshot[];
   obstacles: ObstacleSnapshot[];
