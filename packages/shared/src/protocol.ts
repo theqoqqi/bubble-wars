@@ -74,6 +74,8 @@ export interface PongMessage {
 
 export interface KillEventMessage {
   type: 'kill';
+  killerId?: string;
+  victimId?: string;
   killerName: string;
   victimName: string;
   killerColor: TankColor;

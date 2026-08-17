@@ -132,6 +132,8 @@ export class CollisionHandler {
         const verb = KILL_VERBS[Math.floor(Math.random() * KILL_VERBS.length)];
         this.context.broadcast({
           type: 'kill',
+          killerId: killer.id,
+          victimId: tank.id,
           killerName: killer.name,
           victimName: tank.name,
           killerColor: killer.color,

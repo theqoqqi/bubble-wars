@@ -12,6 +12,7 @@ export class HudManager {
   private leaderboardContainer = document.getElementById('leaderboard-container');
   private killFeed = document.getElementById('kill-feed');
   private deathModal = document.getElementById('death-modal');
+  private deathKillerName = document.getElementById('death-killer-name');
   private deathFinalScore = document.getElementById('death-final-score');
   private gameoverModal = document.getElementById('gameover-modal');
   private gameoverTitle = document.getElementById('gameover-title');
@@ -86,12 +87,28 @@ export class HudManager {
     }, CLIENT_CONFIG.HUD.KILL_FEED_TIMEOUT_MS);
   }
 
-  public showDeathModal(score: number): void {
+  public showDeathModal(
+    score: number,
+    killerInfo?: { name: string; hue: number; verb?: string } | null
+  ): void {
     // Never show death modal if gameover modal is already open
     if (this.gameoverModal && !this.gameoverModal.classList.contains('hidden')) {
       return;
     }
     if (this.deathFinalScore) this.deathFinalScore.textContent = `${score}`;
+
+    if (this.deathKillerName) {
+      if (killerInfo) {
+        this.deathKillerName.textContent = killerInfo.name;
+        this.deathKillerName.style.color = hsla(killerInfo.hue, 90, 72, 1);
+        this.deathKillerName.style.textShadow = `0 0 20px ${hsla(killerInfo.hue, 90, 70, 0.8)}`;
+      } else {
+        this.deathKillerName.textContent = 'Арена';
+        this.deathKillerName.style.color = 'var(--color-danger)';
+        this.deathKillerName.style.textShadow = '0 0 16px rgba(255, 84, 112, 0.7)';
+      }
+    }
+
     if (this.deathModal) this.deathModal.classList.remove('hidden');
   }
 

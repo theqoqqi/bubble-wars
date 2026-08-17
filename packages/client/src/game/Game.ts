@@ -33,6 +33,7 @@ export class Game {
   private shake: number = 0;
   private playerFlash: number = 0;
   private gameTime: number = 0;
+  private lastKiller: { name: string; hue: number; verb?: string } | null = null;
 
   private animFrameId: number | null = null;
   private lastTime: number = 0;
@@ -253,9 +254,10 @@ export class Game {
           this.isPlayerAlive = false;
           this.playerFlash = 1.0;
           this.shake = Math.min(CLIENT_CONFIG.SHAKE.MAX, this.shake + CLIENT_CONFIG.SHAKE.HIT);
-          this.hudManager.showDeathModal(snap.score);
+          this.hudManager.showDeathModal(snap.score, this.lastKiller);
         } else if (!snap.isDead && !this.isPlayerAlive) {
           this.isPlayerAlive = true;
+          this.lastKiller = null;
           this.hudManager.hideDeathModal();
         }
       }
@@ -330,6 +332,20 @@ export class Game {
 
   private handleKillEvent(data: KillEventMessage): void {
     this.hudManager.addKillFeedItem(data);
+
+    const myId = networkManager.playerId;
+    const myTank = myId ? this.tanks.get(myId) : null;
+
+    if (
+      (data.victimId && data.victimId === myId) ||
+      (myTank && myTank.name === data.victimName)
+    ) {
+      this.lastKiller = {
+        name: data.killerName,
+        hue: data.killerHue,
+        verb: data.verb,
+      };
+    }
   }
 
   private handleGameOver(data: GameOverMessage): void {
@@ -341,6 +357,7 @@ export class Game {
 
   public leaveGame(): void {
     this.isMatchOver = false;
+    this.lastKiller = null;
     if (this.inputManager) this.inputManager.reset();
     if (this.hudManager) this.hudManager.reset();
     if (this.particleSystem) this.particleSystem.clear();

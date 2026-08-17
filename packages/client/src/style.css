@@ -671,14 +671,29 @@ html, body {
 
 .death-title {
   font-family: var(--font-disp);
-  font-size: 32px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--color-danger);
-  text-shadow: 0 0 22px rgba(255, 84, 112, 0.6);
+  text-shadow: 0 0 18px rgba(255, 84, 112, 0.6);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.death-killer-name {
+  margin-top: 8px;
+  margin-bottom: 4px;
+  font-family: var(--font-disp);
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .death-score-label {
-  margin-top: 16px;
+  margin-top: 14px;
   font-size: 14px;
   font-weight: 700;
   color: rgba(154, 220, 240, 0.75);
