@@ -59,30 +59,15 @@ export class HudManager {
     leaderboard.forEach((entry) => {
       const isPlayer = entry.id === myId;
       const card = document.createElement('div');
-      card.className = isPlayer ? 'panel' : 'panel-soft';
-      card.style.cssText = `
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        border-radius: 999px;
-        padding: 4px 12px;
-        ${isPlayer ? 'border: 1px solid rgba(53, 224, 255, 0.6);' : ''}
-      `;
+      card.className = `leaderboard-badge ${isPlayer ? 'active' : ''}`;
 
       card.innerHTML = `
-        <span style="
-          display: inline-block;
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background: radial-gradient(circle at 32% 30%, rgba(255,255,255,0.9), ${hsla(entry.hue, 90, 62, 1)} 60%);
-          box-shadow: 0 0 8px ${hsla(entry.hue, 95, 65, 0.8)};
-        "></span>
-        <span style="max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 800; color: ${isPlayer ? '#fff' : 'var(--color-foam)'};">
+        <span class="leaderboard-dot" style="--dot-color: ${hsla(entry.hue, 90, 62, 1)};"></span>
+        <span class="leaderboard-name ${isPlayer ? 'player' : 'bot'}">
           ${entry.name}
         </span>
-        <span style="font-family: var(--font-disp); font-size: 14px; font-weight: 700; color: #fff;">${entry.kills}</span>
-        <span style="font-size: 10px; font-weight: 700; color: rgba(154, 220, 240, 0.5);">/${entry.deaths}</span>
+        <span class="leaderboard-kills">${entry.kills}</span>
+        <span class="leaderboard-deaths">/${entry.deaths}</span>
       `;
       container.appendChild(card);
     });
@@ -92,15 +77,7 @@ export class HudManager {
     if (!this.killFeed) return;
 
     const item = document.createElement('div');
-    item.className = 'feed-item panel-soft';
-    item.style.cssText = `
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      font-size: 12px;
-      font-weight: 700;
-    `;
+    item.className = 'feed-item panel-soft kill-feed-item';
     item.innerHTML = `<span style="color: ${hsla(data.killerHue, 90, 72, 1)}">${data.killerName}</span> <span style="color: rgba(154, 220, 240, 0.6); font-weight: 600;">${data.verb || 'лопает'}</span> <span style="color: ${hsla(data.victimHue, 90, 72, 1)}">${data.victimName}</span> 💥`;
 
     this.killFeed.appendChild(item);
@@ -153,16 +130,12 @@ export class HudManager {
       this.gameoverLeaderboard.innerHTML = data.leaderboard
         .map(
           (pl: any, i: number) => `
-          <div style="display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 10px; ${
-            pl.id === myId
-              ? 'background: rgba(53, 224, 255, 0.15); border: 1px solid rgba(53, 224, 255, 0.4);'
-              : 'background: rgba(0, 0, 0, 0.3);'
-          }">
-            <span style="font-family: var(--font-disp); font-size: 13px; font-weight: 700; width: 18px; color: rgba(154, 220, 240, 0.6);">${i + 1}</span>
-            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${hsla(pl.hue, 90, 65, 1)}; box-shadow: 0 0 8px ${hsla(pl.hue, 90, 65, 0.8)};"></span>
-            <span style="flex: 1; text-align: left; font-size: 13px; font-weight: 800; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${pl.name}</span>
-            <span style="font-family: var(--font-disp); font-size: 15px; font-weight: 700; color: var(--color-soap-gold);">${pl.kills} фр.</span>
-            <span style="font-size: 11px; font-weight: 700; opacity: 0.5;">${pl.deaths} см.</span>
+          <div class="gameover-row ${pl.id === myId ? 'active' : ''}">
+            <span class="gameover-row-rank">${i + 1}</span>
+            <span class="gameover-row-dot" style="--dot-color: ${hsla(pl.hue, 90, 65, 1)};"></span>
+            <span class="gameover-row-name">${pl.name}</span>
+            <span class="gameover-row-kills">${pl.kills} фр.</span>
+            <span class="gameover-row-deaths">${pl.deaths} см.</span>
           </div>
         `
         )

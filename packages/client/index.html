@@ -16,14 +16,14 @@
     <div id="game-container"></div>
 
     <!-- Start / Menu Screen Overlay -->
-    <div id="join-modal" class="overlay" style="background: radial-gradient(circle at center, rgba(10, 36, 64, 0.85) 0%, rgba(6, 20, 38, 0.96) 100%);">
-      <div class="relative z-10 flex h-full flex-col items-center justify-center gap-6 px-4 py-6 text-center" style="max-width: 860px; width: 92%;">
-        <div class="panel-soft" style="padding: 6px 16px; font-size: 11px; font-weight: 800; letter-spacing: 0.2em; color: var(--color-foam); text-transform: uppercase;">
+    <div id="join-modal" class="overlay join-backdrop">
+      <div class="menu-content">
+        <div class="panel-soft menu-badge">
           МЫЛЬНАЯ АРЕНА РЕАЛЬНОГО ВРЕМЕНИ · УПРУГАЯ ФИЗИКА · ТОЛКАЕМЫЕ ПРЕПЯТСТВИЯ
         </div>
 
-        <div class="text-center">
-          <div style="margin-bottom: 8px; display: flex; justify-content: center;">
+        <div>
+          <div class="menu-logo-icon">
             <svg width="120" height="76" viewBox="0 0 120 76" class="floaty">
               <defs>
                 <radialGradient id="bt" cx="35%" cy="30%" r="80%">
@@ -40,23 +40,22 @@
               <circle cx="104" cy="24" r="3" fill="none" stroke="#ffe36e" stroke-width="1.5" />
             </svg>
           </div>
-          <h1 class="title-bubble floaty" style="font-size: 64px; line-height: 1; margin: 4px 0;">
+          <h1 class="title-bubble floaty menu-title">
             BUBBLE WARS
           </h1>
-          <p style="margin-top: 10px; font-size: 15px; font-weight: 700; color: var(--color-foam); max-width: 500px; margin-left: auto; margin-right: auto;">
+          <p class="menu-desc">
             Танки из мыльных пузырей. Упругая физика, радужные снаряды и громкие «чпок» — лопни соперников раньше, чем лопнут тебя!
           </p>
         </div>
 
-        <div style="display: flex; gap: 16px; width: 100%; max-width: 780px; flex-wrap: wrap;">
-          <div class="panel rise-in" style="flex: 1; min-width: 300px; padding: 24px; text-align: left;">
-            <div style="font-family: var(--font-disp); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; color: rgba(154, 220, 240, 0.7); text-transform: uppercase;">
+        <div class="menu-grid">
+          <div class="panel rise-in menu-card">
+            <div class="section-label">
               ПИЛОТ ПУЗЫРЯ
             </div>
             <input
               id="player-name-input"
-              class="name-input"
-              style="width: 100%; padding: 12px 16px; margin-top: 10px; font-size: 16px;"
+              class="name-input player-input-style"
               value="SoapWarrior"
               maxlength="14"
               placeholder="Ваш позывной"
@@ -64,8 +63,8 @@
               required
             />
 
-            <div style="margin-top: 14px;">
-              <div style="font-family: var(--font-disp); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; color: rgba(154, 220, 240, 0.7); text-transform: uppercase; margin-bottom: 6px;">
+            <div class="form-group">
+              <div class="section-label" style="margin-bottom: 6px;">
                 ЦВЕТ ПУЗЫРЯ
               </div>
               <div class="color-picker-row">
@@ -77,49 +76,48 @@
               </div>
             </div>
 
-            <div style="margin-top: 14px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <span style="font-family: var(--font-disp); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; color: rgba(154, 220, 240, 0.7); text-transform: uppercase;">
+            <div class="form-group">
+              <div class="form-header-row">
+                <span class="section-label">
                   СЕРВЕР
                 </span>
-                <span id="server-status-hint" style="font-size: 10px; font-weight: 700; color: var(--color-aqua);">авто</span>
+                <span id="server-status-hint" class="server-hint">авто</span>
               </div>
               <input
                 id="server-url-input"
-                class="name-input"
-                style="width: 100%; padding: 8px 12px; font-size: 13px; font-weight: 600; font-family: monospace;"
+                class="name-input server-input"
                 placeholder="ws://your-vps-ip:3000"
                 autocomplete="off"
               />
             </div>
 
-            <button id="btn-play" class="btn-bubble" style="width: 100%; padding: 14px; font-size: 20px; margin-top: 14px;">
+            <button id="btn-play" class="btn-bubble btn-full">
               В БОЙ
             </button>
-            <div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; color: rgba(154, 220, 240, 0.5);">
+            <div class="menu-card-footer">
               <span>Enter — быстрый старт</span>
-              <a href="/admin" target="_blank" style="color: var(--color-aqua); text-decoration: none; font-weight: 800;">⚙️ Админка</a>
+              <a href="/admin" target="_blank" class="admin-link">⚙️ Админка</a>
             </div>
           </div>
 
-          <div class="panel rise-in" style="flex: 1; min-width: 300px; padding: 24px; text-align: left; animation-delay: 0.1s;">
-            <div style="font-family: var(--font-disp); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; color: rgba(154, 220, 240, 0.7); text-transform: uppercase;">
+          <div class="panel rise-in menu-card delayed">
+            <div class="section-label">
               УПРАВЛЕНИЕ
             </div>
-            <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; font-weight: 700; color: rgba(216, 243, 255, 0.85);">
-              <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="controls-list">
+              <div class="control-item">
                 <span class="keycap">W</span><span class="keycap">A</span><span class="keycap">S</span><span class="keycap">D</span>
                 <span>движение танка (с инерцией)</span>
               </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
+              <div class="control-item">
                 <span class="keycap">Мышь</span>
                 <span>поворот башни</span>
               </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
+              <div class="control-item">
                 <span class="keycap">ЛКМ</span><span class="keycap">Space</span>
                 <span>огонь мыльными снарядами</span>
               </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
+              <div class="control-item">
                 <span class="keycap">M</span>
                 <span>вкл/выкл звук</span>
               </div>
@@ -132,36 +130,36 @@
     <!-- In-Game HUD -->
     <div id="game-hud" class="hud-container hidden">
       <!-- Top Bar: Logo Badge, Ping, Mute Button -->
-      <div style="position: absolute; top: 12px; left: 14px; right: 14px; display: flex; justify-content: space-between; align-items: center; z-index: 20; pointer-events: none;">
-        <div class="panel-soft" style="display: flex; align-items: center; gap: 8px; padding: 6px 14px;">
+      <div class="hud-top-bar">
+        <div class="panel-soft hud-brand-badge">
           <svg width="22" height="22" viewBox="0 0 26 26">
             <circle cx="10" cy="14" r="8" fill="none" stroke="#35e0ff" stroke-width="2" />
             <circle cx="7.4" cy="11.4" r="2" fill="rgba(255,255,255,0.85)" />
             <circle cx="19" cy="8" r="4.5" fill="none" stroke="#ff6ec7" stroke-width="1.8" />
             <circle cx="17.6" cy="6.6" r="1.1" fill="rgba(255,255,255,0.85)" />
           </svg>
-          <span style="font-family: var(--font-disp); font-size: 13px; font-weight: 700; letter-spacing: 0.12em; color: var(--color-foam);">BUBBLE WARS</span>
-          <span id="hud-ping" style="font-size: 10px; font-weight: 700; color: rgba(154, 220, 240, 0.6); margin-left: 4px;">0 ms</span>
+          <span class="hud-brand-title">BUBBLE WARS</span>
+          <span id="hud-ping" class="hud-ping-text">0 ms</span>
         </div>
 
-        <div style="pointer-events: auto; display: flex; gap: 8px;">
+        <div class="hud-actions">
           <button id="btn-mute" class="btn-icon" title="Звук (M)">🔊</button>
         </div>
       </div>
 
       <!-- Top Center: Live Leaderboard Badges -->
-      <div id="leaderboard-container" style="position: absolute; top: 56px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 20; pointer-events: none;">
+      <div id="leaderboard-container" class="hud-leaderboard-bar">
         <!-- Filled dynamically -->
       </div>
 
       <!-- Top Right: Kill Feed -->
-      <div id="kill-feed" style="position: absolute; top: 110px; right: 14px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; z-index: 20; pointer-events: none;"></div>
+      <div id="kill-feed" class="hud-kill-feed"></div>
 
       <!-- Bottom Left: Player Bubble Hull & HP -->
-      <div style="position: absolute; bottom: 16px; left: 16px; width: 280px; z-index: 20; pointer-events: none;">
-        <div class="panel" style="padding: 12px 16px;">
-          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
-            <span style="font-family: var(--font-disp); font-size: 11px; font-weight: 700; letter-spacing: 0.18em; color: rgba(154, 220, 240, 0.8);">
+      <div class="hud-player-hull-panel">
+        <div class="panel hud-hull-card">
+          <div class="hud-hull-header">
+            <span class="section-label" style="letter-spacing: 0.18em; color: rgba(154, 220, 240, 0.8);">
               КОРПУС-ПУЗЫРЬ
             </span>
             <span id="hud-health-text" style="font-family: var(--font-disp); font-size: 14px; font-weight: 700; color: #ffffff;">
@@ -169,11 +167,11 @@
             </span>
           </div>
 
-          <div style="height: 16px; border-radius: 999px; overflow: hidden; background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 255, 255, 0.12);">
+          <div class="hud-hp-track">
             <div id="hud-health-fill" class="hp-fill" style="height: 100%; width: 100%; border-radius: 999px;"></div>
           </div>
 
-          <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; font-weight: 700; color: rgba(154, 220, 240, 0.7);">
+          <div class="hud-stats-row">
             <span>Фраги: <strong id="hud-kills" style="color: #fff;">0</strong> / <span id="hud-frag-limit" style="color: var(--color-soap-gold);">10</span></span>
             <span>Очки: <strong id="hud-score" style="color: var(--color-soap-gold);">0</strong></span>
             <span id="hud-player-name" style="color: var(--color-aqua);">Player</span>
@@ -182,7 +180,7 @@
       </div>
 
       <!-- Bottom Right: Controls Hint -->
-      <div style="position: absolute; bottom: 16px; right: 16px; display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.06); background: rgba(0, 0, 0, 0.3); font-size: 11px; font-weight: 700; color: rgba(154, 220, 240, 0.6); z-index: 10; pointer-events: none;">
+      <div class="hud-controls-hint">
         <span style="display: flex; gap: 3px;">
           <span class="keycap">W</span><span class="keycap">A</span><span class="keycap">S</span><span class="keycap">D</span>
         </span>
@@ -193,14 +191,14 @@
 
       <!-- Death / Respawn Overlay -->
       <div id="death-modal" class="overlay hidden">
-        <div class="panel rise-in" style="width: 400px; padding: 32px; text-align: center; pointer-events: auto;">
-          <div style="font-family: var(--font-disp); font-size: 32px; font-weight: 700; color: var(--color-danger); text-shadow: 0 0 22px rgba(255, 84, 112, 0.6);">
+        <div class="panel rise-in death-card">
+          <div class="death-title">
             Ваш пузырь лопнул!
           </div>
-          <div style="margin-top: 16px; font-size: 14px; font-weight: 700; color: rgba(154, 220, 240, 0.75);">
+          <div class="death-score-label">
             Набранные очки: <strong id="death-final-score" style="color: var(--color-soap-gold); font-size: 20px;">0</strong>
           </div>
-          <button id="btn-respawn" class="btn-bubble" style="width: 100%; padding: 14px; font-size: 20px; margin-top: 20px;">
+          <button id="btn-respawn" class="btn-bubble btn-full">
             ВОЗРОДИТЬСЯ
           </button>
         </div>
@@ -208,24 +206,24 @@
 
       <!-- Match Game Over / Victory Overlay -->
       <div id="gameover-modal" class="overlay hidden">
-        <div class="panel rise-in" style="width: 480px; max-width: 94vw; padding: 32px; text-align: center; pointer-events: auto;">
-          <div style="display: flex; justify-content: center; margin-bottom: 8px;">
-            <svg id="gameover-crown" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ffe36e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 12px #ffe36e);">
+        <div class="panel rise-in gameover-card">
+          <div class="gameover-crown-wrap">
+            <svg id="gameover-crown" class="gameover-crown-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ffe36e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
             </svg>
           </div>
-          <div id="gameover-title" style="font-family: var(--font-disp); font-size: 42px; font-weight: 700; color: #fff; text-shadow: 0 0 24px rgba(53, 224, 255, 0.7);">
+          <div id="gameover-title" class="gameover-title">
             ПОБЕДА
           </div>
-          <div id="gameover-subtitle" style="margin-top: 8px; font-size: 14px; font-weight: 700; color: rgba(154, 220, 240, 0.8);">
+          <div id="gameover-subtitle" class="gameover-subtitle">
             Победил игрок. Реванш?
           </div>
 
-          <div id="gameover-leaderboard" style="margin-top: 20px; display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto;">
+          <div id="gameover-leaderboard" class="gameover-leaderboard-list">
             <!-- Filled dynamically -->
           </div>
 
-          <div style="margin-top: 24px; display: flex; gap: 12px;">
+          <div class="gameover-actions-row">
             <button id="btn-rematch" class="btn-bubble" style="flex: 1; padding: 14px; font-size: 18px;">
               РЕВАНШ
             </button>
