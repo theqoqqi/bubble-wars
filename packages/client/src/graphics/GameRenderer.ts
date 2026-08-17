@@ -1,6 +1,7 @@
 import { GAME_CONFIG } from '@bubble-wars/shared';
 import { ClientObstacle, ClientProjectile, ClientTankState } from '../types.js';
 import { ParticleSystem } from './ParticleSystem.js';
+import { CLIENT_CONFIG } from '../config.js';
 import {
   AmbientBubble,
   createAmbient,
@@ -42,7 +43,7 @@ export class GameRenderer {
   }
 
   public resizeCanvas(): void {
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const dpr = Math.min(CLIENT_CONFIG.RENDER.MAX_DPR, window.devicePixelRatio || 1);
     this.customCanvas.width = Math.floor(window.innerWidth * dpr);
     this.customCanvas.height = Math.floor(window.innerHeight * dpr);
   }
@@ -59,7 +60,7 @@ export class GameRenderer {
   ): void {
     if (!this.ctx) return;
     const { ctx } = this;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const dpr = Math.min(CLIENT_CONFIG.RENDER.MAX_DPR, window.devicePixelRatio || 1);
     const viewW = window.innerWidth;
     const viewH = window.innerHeight;
 

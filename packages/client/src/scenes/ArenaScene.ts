@@ -13,6 +13,7 @@ import { InputManager } from '../input/InputManager.js';
 import { ParticleSystem } from '../graphics/ParticleSystem.js';
 import { HudManager } from '../ui/HudManager.js';
 import { GameRenderer } from '../graphics/GameRenderer.js';
+import { CLIENT_CONFIG } from '../config.js';
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 
@@ -83,12 +84,19 @@ export class ArenaScene extends Phaser.Scene {
 
     // 2. Interpolate Tanks
     this.tanks.forEach((tank) => {
-      tank.x += (tank.targetX - tank.x) * 0.45;
-      tank.y += (tank.targetY - tank.y) * 0.45;
+      tank.x += (tank.targetX - tank.x) * CLIENT_CONFIG.INTERPOLATION.TANK;
+      tank.y += (tank.targetY - tank.y) * CLIENT_CONFIG.INTERPOLATION.TANK;
 
-      tank.flash = Math.max(0, tank.flash - dt * 3.2);
-      tank.wobbleV += (-tank.wobbleS * 170 - tank.wobbleV * 9) * dt;
-      tank.wobbleS = clamp(tank.wobbleS + tank.wobbleV * dt, -0.45, 0.45);
+      tank.flash = Math.max(0, tank.flash - dt * CLIENT_CONFIG.ANIMATION.FLASH_DECAY_TANK);
+      tank.wobbleV +=
+        (-tank.wobbleS * CLIENT_CONFIG.ANIMATION.WOBBLE_SPRING -
+          tank.wobbleV * CLIENT_CONFIG.ANIMATION.WOBBLE_DAMPING) *
+        dt;
+      tank.wobbleS = clamp(
+        tank.wobbleS + tank.wobbleV * dt,
+        -CLIENT_CONFIG.ANIMATION.WOBBLE_MAX,
+        CLIENT_CONFIG.ANIMATION.WOBBLE_MAX
+      );
       if (tank.recoil > 0) {
         tank.recoil = Math.max(0, tank.recoil - GAME_CONFIG.TANK.RECOIL_RECOVERY_SPEED);
       }
@@ -96,25 +104,25 @@ export class ArenaScene extends Phaser.Scene {
 
     // 3. Interpolate Migrating Obstacles
     this.clientObstacles.forEach((o) => {
-      o.x += (o.targetX - o.x) * 0.4;
-      o.y += (o.targetY - o.y) * 0.4;
+      o.x += (o.targetX - o.x) * CLIENT_CONFIG.INTERPOLATION.OBSTACLE;
+      o.y += (o.targetY - o.y) * CLIENT_CONFIG.INTERPOLATION.OBSTACLE;
     });
 
     // 4. Interpolate Projectiles & Trail History
     this.projectiles.forEach((proj) => {
-      proj.x += (proj.targetX - proj.x) * 0.6;
-      proj.y += (proj.targetY - proj.y) * 0.6;
+      proj.x += (proj.targetX - proj.x) * CLIENT_CONFIG.INTERPOLATION.PROJECTILE;
+      proj.y += (proj.targetY - proj.y) * CLIENT_CONFIG.INTERPOLATION.PROJECTILE;
 
       proj.trail.push({ x: proj.x, y: proj.y });
-      if (proj.trail.length > 5) proj.trail.shift();
+      if (proj.trail.length > CLIENT_CONFIG.ANIMATION.TRAIL_MAX_LENGTH) proj.trail.shift();
     });
 
     // 5. Update Particle Simulation
     this.particleSystem.update(dt);
 
     // 6. Screen shake and flash decay
-    this.shake = Math.max(0, this.shake - dt * 28);
-    this.playerFlash = Math.max(0, this.playerFlash - dt * 2.0);
+    this.shake = Math.max(0, this.shake - dt * CLIENT_CONFIG.ANIMATION.SHAKE_DECAY);
+    this.playerFlash = Math.max(0, this.playerFlash - dt * CLIENT_CONFIG.ANIMATION.FLASH_DECAY_PLAYER);
 
     // 7. Render Everything on Custom Canvas
     this.gameRenderer.render(
@@ -216,7 +224,7 @@ export class ArenaScene extends Phaser.Scene {
         if (snap.isDead && this.isPlayerAlive) {
           this.isPlayerAlive = false;
           this.playerFlash = 1.0;
-          this.shake = Math.min(18, this.shake + 12);
+          this.shake = Math.min(CLIENT_CONFIG.SHAKE.MAX, this.shake + CLIENT_CONFIG.SHAKE.HIT);
           this.hudManager.showDeathModal(snap.score);
         } else if (!snap.isDead && !this.isPlayerAlive) {
           this.isPlayerAlive = true;
@@ -286,7 +294,7 @@ export class ArenaScene extends Phaser.Scene {
     soundFx.playBubblePop(event.radius, event.isKill);
 
     if (event.isKill) {
-      this.shake = Math.min(18, this.shake + 14);
+      this.shake = Math.min(CLIENT_CONFIG.SHAKE.MAX, this.shake + CLIENT_CONFIG.SHAKE.KILL_POP);
     }
 
     this.particleSystem.emitPop(event.x, event.y, event.radius, event.hue, event.isKill);

@@ -1,5 +1,6 @@
 import { GameOverMessage, KillEventMessage, LeaderboardEntry, TankSnapshot } from '@bubble-wars/shared';
 import { hsla } from '../graphics/render.js';
+import { CLIENT_CONFIG } from '../config.js';
 
 export class HudManager {
   private hpFill = document.getElementById('hud-health-fill');
@@ -105,7 +106,7 @@ export class HudManager {
     this.killFeed.appendChild(item);
     setTimeout(() => {
       if (item.parentNode) item.parentNode.removeChild(item);
-    }, 4000);
+    }, CLIENT_CONFIG.HUD.KILL_FEED_TIMEOUT_MS);
   }
 
   public showDeathModal(score: number): void {
