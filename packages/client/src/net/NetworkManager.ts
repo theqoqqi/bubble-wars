@@ -1,228 +1,228 @@
 import {
-  BubblePopEvent,
-  ClientMessage,
-  EventBus,
-  GameOverMessage,
-  KillEventMessage,
-  PlayerInput,
-  ServerMessage,
-  TankColor,
-  WelcomeMessage,
-  WorldStateMessage,
+    BubblePopEvent,
+    ClientMessage,
+    EventBus,
+    GameOverMessage,
+    KillEventMessage,
+    PlayerInput,
+    ServerMessage,
+    TankColor,
+    WelcomeMessage,
+    WorldStateMessage,
 } from '@bubble-wars/shared';
 
 export interface NetworkEvents {
-  welcome: WelcomeMessage;
-  world_state: WorldStateMessage;
-  bubble_pop: BubblePopEvent;
-  kill: KillEventMessage;
-  game_over: GameOverMessage;
-  disconnect: void;
+    welcome: WelcomeMessage;
+    world_state: WorldStateMessage;
+    bubble_pop: BubblePopEvent;
+    kill: KillEventMessage;
+    game_over: GameOverMessage;
+    disconnect: void;
 }
 
 export class NetworkManager extends EventBus<NetworkEvents> {
-  private ws: WebSocket | null = null;
-  public serverUrl: string;
-  public playerId: string | null = null;
-  public latency: number = 0;
-  private pingInterval: number | null = null;
+    private ws: WebSocket | null = null;
+    public serverUrl: string;
+    public playerId: string | null = null;
+    public latency: number = 0;
+    private pingInterval: number | null = null;
 
-  constructor() {
-    super();
-    this.serverUrl = this.resolveServerUrl();
-  }
-
-  public setServerUrl(url: string): void {
-    let clean = url.trim();
-    if (!clean.startsWith('ws://') && !clean.startsWith('wss://')) {
-      const isHttps = window.location.protocol === 'https:';
-      clean = `${isHttps ? 'wss://' : 'ws://'}${clean}`;
+    constructor() {
+        super();
+        this.serverUrl = this.resolveServerUrl();
     }
-    this.serverUrl = clean;
-    localStorage.setItem('bubble_server_url', clean);
-  }
 
-  public resolveServerUrl(): string {
-    // 1. URL Query param override (e.g. ?server=ws://123.45.67.89:3000 or ?server=wss://game.domain.com)
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const queryServer = urlParams.get('server');
-      if (queryServer) {
-        let clean = queryServer.trim();
+    public setServerUrl(url: string): void {
+        let clean = url.trim();
         if (!clean.startsWith('ws://') && !clean.startsWith('wss://')) {
-          clean = `${window.location.protocol === 'https:' ? 'wss://' : 'ws://'}${clean}`;
+            const isHttps = window.location.protocol === 'https:';
+            clean = `${isHttps ? 'wss://' : 'ws://'}${clean}`;
         }
+        this.serverUrl = clean;
         localStorage.setItem('bubble_server_url', clean);
-        return clean;
-      }
-    } catch {
-      /* ignore */
     }
 
-    // 2. LocalStorage override
-    try {
-      const saved = localStorage.getItem('bubble_server_url');
-      if (saved) return saved;
-    } catch {
-      /* ignore */
-    }
-
-    // 3. Vite environment variable (VITE_WS_URL)
-    const envUrl = (import.meta as any).env?.VITE_WS_URL;
-    if (envUrl && typeof envUrl === 'string') {
-      return envUrl.trim();
-    }
-
-    // 4. Smart host / protocol fallback
-    const isHttps = window.location.protocol === 'https:';
-    const proto = isHttps ? 'wss:' : 'ws:';
-    const host = window.location.hostname || 'localhost';
-
-    // If client is served from the same server / port or reverse proxy
-    if (window.location.port === '3000' || (isHttps && !window.location.port)) {
-      return `${proto}//${window.location.host}`;
-    }
-
-    return `${proto}//${host}:3000`;
-  }
-
-  public connect(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        console.log('[Network] Connecting to Bubble Wars Server:', this.serverUrl);
-        this.ws = new WebSocket(this.serverUrl);
-
-        this.ws.onopen = () => {
-          console.log('[Network] Successfully connected to:', this.serverUrl);
-          this.startPingLoop();
-          resolve();
-        };
-
-        this.ws.onmessage = (event) => {
-          this.handleMessage(event.data);
-        };
-
-        this.ws.onclose = () => {
-          console.warn('[Network] Disconnected from server');
-          this.stopPingLoop();
-          this.emit('disconnect');
-        };
-
-        this.ws.onerror = (err) => {
-          console.error('[Network] WebSocket error on', this.serverUrl, err);
-          reject(err);
-        };
-      } catch (e) {
-        reject(e);
-      }
-    });
-  }
-
-  public disconnect(): void {
-    this.stopPingLoop();
-    if (this.ws) {
-      try {
-        this.ws.close();
-      } catch {
-        /* ignore */
-      }
-      this.ws = null;
-    }
-    this.playerId = null;
-  }
-
-  private handleMessage(dataStr: string): void {
-    try {
-      const msg: ServerMessage = JSON.parse(dataStr);
-
-      switch (msg.type) {
-        case 'welcome': {
-          this.playerId = msg.playerId;
-          this.emit('welcome', msg);
-          break;
+    public resolveServerUrl(): string {
+        // 1. URL Query param override (e.g. ?server=ws://123.45.67.89:3000 or ?server=wss://game.domain.com)
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryServer = urlParams.get('server');
+            if (queryServer) {
+                let clean = queryServer.trim();
+                if (!clean.startsWith('ws://') && !clean.startsWith('wss://')) {
+                    clean = `${window.location.protocol === 'https:' ? 'wss://' : 'ws://'}${clean}`;
+                }
+                localStorage.setItem('bubble_server_url', clean);
+                return clean;
+            }
+        } catch {
+            /* ignore */
         }
 
-        case 'world_state': {
-          this.emit('world_state', msg);
-          break;
+        // 2. LocalStorage override
+        try {
+            const saved = localStorage.getItem('bubble_server_url');
+            if (saved) return saved;
+        } catch {
+            /* ignore */
         }
 
-        case 'bubble_pop': {
-          this.emit('bubble_pop', msg.event);
-          break;
+        // 3. Vite environment variable (VITE_WS_URL)
+        const envUrl = (import.meta as any).env?.VITE_WS_URL;
+        if (envUrl && typeof envUrl === 'string') {
+            return envUrl.trim();
         }
 
-        case 'kill': {
-          this.emit('kill', msg);
-          break;
+        // 4. Smart host / protocol fallback
+        const isHttps = window.location.protocol === 'https:';
+        const proto = isHttps ? 'wss:' : 'ws:';
+        const host = window.location.hostname || 'localhost';
+
+        // If client is served from the same server / port or reverse proxy
+        if (window.location.port === '3000' || (isHttps && !window.location.port)) {
+            return `${proto}//${window.location.host}`;
         }
 
-        case 'game_over': {
-          this.emit('game_over', msg);
-          break;
-        }
-
-        case 'pong': {
-          this.latency = Math.max(0, Math.round((Date.now() - msg.clientTime) / 2));
-          break;
-        }
-      }
-    } catch (err) {
-      console.error('[Network] Error parsing message:', err);
+        return `${proto}//${host}:3000`;
     }
-  }
 
-  public join(name: string, color: TankColor): void {
-    this.sendMessage({
-      type: 'join',
-      name,
-      color,
-    });
-  }
+    public connect(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            try {
+                console.log('[Network] Connecting to Bubble Wars Server:', this.serverUrl);
+                this.ws = new WebSocket(this.serverUrl);
 
-  public sendInput(input: PlayerInput): void {
-    this.sendMessage({
-      type: 'input',
-      input,
-    });
-  }
+                this.ws.onopen = () => {
+                    console.log('[Network] Successfully connected to:', this.serverUrl);
+                    this.startPingLoop();
+                    resolve();
+                };
 
-  public respawn(): void {
-    this.sendMessage({
-      type: 'respawn',
-    });
-  }
+                this.ws.onmessage = (event) => {
+                    this.handleMessage(event.data);
+                };
 
-  public rematch(): void {
-    this.sendMessage({
-      type: 'rematch',
-    });
-  }
+                this.ws.onclose = () => {
+                    console.warn('[Network] Disconnected from server');
+                    this.stopPingLoop();
+                    this.emit('disconnect');
+                };
 
-  private sendMessage(msg: ClientMessage): void {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(msg));
-    }
-  }
-
-  private startPingLoop(): void {
-    this.stopPingLoop();
-    this.pingInterval = window.setInterval(() => {
-      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.sendMessage({
-          type: 'ping',
-          clientTime: Date.now(),
+                this.ws.onerror = (err) => {
+                    console.error('[Network] WebSocket error on', this.serverUrl, err);
+                    reject(err);
+                };
+            } catch (e) {
+                reject(e);
+            }
         });
-      }
-    }, 1000);
-  }
-
-  private stopPingLoop(): void {
-    if (this.pingInterval !== null) {
-      clearInterval(this.pingInterval);
-      this.pingInterval = null;
     }
-  }
+
+    public disconnect(): void {
+        this.stopPingLoop();
+        if (this.ws) {
+            try {
+                this.ws.close();
+            } catch {
+                /* ignore */
+            }
+            this.ws = null;
+        }
+        this.playerId = null;
+    }
+
+    private handleMessage(dataStr: string): void {
+        try {
+            const msg: ServerMessage = JSON.parse(dataStr);
+
+            switch (msg.type) {
+                case 'welcome': {
+                    this.playerId = msg.playerId;
+                    this.emit('welcome', msg);
+                    break;
+                }
+
+                case 'world_state': {
+                    this.emit('world_state', msg);
+                    break;
+                }
+
+                case 'bubble_pop': {
+                    this.emit('bubble_pop', msg.event);
+                    break;
+                }
+
+                case 'kill': {
+                    this.emit('kill', msg);
+                    break;
+                }
+
+                case 'game_over': {
+                    this.emit('game_over', msg);
+                    break;
+                }
+
+                case 'pong': {
+                    this.latency = Math.max(0, Math.round((Date.now() - msg.clientTime) / 2));
+                    break;
+                }
+            }
+        } catch (err) {
+            console.error('[Network] Error parsing message:', err);
+        }
+    }
+
+    public join(name: string, color: TankColor): void {
+        this.sendMessage({
+            type: 'join',
+            name,
+            color,
+        });
+    }
+
+    public sendInput(input: PlayerInput): void {
+        this.sendMessage({
+            type: 'input',
+            input,
+        });
+    }
+
+    public respawn(): void {
+        this.sendMessage({
+            type: 'respawn',
+        });
+    }
+
+    public rematch(): void {
+        this.sendMessage({
+            type: 'rematch',
+        });
+    }
+
+    private sendMessage(msg: ClientMessage): void {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify(msg));
+        }
+    }
+
+    private startPingLoop(): void {
+        this.stopPingLoop();
+        this.pingInterval = window.setInterval(() => {
+            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                this.sendMessage({
+                    type: 'ping',
+                    clientTime: Date.now(),
+                });
+            }
+        }, 1000);
+    }
+
+    private stopPingLoop(): void {
+        if (this.pingInterval !== null) {
+            clearInterval(this.pingInterval);
+            this.pingInterval = null;
+        }
+    }
 }
 
 export const networkManager = new NetworkManager();

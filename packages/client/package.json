@@ -1,16 +1,16 @@
 {
-  "name": "@bubble-wars/client",
-  "version": "1.0.0",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@bubble-wars/shared": "*"
-  },
-  "devDependencies": {
-    "typescript": "^5.7.3",
-    "vite": "^6.1.0"
-  }
+    "name": "@bubble-wars/client",
+    "version": "1.0.0",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc && vite build",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "@bubble-wars/shared": "*"
+    },
+    "devDependencies": {
+        "typescript": "^5.7.3",
+        "vite": "^6.1.0"
+    }
 }

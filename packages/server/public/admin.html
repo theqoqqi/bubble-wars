@@ -1,403 +1,475 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bubble Wars — Панель администратора</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --font-disp: 'Comfortaa', 'Nunito', sans-serif;
-      --font-body: 'Nunito', sans-serif;
-      --bg: #061426;
-      --panel: linear-gradient(160deg, rgba(16, 48, 78, 0.88), rgba(7, 22, 40, 0.95));
-      --panel-soft: rgba(8, 26, 46, 0.8);
-      --border: rgba(101, 216, 255, 0.22);
-      --aqua: #35e0ff;
-      --foam: #9adcf0;
-      --gold: #ffe36e;
-      --pink: #ff6ec7;
-      --danger: #ff5470;
-      --lime: #39ff14;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: radial-gradient(circle at 50% 10%, #0d2e50 0%, var(--bg) 100%);
-      color: #d8f3ff;
-      font-family: var(--font-body);
-      min-height: 100vh;
-      padding: 24px;
-      -webkit-font-smoothing: antialiased;
-    }
-    .container { max-width: 1050px; margin: 0 auto; }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .title {
-      font-family: var(--font-disp);
-      font-size: 28px;
-      font-weight: 700;
-      color: #fff;
-      text-shadow: 0 0 16px rgba(53, 224, 255, 0.5);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .badge {
-      font-size: 11px;
-      padding: 4px 10px;
-      background: rgba(53, 224, 255, 0.15);
-      border: 1px solid var(--aqua);
-      border-radius: 999px;
-      color: var(--aqua);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-    .btn-link {
-      color: var(--foam);
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 13px;
-      padding: 8px 16px;
-      background: var(--panel-soft);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      transition: 0.15s;
-    }
-    .btn-link:hover { border-color: var(--aqua); color: #fff; transform: translateY(-1px); }
-    
-    .grid-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-    .stat-card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 16px 20px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-    }
-    .stat-val {
-      font-family: var(--font-disp);
-      font-size: 32px;
-      font-weight: 700;
-      color: #fff;
-      margin-top: 4px;
-    }
-    .stat-label {
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--foam);
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      opacity: 0.8;
-    }
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Bubble Wars — Панель администратора</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Nunito:wght@600;700;800;900&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            :root {
+                --font-disp: 'Comfortaa', 'Nunito', sans-serif;
+                --font-body: 'Nunito', sans-serif;
+                --bg: #061426;
+                --panel: linear-gradient(160deg, rgba(16, 48, 78, 0.88), rgba(7, 22, 40, 0.95));
+                --panel-soft: rgba(8, 26, 46, 0.8);
+                --border: rgba(101, 216, 255, 0.22);
+                --aqua: #35e0ff;
+                --foam: #9adcf0;
+                --gold: #ffe36e;
+                --pink: #ff6ec7;
+                --danger: #ff5470;
+                --lime: #39ff14;
+            }
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            body {
+                background: radial-gradient(circle at 50% 10%, #0d2e50 0%, var(--bg) 100%);
+                color: #d8f3ff;
+                font-family: var(--font-body);
+                min-height: 100vh;
+                padding: 24px;
+                -webkit-font-smoothing: antialiased;
+            }
+            .container {
+                max-width: 1050px;
+                margin: 0 auto;
+            }
+            .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 24px;
+                padding-bottom: 16px;
+                border-bottom: 1px solid var(--border);
+            }
+            .title {
+                font-family: var(--font-disp);
+                font-size: 28px;
+                font-weight: 700;
+                color: #fff;
+                text-shadow: 0 0 16px rgba(53, 224, 255, 0.5);
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .badge {
+                font-size: 11px;
+                padding: 4px 10px;
+                background: rgba(53, 224, 255, 0.15);
+                border: 1px solid var(--aqua);
+                border-radius: 999px;
+                color: var(--aqua);
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+            }
+            .btn-link {
+                color: var(--foam);
+                text-decoration: none;
+                font-weight: 700;
+                font-size: 13px;
+                padding: 8px 16px;
+                background: var(--panel-soft);
+                border: 1px solid var(--border);
+                border-radius: 999px;
+                transition: 0.15s;
+            }
+            .btn-link:hover {
+                border-color: var(--aqua);
+                color: #fff;
+                transform: translateY(-1px);
+            }
 
-    .main-grid {
-      display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 24px;
-    }
-    @media (max-width: 860px) {
-      .main-grid { grid-template-columns: 1fr; }
-    }
+            .grid-stats {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 16px;
+                margin-bottom: 24px;
+            }
+            .stat-card {
+                background: var(--panel);
+                border: 1px solid var(--border);
+                border-radius: 18px;
+                padding: 16px 20px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            }
+            .stat-val {
+                font-family: var(--font-disp);
+                font-size: 32px;
+                font-weight: 700;
+                color: #fff;
+                margin-top: 4px;
+            }
+            .stat-label {
+                font-size: 11px;
+                font-weight: 800;
+                color: var(--foam);
+                letter-spacing: 0.15em;
+                text-transform: uppercase;
+                opacity: 0.8;
+            }
 
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-    }
-    .panel-title {
-      font-family: var(--font-disp);
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      color: var(--foam);
-      text-transform: uppercase;
-      margin-bottom: 18px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+            .main-grid {
+                display: grid;
+                grid-template-columns: 360px 1fr;
+                gap: 24px;
+            }
+            @media (max-width: 860px) {
+                .main-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
 
-    .form-group { margin-bottom: 20px; }
-    .form-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-      font-weight: 700;
-      color: #d8f3ff;
-      margin-bottom: 8px;
-    }
-    .range-wrap { display: flex; align-items: center; gap: 12px; }
-    input[type=range] {
-      flex: 1;
-      accent-color: var(--aqua);
-      cursor: pointer;
-    }
-    .input-num {
-      width: 65px;
-      padding: 8px 10px;
-      background: rgba(6, 24, 44, 0.8);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: #fff;
-      font-family: var(--font-disp);
-      font-weight: 700;
-      font-size: 16px;
-      text-align: center;
-      outline: none;
-    }
-    .input-num:focus { border-color: var(--aqua); }
+            .panel {
+                background: var(--panel);
+                border: 1px solid var(--border);
+                border-radius: 20px;
+                padding: 24px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            }
+            .panel-title {
+                font-family: var(--font-disp);
+                font-size: 16px;
+                font-weight: 700;
+                letter-spacing: 0.1em;
+                color: var(--foam);
+                text-transform: uppercase;
+                margin-bottom: 18px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
 
-    .btn {
-      width: 100%;
-      padding: 12px;
-      border-radius: 999px;
-      font-family: var(--font-disp);
-      font-weight: 700;
-      font-size: 14px;
-      letter-spacing: 0.05em;
-      cursor: pointer;
-      border: none;
-      transition: 0.12s;
-    }
-    .btn-primary {
-      background: linear-gradient(180deg, #7ceaff 0%, #2fc6ee 55%, #17a3d3 100%);
-      color: #04222e;
-      box-shadow: 0 6px 18px rgba(53, 224, 255, 0.35);
-    }
-    .btn-primary:hover { transform: translateY(-2px); filter: brightness(1.1); }
-    .btn-danger {
-      background: rgba(255, 84, 112, 0.15);
-      border: 1px solid rgba(255, 84, 112, 0.4);
-      color: var(--danger);
-      margin-top: 12px;
-    }
-    .btn-danger:hover { background: rgba(255, 84, 112, 0.28); color: #fff; }
+            .form-group {
+                margin-bottom: 20px;
+            }
+            .form-label {
+                display: flex;
+                justify-content: space-between;
+                font-size: 13px;
+                font-weight: 700;
+                color: #d8f3ff;
+                margin-bottom: 8px;
+            }
+            .range-wrap {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            input[type='range'] {
+                flex: 1;
+                accent-color: var(--aqua);
+                cursor: pointer;
+            }
+            .input-num {
+                width: 65px;
+                padding: 8px 10px;
+                background: rgba(6, 24, 44, 0.8);
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                color: #fff;
+                font-family: var(--font-disp);
+                font-weight: 700;
+                font-size: 16px;
+                text-align: center;
+                outline: none;
+            }
+            .input-num:focus {
+                border-color: var(--aqua);
+            }
 
-    /* Players Table */
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th {
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--foam);
-      padding: 10px 12px;
-      border-bottom: 1px solid rgba(101, 216, 255, 0.15);
-      opacity: 0.7;
-    }
-    td {
-      padding: 12px;
-      font-size: 13px;
-      font-weight: 700;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .tank-row:hover td { background: rgba(255,255,255,0.02); }
-    .dot {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-right: 8px;
-    }
-    .btn-kick {
-      padding: 4px 10px;
-      background: rgba(255, 84, 112, 0.2);
-      border: 1px solid rgba(255, 84, 112, 0.4);
-      border-radius: 6px;
-      color: var(--danger);
-      font-size: 11px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: 0.1s;
-    }
-    .btn-kick:hover { background: var(--danger); color: #fff; }
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: var(--panel);
-      border: 1px solid var(--aqua);
-      color: #fff;
-      padding: 12px 20px;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      font-weight: 700;
-      display: none;
-      animation: fadeIn 0.2s;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <header class="header">
-      <div class="title">
-        <span>🫧 Bubble Wars</span>
-        <span class="badge">Админка</span>
-      </div>
-      <div style="display: flex; gap: 10px;">
-        <a href="/" class="btn-link" target="_blank">🎮 Открыть игру</a>
-      </div>
-    </header>
+            .btn {
+                width: 100%;
+                padding: 12px;
+                border-radius: 999px;
+                font-family: var(--font-disp);
+                font-weight: 700;
+                font-size: 14px;
+                letter-spacing: 0.05em;
+                cursor: pointer;
+                border: none;
+                transition: 0.12s;
+            }
+            .btn-primary {
+                background: linear-gradient(180deg, #7ceaff 0%, #2fc6ee 55%, #17a3d3 100%);
+                color: #04222e;
+                box-shadow: 0 6px 18px rgba(53, 224, 255, 0.35);
+            }
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                filter: brightness(1.1);
+            }
+            .btn-danger {
+                background: rgba(255, 84, 112, 0.15);
+                border: 1px solid rgba(255, 84, 112, 0.4);
+                color: var(--danger);
+                margin-top: 12px;
+            }
+            .btn-danger:hover {
+                background: rgba(255, 84, 112, 0.28);
+                color: #fff;
+            }
 
-    <div class="grid-stats">
-      <div class="stat-card">
-        <div class="stat-label">Игроков онлайн</div>
-        <div id="stat-players" class="stat-val" style="color: var(--aqua);">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Ботов в бою</div>
-        <div id="stat-bots" class="stat-val" style="color: var(--pink);">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Цель (Фрагов)</div>
-        <div id="stat-frag-limit" class="stat-val" style="color: var(--gold);">10</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Аптайм сервера</div>
-        <div id="stat-uptime" class="stat-val">0с</div>
-      </div>
-    </div>
+            /* Players Table */
+            .table-wrap {
+                overflow-x: auto;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                text-align: left;
+            }
+            th {
+                font-size: 11px;
+                font-weight: 800;
+                letter-spacing: 0.15em;
+                text-transform: uppercase;
+                color: var(--foam);
+                padding: 10px 12px;
+                border-bottom: 1px solid rgba(101, 216, 255, 0.15);
+                opacity: 0.7;
+            }
+            td {
+                padding: 12px;
+                font-size: 13px;
+                font-weight: 700;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            }
+            .tank-row:hover td {
+                background: rgba(255, 255, 255, 0.02);
+            }
+            .dot {
+                display: inline-block;
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                margin-right: 8px;
+            }
+            .btn-kick {
+                padding: 4px 10px;
+                background: rgba(255, 84, 112, 0.2);
+                border: 1px solid rgba(255, 84, 112, 0.4);
+                border-radius: 6px;
+                color: var(--danger);
+                font-size: 11px;
+                font-weight: 800;
+                cursor: pointer;
+                transition: 0.1s;
+            }
+            .btn-kick:hover {
+                background: var(--danger);
+                color: #fff;
+            }
+            .toast {
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                background: var(--panel);
+                border: 1px solid var(--aqua);
+                color: #fff;
+                padding: 12px 20px;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+                font-weight: 700;
+                display: none;
+                animation: fadeIn 0.2s;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header class="header">
+                <div class="title">
+                    <span>🫧 Bubble Wars</span>
+                    <span class="badge">Админка</span>
+                </div>
+                <div style="display: flex; gap: 10px">
+                    <a href="/" class="btn-link" target="_blank">🎮 Открыть игру</a>
+                </div>
+            </header>
 
-    <div class="main-grid">
-      <!-- Settings Panel -->
-      <div class="panel">
-        <div class="panel-title">⚙️ Настройки матча</div>
+            <div class="grid-stats">
+                <div class="stat-card">
+                    <div class="stat-label">Игроков онлайн</div>
+                    <div id="stat-players" class="stat-val" style="color: var(--aqua)">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Ботов в бою</div>
+                    <div id="stat-bots" class="stat-val" style="color: var(--pink)">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Цель (Фрагов)</div>
+                    <div id="stat-frag-limit" class="stat-val" style="color: var(--gold)">10</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Аптайм сервера</div>
+                    <div id="stat-uptime" class="stat-val">0с</div>
+                </div>
+            </div>
 
-        <div class="form-group">
-          <div class="form-label">
-            <span>Количество ботов:</span>
-            <strong id="bot-count-val" style="color: var(--aqua);">3</strong>
-          </div>
-          <div class="range-wrap">
-            <input id="range-bots" type="range" min="0" max="15" value="3">
-            <input id="num-bots" class="input-num" type="number" min="0" max="15" value="3">
-          </div>
+            <div class="main-grid">
+                <!-- Settings Panel -->
+                <div class="panel">
+                    <div class="panel-title">⚙️ Настройки матча</div>
+
+                    <div class="form-group">
+                        <div class="form-label">
+                            <span>Количество ботов:</span>
+                            <strong id="bot-count-val" style="color: var(--aqua)">3</strong>
+                        </div>
+                        <div class="range-wrap">
+                            <input id="range-bots" type="range" min="0" max="15" value="3" />
+                            <input
+                                id="num-bots"
+                                class="input-num"
+                                type="number"
+                                min="0"
+                                max="15"
+                                value="3"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-label">
+                            <span>Фрагов для победы:</span>
+                            <strong id="frag-limit-val" style="color: var(--gold)">10</strong>
+                        </div>
+                        <div class="range-wrap">
+                            <input id="range-frags" type="range" min="1" max="50" value="10" />
+                            <input
+                                id="num-frags"
+                                class="input-num"
+                                type="number"
+                                min="1"
+                                max="50"
+                                value="10"
+                            />
+                        </div>
+                    </div>
+
+                    <button id="btn-save" class="btn btn-primary">Применить настройки</button>
+                    <button id="btn-reset" class="btn btn-danger">
+                        Сбросить очки / Перезапуск арены
+                    </button>
+                </div>
+
+                <!-- Live Tanks Table -->
+                <div class="panel">
+                    <div class="panel-title">👥 Участники на арене</div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Участник</th>
+                                    <th>Тип</th>
+                                    <th>HP</th>
+                                    <th>Фраги</th>
+                                    <th>Смерти</th>
+                                    <th>Очки</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="players-tbody">
+                                <tr>
+                                    <td
+                                        colspan="7"
+                                        style="text-align: center; color: var(--foam); opacity: 0.5"
+                                    >
+                                        Загрузка данных...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="form-group">
-          <div class="form-label">
-            <span>Фрагов для победы:</span>
-            <strong id="frag-limit-val" style="color: var(--gold);">10</strong>
-          </div>
-          <div class="range-wrap">
-            <input id="range-frags" type="range" min="1" max="50" value="10">
-            <input id="num-frags" class="input-num" type="number" min="1" max="50" value="10">
-          </div>
-        </div>
+        <div id="toast" class="toast">Настройки обновлены!</div>
 
-        <button id="btn-save" class="btn btn-primary">Применить настройки</button>
-        <button id="btn-reset" class="btn btn-danger">Сбросить очки / Перезапуск арены</button>
-      </div>
+        <script>
+            const statPlayers = document.getElementById('stat-players');
+            const statBots = document.getElementById('stat-bots');
+            const statFragLimit = document.getElementById('stat-frag-limit');
+            const statUptime = document.getElementById('stat-uptime');
 
-      <!-- Live Tanks Table -->
-      <div class="panel">
-        <div class="panel-title">👥 Участники на арене</div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Участник</th>
-                <th>Тип</th>
-                <th>HP</th>
-                <th>Фраги</th>
-                <th>Смерти</th>
-                <th>Очки</th>
-                <th>Действия</th>
-              </tr>
-            </thead>
-            <tbody id="players-tbody">
-              <tr><td colspan="7" style="text-align: center; color: var(--foam); opacity: 0.5;">Загрузка данных...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+            const rangeBots = document.getElementById('range-bots');
+            const numBots = document.getElementById('num-bots');
+            const botCountVal = document.getElementById('bot-count-val');
 
-  <div id="toast" class="toast">Настройки обновлены!</div>
+            const rangeFrags = document.getElementById('range-frags');
+            const numFrags = document.getElementById('num-frags');
+            const fragLimitVal = document.getElementById('frag-limit-val');
 
-  <script>
-    const statPlayers = document.getElementById('stat-players');
-    const statBots = document.getElementById('stat-bots');
-    const statFragLimit = document.getElementById('stat-frag-limit');
-    const statUptime = document.getElementById('stat-uptime');
-    
-    const rangeBots = document.getElementById('range-bots');
-    const numBots = document.getElementById('num-bots');
-    const botCountVal = document.getElementById('bot-count-val');
+            const btnSave = document.getElementById('btn-save');
+            const btnReset = document.getElementById('btn-reset');
+            const tbody = document.getElementById('players-tbody');
+            const toast = document.getElementById('toast');
 
-    const rangeFrags = document.getElementById('range-frags');
-    const numFrags = document.getElementById('num-frags');
-    const fragLimitVal = document.getElementById('frag-limit-val');
+            function showToast(text) {
+                toast.textContent = text;
+                toast.style.display = 'block';
+                setTimeout(() => (toast.style.display = 'none'), 2500);
+            }
 
-    const btnSave = document.getElementById('btn-save');
-    const btnReset = document.getElementById('btn-reset');
-    const tbody = document.getElementById('players-tbody');
-    const toast = document.getElementById('toast');
+            function syncInputs(range, num, label) {
+                range.addEventListener('input', () => {
+                    num.value = range.value;
+                    label.textContent = range.value;
+                });
+                num.addEventListener('input', () => {
+                    range.value = num.value;
+                    label.textContent = num.value;
+                });
+            }
+            syncInputs(rangeBots, numBots, botCountVal);
+            syncInputs(rangeFrags, numFrags, fragLimitVal);
 
-    function showToast(text) {
-      toast.textContent = text;
-      toast.style.display = 'block';
-      setTimeout(() => toast.style.display = 'none', 2500);
-    }
+            async function loadState() {
+                try {
+                    const res = await fetch('/api/admin/state');
+                    if (!res.ok) return;
+                    const data = await res.json();
 
-    function syncInputs(range, num, label) {
-      range.addEventListener('input', () => {
-        num.value = range.value;
-        label.textContent = range.value;
-      });
-      num.addEventListener('input', () => {
-        range.value = num.value;
-        label.textContent = num.value;
-      });
-    }
-    syncInputs(rangeBots, numBots, botCountVal);
-    syncInputs(rangeFrags, numFrags, fragLimitVal);
+                    statPlayers.textContent = data.playersCount;
+                    statBots.textContent = data.botsCount;
+                    statFragLimit.textContent = data.fragLimit;
 
-    async function loadState() {
-      try {
-        const res = await fetch('/api/admin/state');
-        if (!res.ok) return;
-        const data = await res.json();
+                    const m = Math.floor(data.uptimeSeconds / 60);
+                    const s = data.uptimeSeconds % 60;
+                    statUptime.textContent = `${m}м ${s}с`;
 
-        statPlayers.textContent = data.playersCount;
-        statBots.textContent = data.botsCount;
-        statFragLimit.textContent = data.fragLimit;
-        
-        const m = Math.floor(data.uptimeSeconds / 60);
-        const s = data.uptimeSeconds % 60;
-        statUptime.textContent = `${m}м ${s}с`;
+                    // Update inputs if not focused
+                    if (
+                        document.activeElement !== rangeBots &&
+                        document.activeElement !== numBots
+                    ) {
+                        rangeBots.value = data.botCount;
+                        numBots.value = data.botCount;
+                        botCountVal.textContent = data.botCount;
+                    }
+                    if (
+                        document.activeElement !== rangeFrags &&
+                        document.activeElement !== numFrags
+                    ) {
+                        rangeFrags.value = data.fragLimit;
+                        numFrags.value = data.fragLimit;
+                        fragLimitVal.textContent = data.fragLimit;
+                    }
 
-        // Update inputs if not focused
-        if (document.activeElement !== rangeBots && document.activeElement !== numBots) {
-          rangeBots.value = data.botCount;
-          numBots.value = data.botCount;
-          botCountVal.textContent = data.botCount;
-        }
-        if (document.activeElement !== rangeFrags && document.activeElement !== numFrags) {
-          rangeFrags.value = data.fragLimit;
-          numFrags.value = data.fragLimit;
-          fragLimitVal.textContent = data.fragLimit;
-        }
-
-        // Render Table
-        if (data.tanks && data.tanks.length > 0) {
-          tbody.innerHTML = data.tanks.map(t => `
+                    // Render Table
+                    if (data.tanks && data.tanks.length > 0) {
+                        tbody.innerHTML = data.tanks
+                            .map(
+                                (t) => `
             <tr class="tank-row">
               <td>
                 <span class="dot" style="background: hsl(${t.hue}, 90%, 65%); box-shadow: 0 0 6px hsl(${t.hue}, 90%, 65%);"></span>
@@ -412,69 +484,72 @@
                 ${!t.isBot ? `<button class="btn-kick" onclick="kickPlayer('${t.id}')">Кикнуть</button>` : '-'}
               </td>
             </tr>
-          `).join('');
-        } else {
-          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--foam); opacity: 0.6;">На арене пока никого нет</td></tr>';
-        }
-      } catch (err) {
-        console.error('Failed to load state:', err);
-      }
-    }
+          `
+                            )
+                            .join('');
+                    } else {
+                        tbody.innerHTML =
+                            '<tr><td colspan="7" style="text-align: center; color: var(--foam); opacity: 0.6;">На арене пока никого нет</td></tr>';
+                    }
+                } catch (err) {
+                    console.error('Failed to load state:', err);
+                }
+            }
 
-    async function saveConfig() {
-      const botCount = parseInt(numBots.value, 10);
-      const fragLimit = parseInt(numFrags.value, 10);
+            async function saveConfig() {
+                const botCount = parseInt(numBots.value, 10);
+                const fragLimit = parseInt(numFrags.value, 10);
 
-      try {
-        const res = await fetch('/api/admin/config', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ botCount, fragLimit })
-        });
-        if (res.ok) {
-          showToast('Настройки успешно применены!');
-          loadState();
-        }
-      } catch (e) {
-        alert('Ошибка сохранения настроек');
-      }
-    }
+                try {
+                    const res = await fetch('/api/admin/config', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ botCount, fragLimit }),
+                    });
+                    if (res.ok) {
+                        showToast('Настройки успешно применены!');
+                        loadState();
+                    }
+                } catch (e) {
+                    alert('Ошибка сохранения настроек');
+                }
+            }
 
-    async function resetArena() {
-      if (!confirm('Вы уверены, что хотите сбросить текущий матч и очки?')) return;
-      try {
-        const res = await fetch('/api/admin/reset', { method: 'POST' });
-        if (res.ok) {
-          showToast('Арена перезапущена!');
-          loadState();
-        }
-      } catch (e) {
-        alert('Ошибка перезапуска');
-      }
-    }
+            async function resetArena() {
+                if (!confirm('Вы уверены, что хотите сбросить текущий матч и очки?')) return;
+                try {
+                    const res = await fetch('/api/admin/reset', { method: 'POST' });
+                    if (res.ok) {
+                        showToast('Арена перезапущена!');
+                        loadState();
+                    }
+                } catch (e) {
+                    alert('Ошибка перезапуска');
+                }
+            }
 
-    async function kickPlayer(id) {
-      if (!confirm('Кикнуть этого игрока?')) return;
-      try {
-        const res = await fetch('/api/admin/kick', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id })
-        });
-        if (res.ok) {
-          showToast('Игрок отключен!');
-          loadState();
-        }
-      } catch (e) {
-        alert('Ошибка');
-      }
-    }
+            async function kickPlayer(id) {
+                if (!confirm('Кикнуть этого игрока?')) return;
+                try {
+                    const res = await fetch('/api/admin/kick', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id }),
+                    });
+                    if (res.ok) {
+                        showToast('Игрок отключен!');
+                        loadState();
+                    }
+                } catch (e) {
+                    alert('Ошибка');
+                }
+            }
 
-    btnSave.addEventListener('click', saveConfig);
-    btnReset.addEventListener('click', resetArena);
+            btnSave.addEventListener('click', saveConfig);
+            btnReset.addEventListener('click', resetArena);
 
-    loadState();
-    setInterval(loadState, 1500);
-  </script>
-</body>
+            loadState();
+            setInterval(loadState, 1500);
+        </script>
+    </body>
 </html>

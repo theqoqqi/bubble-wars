@@ -1,40 +1,40 @@
 export interface Identifiable {
-  id: string;
+    id: string;
 }
 
 /**
  * Universal type-safe runtime registry for game objects (GunType, AmmoType, TankBlueprint, etc.)
  */
 export class Registry<T extends Identifiable> {
-  private items = new Map<string, T>();
+    private items = new Map<string, T>();
 
-  constructor(public readonly name: string) {}
+    constructor(public readonly name: string) {}
 
-  public register(item: T): void {
-    this.items.set(item.id, item);
-  }
-
-  public get(id: string): T {
-    const item = this.items.get(id);
-    if (!item) {
-      throw new Error(`[${this.name}] Элемент с id '${id}' не найден в реестре`);
+    public register(item: T): void {
+        this.items.set(item.id, item);
     }
-    return item;
-  }
 
-  public tryGet(id: string): T | undefined {
-    return this.items.get(id);
-  }
+    public get(id: string): T {
+        const item = this.items.get(id);
+        if (!item) {
+            throw new Error(`[${this.name}] Элемент с id '${id}' не найден в реестре`);
+        }
+        return item;
+    }
 
-  public getAll(): T[] {
-    return Array.from(this.items.values());
-  }
+    public tryGet(id: string): T | undefined {
+        return this.items.get(id);
+    }
 
-  public has(id: string): boolean {
-    return this.items.has(id);
-  }
+    public getAll(): T[] {
+        return Array.from(this.items.values());
+    }
 
-  public clear(): void {
-    this.items.clear();
-  }
+    public has(id: string): boolean {
+        return this.items.has(id);
+    }
+
+    public clear(): void {
+        this.items.clear();
+    }
 }

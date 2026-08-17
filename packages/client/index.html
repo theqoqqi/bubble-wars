@@ -1,283 +1,461 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>Bubble Wars — Soap Tank Battles</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Nunito:wght@600;700;800;900&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="./src/style.css" />
-  </head>
-  <body>
-    <div id="game-container"></div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+        <title>Bubble Wars — Soap Tank Battles</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Nunito:wght@600;700;800;900&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="./src/style.css" />
+    </head>
+    <body>
+        <div id="game-container"></div>
 
-    <!-- Start / Menu Screen Overlay -->
-    <div id="join-modal" class="overlay join-backdrop">
-      <div class="menu-content">
-        <div class="panel-soft menu-badge">
-          МЫЛЬНАЯ АРЕНА РЕАЛЬНОГО ВРЕМЕНИ · УПРУГАЯ ФИЗИКА · ТОЛКАЕМЫЕ ПРЕПЯТСТВИЯ
+        <!-- Start / Menu Screen Overlay -->
+        <div id="join-modal" class="overlay join-backdrop">
+            <div class="menu-content">
+                <div class="panel-soft menu-badge">
+                    МЫЛЬНАЯ АРЕНА РЕАЛЬНОГО ВРЕМЕНИ · УПРУГАЯ ФИЗИКА · ТОЛКАЕМЫЕ ПРЕПЯТСТВИЯ
+                </div>
+
+                <div>
+                    <div class="menu-logo-icon">
+                        <svg width="120" height="76" viewBox="0 0 120 76" class="floaty">
+                            <defs>
+                                <radialGradient id="bt" cx="35%" cy="30%" r="80%">
+                                    <stop offset="0%" stop-color="rgba(255,255,255,0.85)" />
+                                    <stop offset="45%" stop-color="rgba(53,224,255,0.25)" />
+                                    <stop offset="100%" stop-color="rgba(53,224,255,0.55)" />
+                                </radialGradient>
+                            </defs>
+                            <circle
+                                cx="44"
+                                cy="42"
+                                r="27"
+                                fill="url(#bt)"
+                                stroke="#7ceaff"
+                                stroke-width="2.5"
+                            />
+                            <circle cx="35" cy="32" r="6" fill="rgba(255,255,255,0.9)" />
+                            <circle
+                                cx="66"
+                                cy="36"
+                                r="10"
+                                fill="url(#bt)"
+                                stroke="#ff6ec7"
+                                stroke-width="2"
+                            />
+                            <circle
+                                cx="80"
+                                cy="32"
+                                r="6"
+                                fill="none"
+                                stroke="#ffe36e"
+                                stroke-width="2"
+                            />
+                            <circle
+                                cx="93"
+                                cy="28"
+                                r="4.5"
+                                fill="none"
+                                stroke="#ffe36e"
+                                stroke-width="1.8"
+                            />
+                            <circle
+                                cx="104"
+                                cy="24"
+                                r="3"
+                                fill="none"
+                                stroke="#ffe36e"
+                                stroke-width="1.5"
+                            />
+                        </svg>
+                    </div>
+                    <h1 class="title-bubble floaty menu-title">BUBBLE WARS</h1>
+                    <p class="menu-desc">
+                        Танки из мыльных пузырей. Упругая физика, радужные снаряды и громкие «чпок»
+                        — лопни соперников раньше, чем лопнут тебя!
+                    </p>
+                </div>
+
+                <div class="menu-grid">
+                    <div class="panel rise-in menu-card">
+                        <div class="section-label">ПИЛОТ ПУЗЫРЯ</div>
+                        <input
+                            id="player-name-input"
+                            class="name-input player-input-style"
+                            value="SoapWarrior"
+                            maxlength="14"
+                            placeholder="Ваш позывной"
+                            autocomplete="off"
+                            required
+                        />
+
+                        <div class="form-group">
+                            <div class="section-label" style="margin-bottom: 6px">ЦВЕТ ПУЗЫРЯ</div>
+                            <div class="color-picker-row">
+                                <button
+                                    type="button"
+                                    class="color-dot active"
+                                    data-color="cyan"
+                                    style="
+                                        --c: #00f0ff;
+                                        background: radial-gradient(
+                                            circle at 35% 30%,
+                                            #fff,
+                                            #00f0ff 60%,
+                                            #0077ff
+                                        );
+                                    "
+                                ></button>
+                                <button
+                                    type="button"
+                                    class="color-dot"
+                                    data-color="coral"
+                                    style="
+                                        --c: #ff3366;
+                                        background: radial-gradient(
+                                            circle at 35% 30%,
+                                            #fff,
+                                            #ff3366 60%,
+                                            #ff0055
+                                        );
+                                    "
+                                ></button>
+                                <button
+                                    type="button"
+                                    class="color-dot"
+                                    data-color="lime"
+                                    style="
+                                        --c: #39ff14;
+                                        background: radial-gradient(
+                                            circle at 35% 30%,
+                                            #fff,
+                                            #39ff14 60%,
+                                            #00cc66
+                                        );
+                                    "
+                                ></button>
+                                <button
+                                    type="button"
+                                    class="color-dot"
+                                    data-color="violet"
+                                    style="
+                                        --c: #b026ff;
+                                        background: radial-gradient(
+                                            circle at 35% 30%,
+                                            #fff,
+                                            #b026ff 60%,
+                                            #6600cc
+                                        );
+                                    "
+                                ></button>
+                                <button
+                                    type="button"
+                                    class="color-dot"
+                                    data-color="amber"
+                                    style="
+                                        --c: #ffaa00;
+                                        background: radial-gradient(
+                                            circle at 35% 30%,
+                                            #fff,
+                                            #ffaa00 60%,
+                                            #ff6600
+                                        );
+                                    "
+                                ></button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-header-row">
+                                <span class="section-label"> СЕРВЕР </span>
+                                <span id="server-status-hint" class="server-hint">авто</span>
+                            </div>
+                            <input
+                                id="server-url-input"
+                                class="name-input server-input"
+                                placeholder="ws://your-vps-ip:3000"
+                                autocomplete="off"
+                            />
+                        </div>
+
+                        <button id="btn-play" class="btn-bubble btn-full">В БОЙ</button>
+                        <div class="menu-card-footer">
+                            <span>Enter — быстрый старт</span>
+                            <a href="/admin" target="_blank" class="admin-link">⚙️ Админка</a>
+                        </div>
+                    </div>
+
+                    <div class="panel rise-in menu-card delayed">
+                        <div class="section-label">УПРАВЛЕНИЕ</div>
+                        <div class="controls-list">
+                            <div class="control-item">
+                                <span class="keycap">W</span><span class="keycap">A</span
+                                ><span class="keycap">S</span><span class="keycap">D</span>
+                                <span>движение танка (с инерцией)</span>
+                            </div>
+                            <div class="control-item">
+                                <span class="keycap">Мышь</span>
+                                <span>поворот башни</span>
+                            </div>
+                            <div class="control-item">
+                                <span class="keycap">ЛКМ</span><span class="keycap">Space</span>
+                                <span>огонь мыльными снарядами</span>
+                            </div>
+                            <div class="control-item">
+                                <span class="keycap">M</span>
+                                <span>вкл/выкл звук</span>
+                            </div>
+                            <div class="control-item">
+                                <span class="keycap">Esc</span>
+                                <span>меню / выход из матча</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div>
-          <div class="menu-logo-icon">
-            <svg width="120" height="76" viewBox="0 0 120 76" class="floaty">
-              <defs>
-                <radialGradient id="bt" cx="35%" cy="30%" r="80%">
-                  <stop offset="0%" stop-color="rgba(255,255,255,0.85)" />
-                  <stop offset="45%" stop-color="rgba(53,224,255,0.25)" />
-                  <stop offset="100%" stop-color="rgba(53,224,255,0.55)" />
-                </radialGradient>
-              </defs>
-              <circle cx="44" cy="42" r="27" fill="url(#bt)" stroke="#7ceaff" stroke-width="2.5" />
-              <circle cx="35" cy="32" r="6" fill="rgba(255,255,255,0.9)" />
-              <circle cx="66" cy="36" r="10" fill="url(#bt)" stroke="#ff6ec7" stroke-width="2" />
-              <circle cx="80" cy="32" r="6" fill="none" stroke="#ffe36e" stroke-width="2" />
-              <circle cx="93" cy="28" r="4.5" fill="none" stroke="#ffe36e" stroke-width="1.8" />
-              <circle cx="104" cy="24" r="3" fill="none" stroke="#ffe36e" stroke-width="1.5" />
-            </svg>
-          </div>
-          <h1 class="title-bubble floaty menu-title">
-            BUBBLE WARS
-          </h1>
-          <p class="menu-desc">
-            Танки из мыльных пузырей. Упругая физика, радужные снаряды и громкие «чпок» — лопни соперников раньше, чем лопнут тебя!
-          </p>
-        </div>
+        <!-- In-Game HUD -->
+        <div id="game-hud" class="hud-container hidden">
+            <!-- Top Bar: Logo Badge, Ping, Mute Button -->
+            <div class="hud-top-bar">
+                <div class="panel-soft hud-brand-badge">
+                    <svg width="22" height="22" viewBox="0 0 26 26">
+                        <circle
+                            cx="10"
+                            cy="14"
+                            r="8"
+                            fill="none"
+                            stroke="#35e0ff"
+                            stroke-width="2"
+                        />
+                        <circle cx="7.4" cy="11.4" r="2" fill="rgba(255,255,255,0.85)" />
+                        <circle
+                            cx="19"
+                            cy="8"
+                            r="4.5"
+                            fill="none"
+                            stroke="#ff6ec7"
+                            stroke-width="1.8"
+                        />
+                        <circle cx="17.6" cy="6.6" r="1.1" fill="rgba(255,255,255,0.85)" />
+                    </svg>
+                    <span class="hud-brand-title">BUBBLE WARS</span>
+                    <span id="hud-ping" class="hud-ping-text">0 ms</span>
+                </div>
 
-        <div class="menu-grid">
-          <div class="panel rise-in menu-card">
-            <div class="section-label">
-              ПИЛОТ ПУЗЫРЯ
-            </div>
-            <input
-              id="player-name-input"
-              class="name-input player-input-style"
-              value="SoapWarrior"
-              maxlength="14"
-              placeholder="Ваш позывной"
-              autocomplete="off"
-              required
-            />
-
-            <div class="form-group">
-              <div class="section-label" style="margin-bottom: 6px;">
-                ЦВЕТ ПУЗЫРЯ
-              </div>
-              <div class="color-picker-row">
-                <button type="button" class="color-dot active" data-color="cyan" style="--c: #00f0ff; background: radial-gradient(circle at 35% 30%, #fff, #00f0ff 60%, #0077ff);"></button>
-                <button type="button" class="color-dot" data-color="coral" style="--c: #ff3366; background: radial-gradient(circle at 35% 30%, #fff, #ff3366 60%, #ff0055);"></button>
-                <button type="button" class="color-dot" data-color="lime" style="--c: #39ff14; background: radial-gradient(circle at 35% 30%, #fff, #39ff14 60%, #00cc66);"></button>
-                <button type="button" class="color-dot" data-color="violet" style="--c: #b026ff; background: radial-gradient(circle at 35% 30%, #fff, #b026ff 60%, #6600cc);"></button>
-                <button type="button" class="color-dot" data-color="amber" style="--c: #ffaa00; background: radial-gradient(circle at 35% 30%, #fff, #ffaa00 60%, #ff6600);"></button>
-              </div>
+                <div class="hud-actions">
+                    <button id="btn-mute" class="btn-icon" title="Звук (M)">🔊</button>
+                </div>
             </div>
 
-            <div class="form-group">
-              <div class="form-header-row">
-                <span class="section-label">
-                  СЕРВЕР
+            <!-- Top Center: Live Leaderboard Badges -->
+            <div id="leaderboard-container" class="hud-leaderboard-bar">
+                <!-- Filled dynamically -->
+            </div>
+
+            <!-- Top Right: Kill Feed -->
+            <div id="kill-feed" class="hud-kill-feed"></div>
+
+            <!-- Bottom Left: Player Bubble Hull & HP -->
+            <div class="hud-player-hull-panel">
+                <div class="panel hud-hull-card">
+                    <div class="hud-hull-header">
+                        <span
+                            class="section-label"
+                            style="letter-spacing: 0.18em; color: rgba(154, 220, 240, 0.8)"
+                        >
+                            КОРПУС-ПУЗЫРЬ
+                        </span>
+                        <span
+                            id="hud-health-text"
+                            style="
+                                font-family: var(--font-disp);
+                                font-size: 14px;
+                                font-weight: 700;
+                                color: #ffffff;
+                            "
+                        >
+                            100<span style="color: rgba(154, 220, 240, 0.5)">/100</span>
+                        </span>
+                    </div>
+
+                    <div class="hud-hp-track">
+                        <div
+                            id="hud-health-fill"
+                            class="hp-fill"
+                            style="height: 100%; width: 100%; border-radius: 999px"
+                        ></div>
+                    </div>
+
+                    <div class="hud-stats-row">
+                        <span
+                            >Фраги: <strong id="hud-kills" style="color: #fff">0</strong> /
+                            <span id="hud-frag-limit" style="color: var(--color-soap-gold)"
+                                >10</span
+                            ></span
+                        >
+                        <span
+                            >Очки:
+                            <strong id="hud-score" style="color: var(--color-soap-gold)"
+                                >0</strong
+                            ></span
+                        >
+                        <span id="hud-player-name" style="color: var(--color-aqua)">Player</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Right: Controls Hint -->
+            <div class="hud-controls-hint">
+                <span style="display: flex; gap: 3px">
+                    <span class="keycap">W</span><span class="keycap">A</span
+                    ><span class="keycap">S</span><span class="keycap">D</span>
                 </span>
-                <span id="server-status-hint" class="server-hint">авто</span>
-              </div>
-              <input
-                id="server-url-input"
-                class="name-input server-input"
-                placeholder="ws://your-vps-ip:3000"
-                autocomplete="off"
-              />
+                <span>движение</span>
+                <span>·</span>
+                <span>ЛКМ — огонь</span>
+                <span>·</span>
+                <span><span class="keycap">Esc</span> меню</span>
             </div>
 
-            <button id="btn-play" class="btn-bubble btn-full">
-              В БОЙ
-            </button>
-            <div class="menu-card-footer">
-              <span>Enter — быстрый старт</span>
-              <a href="/admin" target="_blank" class="admin-link">⚙️ Админка</a>
+            <!-- Leave Game Confirmation Overlay -->
+            <div id="leave-modal" class="overlay hidden">
+                <div class="panel rise-in leave-card">
+                    <div class="leave-icon">
+                        <svg
+                            width="48"
+                            height="48"
+                            viewBox="0 0 48 48"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <defs>
+                                <linearGradient
+                                    id="leaveBubbleGrad"
+                                    x1="0%"
+                                    y1="0%"
+                                    x2="100%"
+                                    y2="100%"
+                                >
+                                    <stop offset="0%" stop-color="#ff6e8a" />
+                                    <stop offset="100%" stop-color="#ff3355" />
+                                </linearGradient>
+                            </defs>
+                            <circle
+                                cx="22"
+                                cy="26"
+                                r="15"
+                                stroke="url(#leaveBubbleGrad)"
+                                stroke-width="2.5"
+                                fill="rgba(255, 110, 138, 0.15)"
+                            />
+                            <circle cx="17" cy="20" r="3.5" fill="rgba(255, 255, 255, 0.85)" />
+                            <circle
+                                cx="36"
+                                cy="14"
+                                r="8"
+                                stroke="#35e0ff"
+                                stroke-width="2"
+                                fill="rgba(53, 224, 255, 0.15)"
+                            />
+                            <circle cx="33.5" cy="11.5" r="1.8" fill="rgba(255, 255, 255, 0.85)" />
+                        </svg>
+                    </div>
+                    <div class="leave-title">Покинуть арену?</div>
+                    <div class="leave-subtitle">
+                        Вы действительно хотите выйти из текущего матча в главное меню?
+                    </div>
+                    <div class="leave-actions-row">
+                        <button
+                            id="btn-leave-confirm"
+                            class="btn-bubble btn-danger"
+                            style="flex: 1; padding: 14px; font-size: 16px"
+                        >
+                            ВЫЙТИ
+                        </button>
+                        <button
+                            id="btn-leave-cancel"
+                            class="btn-ghost"
+                            style="padding: 14px 24px; font-size: 15px"
+                        >
+                            ОТМЕНА
+                        </button>
+                    </div>
+                </div>
             </div>
-          </div>
 
-          <div class="panel rise-in menu-card delayed">
-            <div class="section-label">
-              УПРАВЛЕНИЕ
+            <!-- Death / Respawn Overlay -->
+            <div id="death-modal" class="overlay hidden">
+                <div class="panel rise-in death-card">
+                    <div class="death-title">ВАС ЛОПНУЛ</div>
+                    <div id="death-killer-name" class="death-killer-name">—</div>
+                    <div class="death-score-label">
+                        Набранные очки:
+                        <strong
+                            id="death-final-score"
+                            style="color: var(--color-soap-gold); font-size: 20px"
+                            >0</strong
+                        >
+                    </div>
+                    <button id="btn-respawn" class="btn-bubble btn-full">ВОЗРОДИТЬСЯ</button>
+                </div>
             </div>
-            <div class="controls-list">
-              <div class="control-item">
-                <span class="keycap">W</span><span class="keycap">A</span><span class="keycap">S</span><span class="keycap">D</span>
-                <span>движение танка (с инерцией)</span>
-              </div>
-              <div class="control-item">
-                <span class="keycap">Мышь</span>
-                <span>поворот башни</span>
-              </div>
-              <div class="control-item">
-                <span class="keycap">ЛКМ</span><span class="keycap">Space</span>
-                <span>огонь мыльными снарядами</span>
-              </div>
-              <div class="control-item">
-                <span class="keycap">M</span>
-                <span>вкл/выкл звук</span>
-              </div>
-              <div class="control-item">
-                <span class="keycap">Esc</span>
-                <span>меню / выход из матча</span>
-              </div>
+
+            <!-- Match Game Over / Victory Overlay -->
+            <div id="gameover-modal" class="overlay hidden">
+                <div class="panel rise-in gameover-card">
+                    <div class="gameover-crown-wrap">
+                        <svg
+                            id="gameover-crown"
+                            class="gameover-crown-icon"
+                            width="48"
+                            height="48"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="#ffe36e"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
+                        </svg>
+                    </div>
+                    <div id="gameover-title" class="gameover-title">ПОБЕДА</div>
+                    <div id="gameover-subtitle" class="gameover-subtitle">
+                        Победил игрок. Реванш?
+                    </div>
+
+                    <div id="gameover-leaderboard" class="gameover-leaderboard-list">
+                        <!-- Filled dynamically -->
+                    </div>
+
+                    <div class="gameover-actions-row">
+                        <button
+                            id="btn-rematch"
+                            class="btn-bubble"
+                            style="flex: 1; padding: 14px; font-size: 18px"
+                        >
+                            РЕВАНШ
+                        </button>
+                        <button
+                            id="btn-gameover-menu"
+                            class="btn-ghost"
+                            style="padding: 14px 24px; font-size: 16px"
+                        >
+                            В меню
+                        </button>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- In-Game HUD -->
-    <div id="game-hud" class="hud-container hidden">
-      <!-- Top Bar: Logo Badge, Ping, Mute Button -->
-      <div class="hud-top-bar">
-        <div class="panel-soft hud-brand-badge">
-          <svg width="22" height="22" viewBox="0 0 26 26">
-            <circle cx="10" cy="14" r="8" fill="none" stroke="#35e0ff" stroke-width="2" />
-            <circle cx="7.4" cy="11.4" r="2" fill="rgba(255,255,255,0.85)" />
-            <circle cx="19" cy="8" r="4.5" fill="none" stroke="#ff6ec7" stroke-width="1.8" />
-            <circle cx="17.6" cy="6.6" r="1.1" fill="rgba(255,255,255,0.85)" />
-          </svg>
-          <span class="hud-brand-title">BUBBLE WARS</span>
-          <span id="hud-ping" class="hud-ping-text">0 ms</span>
         </div>
 
-        <div class="hud-actions">
-          <button id="btn-mute" class="btn-icon" title="Звук (M)">🔊</button>
-        </div>
-      </div>
-
-      <!-- Top Center: Live Leaderboard Badges -->
-      <div id="leaderboard-container" class="hud-leaderboard-bar">
-        <!-- Filled dynamically -->
-      </div>
-
-      <!-- Top Right: Kill Feed -->
-      <div id="kill-feed" class="hud-kill-feed"></div>
-
-      <!-- Bottom Left: Player Bubble Hull & HP -->
-      <div class="hud-player-hull-panel">
-        <div class="panel hud-hull-card">
-          <div class="hud-hull-header">
-            <span class="section-label" style="letter-spacing: 0.18em; color: rgba(154, 220, 240, 0.8);">
-              КОРПУС-ПУЗЫРЬ
-            </span>
-            <span id="hud-health-text" style="font-family: var(--font-disp); font-size: 14px; font-weight: 700; color: #ffffff;">
-              100<span style="color: rgba(154, 220, 240, 0.5);">/100</span>
-            </span>
-          </div>
-
-          <div class="hud-hp-track">
-            <div id="hud-health-fill" class="hp-fill" style="height: 100%; width: 100%; border-radius: 999px;"></div>
-          </div>
-
-          <div class="hud-stats-row">
-            <span>Фраги: <strong id="hud-kills" style="color: #fff;">0</strong> / <span id="hud-frag-limit" style="color: var(--color-soap-gold);">10</span></span>
-            <span>Очки: <strong id="hud-score" style="color: var(--color-soap-gold);">0</strong></span>
-            <span id="hud-player-name" style="color: var(--color-aqua);">Player</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bottom Right: Controls Hint -->
-      <div class="hud-controls-hint">
-        <span style="display: flex; gap: 3px;">
-          <span class="keycap">W</span><span class="keycap">A</span><span class="keycap">S</span><span class="keycap">D</span>
-        </span>
-        <span>движение</span>
-        <span>·</span>
-        <span>ЛКМ — огонь</span>
-        <span>·</span>
-        <span><span class="keycap">Esc</span> меню</span>
-      </div>
-
-      <!-- Leave Game Confirmation Overlay -->
-      <div id="leave-modal" class="overlay hidden">
-        <div class="panel rise-in leave-card">
-          <div class="leave-icon">
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="leaveBubbleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#ff6e8a" />
-                  <stop offset="100%" stop-color="#ff3355" />
-                </linearGradient>
-              </defs>
-              <circle cx="22" cy="26" r="15" stroke="url(#leaveBubbleGrad)" stroke-width="2.5" fill="rgba(255, 110, 138, 0.15)" />
-              <circle cx="17" cy="20" r="3.5" fill="rgba(255, 255, 255, 0.85)" />
-              <circle cx="36" cy="14" r="8" stroke="#35e0ff" stroke-width="2" fill="rgba(53, 224, 255, 0.15)" />
-              <circle cx="33.5" cy="11.5" r="1.8" fill="rgba(255, 255, 255, 0.85)" />
-            </svg>
-          </div>
-          <div class="leave-title">
-            Покинуть арену?
-          </div>
-          <div class="leave-subtitle">
-            Вы действительно хотите выйти из текущего матча в главное меню?
-          </div>
-          <div class="leave-actions-row">
-            <button id="btn-leave-confirm" class="btn-bubble btn-danger" style="flex: 1; padding: 14px; font-size: 16px;">
-              ВЫЙТИ
-            </button>
-            <button id="btn-leave-cancel" class="btn-ghost" style="padding: 14px 24px; font-size: 15px;">
-              ОТМЕНА
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Death / Respawn Overlay -->
-      <div id="death-modal" class="overlay hidden">
-        <div class="panel rise-in death-card">
-          <div class="death-title">
-            ВАС ЛОПНУЛ
-          </div>
-          <div id="death-killer-name" class="death-killer-name">
-            —
-          </div>
-          <div class="death-score-label">
-            Набранные очки: <strong id="death-final-score" style="color: var(--color-soap-gold); font-size: 20px;">0</strong>
-          </div>
-          <button id="btn-respawn" class="btn-bubble btn-full">
-            ВОЗРОДИТЬСЯ
-          </button>
-        </div>
-      </div>
-
-      <!-- Match Game Over / Victory Overlay -->
-      <div id="gameover-modal" class="overlay hidden">
-        <div class="panel rise-in gameover-card">
-          <div class="gameover-crown-wrap">
-            <svg id="gameover-crown" class="gameover-crown-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ffe36e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
-            </svg>
-          </div>
-          <div id="gameover-title" class="gameover-title">
-            ПОБЕДА
-          </div>
-          <div id="gameover-subtitle" class="gameover-subtitle">
-            Победил игрок. Реванш?
-          </div>
-
-          <div id="gameover-leaderboard" class="gameover-leaderboard-list">
-            <!-- Filled dynamically -->
-          </div>
-
-          <div class="gameover-actions-row">
-            <button id="btn-rematch" class="btn-bubble" style="flex: 1; padding: 14px; font-size: 18px;">
-              РЕВАНШ
-            </button>
-            <button id="btn-gameover-menu" class="btn-ghost" style="padding: 14px 24px; font-size: 16px;">
-              В меню
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <script type="module" src="./src/main.ts"></script>
-  </body>
+        <script type="module" src="./src/main.ts"></script>
+    </body>
 </html>
