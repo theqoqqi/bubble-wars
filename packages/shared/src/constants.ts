@@ -32,7 +32,13 @@ export const GAME_CONFIG = {
   ARENA: {
     width: 2400,
     height: 1800,
-  } as ArenaBounds,
+    SPAWN_MARGIN: 300,
+  } as ArenaBounds & { SPAWN_MARGIN: number },
+
+  MATCH: {
+    DEFAULT_FRAG_LIMIT: 10,
+    AUTO_RESET_DELAY_MS: 12000,
+  },
 
   TANK: {
     BODY_RADIUS: 32,
@@ -87,3 +93,4 @@ export const GAME_CONFIG = {
     bot: { primary: '#ff2a2a', secondary: '#880000', glow: '#ff4444' },
   } as Record<TankColor, { primary: string; secondary: string; glow: string }>,
 };
+

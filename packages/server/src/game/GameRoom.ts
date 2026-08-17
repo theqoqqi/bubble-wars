@@ -25,7 +25,7 @@ interface ConnectedPlayer {
 export class GameRoom {
   public physics: PhysicsWorld;
   public botCount: number = GAME_CONFIG.BOT.SPAWN_COUNT;
-  public fragLimit: number = 10;
+  public fragLimit: number = GAME_CONFIG.MATCH.DEFAULT_FRAG_LIMIT;
   public isMatchOver: boolean = false;
   public matchOverTime: number = 0;
   private collisionHandler: CollisionHandler;
@@ -53,10 +53,27 @@ export class GameRoom {
     this.startLoop();
   }
 
+  public buildLeaderboard(tanks?: ServerTank[]): LeaderboardEntry[] {
+    const list = tanks || this.getAllTanks();
+    return list
+      .map((t) => ({
+        id: t.id,
+        name: t.name,
+        score: t.score,
+        kills: t.kills,
+        deaths: t.deaths,
+        isBot: t.isBot,
+        color: t.color,
+        hue: t.hue,
+      }))
+      .sort((a, b) => b.kills - a.kills || b.score - a.score)
+      .slice(0, 10);
+  }
+
   private spawnInitialBots(): void {
     const count = GAME_CONFIG.BOT.SPAWN_COUNT;
     for (let i = 0; i < count; i++) {
-      const pos = this.physics.getRandomSpawnPosition(300);
+      const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
       const bot = new BotPlayer(`bot_${i + 1}`, pos.x, pos.y, i);
       this.bots.push(bot);
       this.physics.addBody(bot.tank.body);
@@ -69,18 +86,7 @@ export class GameRoom {
     this.matchOverTime = Date.now();
 
     const allTanks = this.getAllTanks();
-    const leaderboard: LeaderboardEntry[] = allTanks
-      .map((t) => ({
-        id: t.id,
-        name: t.name,
-        score: t.score,
-        kills: t.kills,
-        deaths: t.deaths,
-        isBot: t.isBot,
-        color: t.color,
-        hue: t.hue,
-      }))
-      .sort((a, b) => b.kills - a.kills || b.score - a.score);
+    const leaderboard = this.buildLeaderboard(allTanks);
 
     console.log(`🏆 [Game Over] Winner: "${winner.name}" with ${winner.kills} kills!`);
 
@@ -103,7 +109,7 @@ export class GameRoom {
     const color = preferredColor || this.availableColors[this.colorIndex++ % this.availableColors.length];
     const hue = COLOR_TO_HUE[color] ?? 192;
 
-    const pos = this.physics.getRandomSpawnPosition(300);
+    const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
     const tank = new ServerTank(id, cleanName, color, pos.x, pos.y, false, hue);
 
     this.physics.addBody(tank.body);
@@ -154,7 +160,7 @@ export class GameRoom {
   public handlePlayerRespawn(playerId: string): void {
     const player = this.players.get(playerId);
     if (player && player.tank.isDead) {
-      const pos = this.physics.getRandomSpawnPosition(300);
+      const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
       player.tank.respawn(pos.x, pos.y);
     }
   }
@@ -213,7 +219,7 @@ export class GameRoom {
     for (const bot of this.bots) {
       if (bot.tank.isDead) {
         if (now - bot.tank.deathTime >= GAME_CONFIG.TANK.RESPAWN_DELAY_MS) {
-          const pos = this.physics.getRandomSpawnPosition(300);
+          const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
           bot.tank.respawn(pos.x, pos.y);
         }
       } else {
@@ -226,6 +232,9 @@ export class GameRoom {
       }
       bot.tank.update(deltaMs);
     }
+          const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
+          const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
+          const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
 
     // 3. Step physics simulation
     this.physics.step(deltaMs);
@@ -251,19 +260,7 @@ export class GameRoom {
     }
 
     // 6. Construct leaderboard
-    const leaderboard: LeaderboardEntry[] = allTanks
-      .map((t) => ({
-        id: t.id,
-        name: t.name,
-        score: t.score,
-        kills: t.kills,
-        deaths: t.deaths,
-        isBot: t.isBot,
-        color: t.color,
-        hue: t.hue,
-      }))
-      .sort((a, b) => b.score - a.score || b.kills - a.kills)
-      .slice(0, 10);
+    const leaderboard = this.buildLeaderboard(allTanks);
 
     // 7. Broadcast world snapshot
     const worldStateMsg: ServerMessage = {
@@ -278,8 +275,8 @@ export class GameRoom {
 
     this.broadcast(worldStateMsg);
 
-    // Auto-restart next match after 12s if game over
-    if (this.isMatchOver && now - this.matchOverTime > 12000) {
+    // Auto-restart next match after delay if game over
+    if (this.isMatchOver && now - this.matchOverTime > GAME_CONFIG.MATCH.AUTO_RESET_DELAY_MS) {
       this.resetArena();
     }
   }
@@ -304,7 +301,7 @@ export class GameRoom {
 
     while (this.bots.length < count) {
       const idx = this.bots.length;
-      const pos = this.physics.getRandomSpawnPosition(300);
+      const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
       const bot = new BotPlayer(`bot_${Date.now()}_${idx + 1}`, pos.x, pos.y, idx);
       this.bots.push(bot);
       this.physics.addBody(bot.tank.body);
@@ -343,7 +340,7 @@ export class GameRoom {
       player.tank.score = 0;
       player.tank.kills = 0;
       player.tank.deaths = 0;
-      const pos = this.physics.getRandomSpawnPosition(300);
+      const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
       player.tank.respawn(pos.x, pos.y);
     }
 
@@ -351,7 +348,7 @@ export class GameRoom {
       bot.tank.score = 0;
       bot.tank.kills = 0;
       bot.tank.deaths = 0;
-      const pos = this.physics.getRandomSpawnPosition(300);
+      const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
       bot.tank.respawn(pos.x, pos.y);
     }
 

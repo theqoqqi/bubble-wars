@@ -1,5 +1,5 @@
 import Matter from 'matter-js';
-import { GAME_CONFIG, ObstacleSnapshot } from '@bubble-wars/shared';
+import { GAME_CONFIG, ObstacleSnapshot, round1 } from '@bubble-wars/shared';
 
 export const COLLISION_CATEGORIES = {
   WALL: 0x0001,
@@ -167,9 +167,9 @@ export class PhysicsWorld {
   public getObstacleSnapshots(): ObstacleSnapshot[] {
     return this.obstacles.map((o) => ({
       id: o.id,
-      x: Math.round(o.body.position.x * 10) / 10,
-      y: Math.round(o.body.position.y * 10) / 10,
-      r: Math.round(o.r * 10) / 10,
+      x: round1(o.body.position.x),
+      y: round1(o.body.position.y),
+      r: round1(o.r),
       hue: o.hue,
     }));
   }

@@ -1,5 +1,5 @@
 import Matter from 'matter-js';
-import { COLOR_TO_HUE, GAME_CONFIG, PlayerInput, TankColor, TankSnapshot } from '@bubble-wars/shared';
+import { COLOR_TO_HUE, GAME_CONFIG, PlayerInput, TankColor, TankSnapshot, round1, round2 } from '@bubble-wars/shared';
 import { COLLISION_CATEGORIES } from './PhysicsWorld.js';
 import { ServerProjectile } from './Projectile.js';
 
@@ -183,11 +183,11 @@ export class ServerTank {
     return {
       id: this.id,
       name: this.name,
-      x: Math.round(this.body.position.x * 10) / 10,
-      y: Math.round(this.body.position.y * 10) / 10,
-      vx: Math.round(this.body.velocity.x * 10) / 10,
-      vy: Math.round(this.body.velocity.y * 10) / 10,
-      aimAngle: Math.round(this.aimAngle * 100) / 100,
+      x: round1(this.body.position.x),
+      y: round1(this.body.position.y),
+      vx: round1(this.body.velocity.x),
+      vy: round1(this.body.velocity.y),
+      aimAngle: round2(this.aimAngle),
       hp: this.hp,
       maxHp: this.maxHp,
       color: this.color,
@@ -197,11 +197,11 @@ export class ServerTank {
       deaths: this.deaths,
       isBot: this.isBot,
       isDead: this.isDead,
-      recoil: Math.round(this.recoil * 100) / 100,
-      invulnT: Math.round((invulnLeftMs / 1000) * 10) / 10,
-      flash: Math.round(this.flash * 100) / 100,
-      wobbleS: Math.round(this.wobbleS * 100) / 100,
-      wobbleA: Math.round(this.wobbleA * 100) / 100,
+      recoil: round2(this.recoil),
+      invulnT: round1(invulnLeftMs / 1000),
+      flash: round2(this.flash),
+      wobbleS: round2(this.wobbleS),
+      wobbleA: round2(this.wobbleA),
     };
   }
 }

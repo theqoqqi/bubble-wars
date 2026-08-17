@@ -1,5 +1,5 @@
 import Matter from 'matter-js';
-import { COLOR_TO_HUE, GAME_CONFIG, ProjectileSnapshot, TankColor } from '@bubble-wars/shared';
+import { COLOR_TO_HUE, GAME_CONFIG, ProjectileSnapshot, TankColor, round1 } from '@bubble-wars/shared';
 import { COLLISION_CATEGORIES } from './PhysicsWorld.js';
 
 let projectileIdCounter = 1;
@@ -55,10 +55,10 @@ export class ServerProjectile {
     return {
       id: this.id,
       ownerId: this.ownerId,
-      x: Math.round(this.body.position.x * 10) / 10,
-      y: Math.round(this.body.position.y * 10) / 10,
-      vx: Math.round(this.body.velocity.x * 10) / 10,
-      vy: Math.round(this.body.velocity.y * 10) / 10,
+      x: round1(this.body.position.x),
+      y: round1(this.body.position.y),
+      vx: round1(this.body.velocity.x),
+      vy: round1(this.body.velocity.y),
       r: this.radius,
       hue: this.hue,
       color: this.color,
