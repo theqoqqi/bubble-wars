@@ -1,5 +1,6 @@
 import Matter from 'matter-js';
 import { GAME_CONFIG, ObstacleSnapshot, round1 } from '@bubble-wars/shared';
+import './matterTypes.js';
 
 export const COLLISION_CATEGORIES = {
   WALL: 0x0001,
@@ -88,7 +89,7 @@ export class PhysicsWorld {
         label: 'obstacle',
       });
 
-      (body as any).obstacleData = { id: idx + 1, r, hue: spot.hue };
+      body.obstacleData = { id: idx + 1, r, hue: spot.hue };
       Matter.Composite.add(this.world, body);
 
       return {

@@ -2,6 +2,7 @@ import Matter from 'matter-js';
 import { BubblePopEvent, GAME_CONFIG, KILL_VERBS, ServerMessage } from '@bubble-wars/shared';
 import { ServerProjectile } from './Projectile.js';
 import { ServerTank } from './ServerTank.js';
+import './matterTypes.js';
 
 export interface CollisionContext {
   findTankById(id: string): ServerTank | null | undefined;
@@ -43,12 +44,14 @@ export class CollisionHandler {
     }
 
     if (projectileBody && otherBody) {
-      const projectile: ServerProjectile = (projectileBody as any).projectileInstance;
+      const projectile = projectileBody.projectileInstance;
       if (!projectile || projectile.isDestroyed) return;
 
       if (otherBody.label === 'tank') {
-        const tank: ServerTank = (otherBody as any).tankInstance;
-        this.handleProjectileTank(projectile, projectileBody, tank);
+        const tank = otherBody.tankInstance;
+        if (tank) {
+          this.handleProjectileTank(projectile, projectileBody, tank);
+        }
       } else if (otherBody.label === 'obstacle') {
         this.handleProjectileObstacle(projectile, projectileBody, otherBody);
       } else if (otherBody.label === 'wall') {
@@ -59,17 +62,17 @@ export class CollisionHandler {
 
     // 3. Tank vs Obstacle or Tank vs Tank (trigger bubble wobbles)
     if (bodyA.label === 'tank' && bodyB.label === 'obstacle') {
-      this.handleTankObstacle((bodyA as any).tankInstance);
+      this.handleTankObstacle(bodyA.tankInstance);
     } else if (bodyB.label === 'tank' && bodyA.label === 'obstacle') {
-      this.handleTankObstacle((bodyB as any).tankInstance);
+      this.handleTankObstacle(bodyB.tankInstance);
     } else if (bodyA.label === 'tank' && bodyB.label === 'tank') {
-      this.handleTankTank((bodyA as any).tankInstance, (bodyB as any).tankInstance);
+      this.handleTankTank(bodyA.tankInstance, bodyB.tankInstance);
     }
   }
 
   private handleProjectileProjectile(bodyA: Matter.Body, bodyB: Matter.Body): void {
-    const projA: ServerProjectile = (bodyA as any).projectileInstance;
-    const projB: ServerProjectile = (bodyB as any).projectileInstance;
+    const projA = bodyA.projectileInstance;
+    const projB = bodyB.projectileInstance;
     if (projA && projB && !projA.isDestroyed && !projB.isDestroyed) {
       projA.isDestroyed = true;
       projB.isDestroyed = true;

@@ -2,6 +2,7 @@ import Matter from 'matter-js';
 import { COLOR_TO_HUE, GAME_CONFIG, PlayerInput, TankColor, TankSnapshot, round1, round2 } from '@bubble-wars/shared';
 import { COLLISION_CATEGORIES } from './PhysicsWorld.js';
 import { ServerProjectile } from './Projectile.js';
+import './matterTypes.js';
 
 export class ServerTank {
   public id: string;
@@ -66,7 +67,7 @@ export class ServerTank {
       label: 'tank',
     });
 
-    (this.body as any).tankInstance = this;
+    this.body.tankInstance = this;
   }
 
   public applyInput(input: PlayerInput, now: number): ServerProjectile | null {

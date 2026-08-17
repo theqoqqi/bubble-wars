@@ -1,6 +1,7 @@
 import Matter from 'matter-js';
 import { COLOR_TO_HUE, GAME_CONFIG, ProjectileSnapshot, TankColor, round1 } from '@bubble-wars/shared';
 import { COLLISION_CATEGORIES } from './PhysicsWorld.js';
+import './matterTypes.js';
 
 let projectileIdCounter = 1;
 
@@ -42,7 +43,7 @@ export class ServerProjectile {
       label: 'projectile',
     });
 
-    (this.body as any).projectileInstance = this;
+    this.body.projectileInstance = this;
 
     Matter.Body.setVelocity(this.body, { x: vx, y: vy });
   }
