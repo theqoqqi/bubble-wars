@@ -2,6 +2,7 @@ import { ColorDef } from '@bubble-wars/shared';
 import { Game } from './game/Game.js';
 import { networkManager } from './net/NetworkManager.js';
 import { soundFx } from './audio/SoundFx.js';
+import { TankSelectionManager } from './ui/TankSelectionManager.js';
 
 const COLOR_HUES: Record<string, number> = {
     cyan: 192,
@@ -12,6 +13,7 @@ const COLOR_HUES: Record<string, number> = {
 };
 
 let selectedColor: ColorDef = { hue: 192 };
+const tankSelectionManager = new TankSelectionManager(selectedColor);
 
 // 1. Initialize Game Instance & Start Native Game Loop
 const game = new Game('game-container');
@@ -19,6 +21,8 @@ game.start();
 
 // 2. DOM UI Bindings
 window.addEventListener('DOMContentLoaded', () => {
+    tankSelectionManager.init();
+
     const joinModal = document.getElementById('join-modal');
     const gameHud = document.getElementById('game-hud');
     const joinForm = document.getElementById('join-form') as HTMLFormElement;
@@ -48,6 +52,7 @@ window.addEventListener('DOMContentLoaded', () => {
             target.classList.add('active');
             const colorName = target.dataset.color || 'cyan';
             selectedColor = { hue: COLOR_HUES[colorName] ?? 192 };
+            tankSelectionManager.setColor(selectedColor);
         });
     });
 
@@ -71,7 +76,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
         try {
             await networkManager.connect();
-            networkManager.join(name, selectedColor, 'classic');
+            networkManager.join(name, selectedColor, tankSelectionManager.selectedBlueprintId);
 
             if (joinModal) joinModal.classList.add('hidden');
             if (gameHud) gameHud.classList.remove('hidden');

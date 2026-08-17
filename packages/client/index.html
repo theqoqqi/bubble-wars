@@ -192,8 +192,50 @@
                         </div>
                     </div>
 
-                    <!-- Panel 2: Controls -->
-                    <div class="panel rise-in menu-card delayed-1">
+                    <!-- Panel 2: Tank Selection Panel -->
+                    <div id="tank-preview-card" class="panel rise-in menu-card tank-choice-panel delayed-1" role="button" tabindex="0">
+                        <div class="tank-panel-top-row">
+                            <span class="section-label">МОДЕЛЬ ТАНКА</span>
+                            <span id="tank-preview-role" class="tank-role-badge">УНИВЕРСАЛ</span>
+                        </div>
+
+                        <div class="tank-panel-canvas-box">
+                            <canvas id="tank-preview-canvas" width="200" height="130"></canvas>
+                        </div>
+
+                        <div class="tank-panel-info">
+                            <h3 id="tank-preview-name" class="tank-card-title">Классический пузырь</h3>
+                            <p id="tank-preview-desc" class="tank-card-desc">Сбалансированный мыльный танк с хорошей подвижностью и надёжным орудием.</p>
+
+                            <div class="tank-stats-list">
+                                <div class="tank-stat-row">
+                                    <span class="stat-label">Прочность</span>
+                                    <span id="tank-preview-val-hp" class="stat-val">100</span>
+                                    <div class="stat-bar-bg"><div id="tank-preview-bar-hp" class="stat-bar-fill hp" style="width: 62%"></div></div>
+                                </div>
+                                <div class="tank-stat-row">
+                                    <span class="stat-label">Скорость</span>
+                                    <span id="tank-preview-val-speed" class="stat-val">3/5</span>
+                                    <div class="stat-bar-bg"><div id="tank-preview-bar-speed" class="stat-bar-fill speed" style="width: 60%"></div></div>
+                                </div>
+                                <div class="tank-stat-row">
+                                    <span class="stat-label">Урон / Залп</span>
+                                    <span id="tank-preview-val-damage" class="stat-val">3/5</span>
+                                    <div class="stat-bar-bg"><div id="tank-preview-bar-damage" class="stat-bar-fill damage" style="width: 60%"></div></div>
+                                </div>
+                            </div>
+
+                            <div class="tank-weapon-info" style="margin-bottom: 0">
+                                <span class="weapon-icon">🫧</span>
+                                <span id="tank-preview-weapon-text" class="weapon-text">Стандартный мыломёт (16 урона)</span>
+                            </div>
+                        </div>
+
+                        <button id="btn-open-hangar" class="btn-bubble btn-full btn-open-hangar">АНГАР ТАНКОВ ⚙️</button>
+                    </div>
+
+                    <!-- Panel 3: Controls -->
+                    <div class="panel rise-in menu-card delayed-2">
                         <div class="section-label">УПРАВЛЕНИЕ</div>
                         <div class="controls-list">
                             <div class="control-item">
@@ -457,6 +499,22 @@
                             В меню
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tank Selection / Hangar Modal Overlay -->
+        <div id="tank-modal" class="overlay hidden" style="z-index: 150">
+            <div class="panel rise-in tank-modal-content">
+                <div class="tank-modal-header">
+                    <div>
+                        <h2 class="title-bubble modal-main-title">АНГАР ТАНКОВ</h2>
+                        <div class="modal-supertitle">ВЫБЕРИТЕ ПУЗЫРЬ</div>
+                    </div>
+                    <button id="btn-close-tank-modal" class="btn-close-modal" aria-label="Закрыть">✕</button>
+                </div>
+                <div id="tank-grid" class="tank-grid">
+                    <!-- Filled dynamically by TankSelectionManager -->
                 </div>
             </div>
         </div>

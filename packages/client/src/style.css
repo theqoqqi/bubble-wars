@@ -431,16 +431,16 @@ body {
 
 .menu-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(280px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(3, minmax(260px, 1fr));
+    gap: 16px;
     width: 100%;
-    max-width: 860px;
+    max-width: 1080px;
     align-items: stretch;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 920px) {
     .menu-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     }
 }
 
@@ -941,3 +941,314 @@ body {
         0 6px 28px rgba(255, 51, 85, 0.6),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
+
+/* ==========================================================================
+   Tank Preview Panel & Selection Hangar Modal
+   ========================================================================== */
+
+.tank-choice-panel {
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+    position: relative;
+    border: 1.5px solid rgba(53, 224, 255, 0.3);
+    outline: none;
+}
+
+.tank-choice-panel:hover {
+    border-color: rgba(53, 224, 255, 0.85);
+    transform: translateY(-4px);
+    box-shadow:
+        0 12px 32px rgba(53, 224, 255, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.tank-choice-panel:focus-visible {
+    border-color: var(--color-soap-cyan);
+    box-shadow: 0 0 0 3px rgba(53, 224, 255, 0.3);
+}
+
+.tank-panel-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.tank-panel-canvas-box {
+    width: 100%;
+    height: 130px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle, rgba(53, 224, 255, 0.12) 0%, rgba(0, 0, 0, 0.32) 75%);
+    border-radius: 16px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.tank-panel-canvas-box canvas {
+    display: block;
+    margin: 0 auto;
+}
+
+.tank-panel-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.btn-open-hangar {
+    margin-top: 14px;
+    font-size: 15px;
+    padding: 12px;
+    font-weight: 800;
+}
+
+/* Hangar Modal */
+.tank-modal-content {
+    width: 960px;
+    max-width: 95vw;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    padding: 28px;
+    pointer-events: auto;
+    overflow: hidden;
+}
+
+.tank-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+}
+
+.modal-supertitle {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    color: var(--color-soap-cyan);
+}
+
+.modal-main-title {
+    font-size: 26px;
+    margin-top: 4px;
+}
+
+.btn-close-modal {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-close-modal:hover {
+    background: rgba(255, 51, 85, 0.25);
+    border-color: rgba(255, 51, 85, 0.6);
+    color: #ff3355;
+    transform: scale(1.08);
+}
+
+.tank-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    gap: 16px;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+.tank-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tank-grid::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.tank-grid::-webkit-scrollbar-thumb {
+    background: rgba(53, 224, 255, 0.35);
+    border-radius: 4px;
+}
+
+.tank-card {
+    background: rgba(10, 32, 58, 0.65);
+    border: 1.5px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+
+.tank-card:hover {
+    background: rgba(16, 46, 80, 0.85);
+    border-color: rgba(53, 224, 255, 0.6);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(53, 224, 255, 0.25);
+}
+
+.tank-card.active {
+    background: rgba(14, 52, 92, 0.9);
+    border-color: var(--color-soap-cyan);
+    box-shadow:
+        0 0 0 1px var(--color-soap-cyan),
+        0 10px 32px rgba(53, 224, 255, 0.4);
+}
+
+.tank-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.tank-role-badge {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(53, 224, 255, 0.18);
+    color: var(--color-soap-cyan);
+    border: 1px solid rgba(53, 224, 255, 0.3);
+}
+
+.tank-diff-badge {
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.tank-card-canvas-box {
+    width: 100%;
+    height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle, rgba(53, 224, 255, 0.08) 0%, rgba(0, 0, 0, 0.25) 75%);
+    border-radius: 14px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tank-card-title {
+    font-family: var(--font-disp);
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    text-shadow: 0 0 10px rgba(53, 224, 255, 0.3);
+}
+
+.tank-card-desc {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(154, 220, 240, 0.8);
+    margin: 4px 0 12px;
+    line-height: 1.35;
+    min-height: 32px;
+}
+
+.tank-stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.tank-stat-row {
+    display: grid;
+    grid-template-columns: 85px 36px 1fr;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+}
+
+.stat-label {
+    font-weight: 700;
+    color: rgba(154, 220, 240, 0.7);
+}
+
+.stat-val {
+    font-weight: 800;
+    color: #fff;
+    text-align: right;
+}
+
+.stat-bar-bg {
+    height: 7px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stat-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+
+.stat-bar-fill.hp {
+    background: linear-gradient(90deg, #00f0ff, #39ff14);
+}
+
+.stat-bar-fill.speed {
+    background: linear-gradient(90deg, #ffe36e, #ffaa00);
+}
+
+.stat-bar-fill.damage {
+    background: linear-gradient(90deg, #ff6ec7, #ff3366);
+}
+
+.tank-weapon-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-soap-cyan);
+    background: rgba(0, 0, 0, 0.25);
+    padding: 6px 10px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    border: 1px solid rgba(53, 224, 255, 0.15);
+}
+
+.weapon-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn-select-tank {
+    width: 100%;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.btn-select-tank.btn-active {
+    background: linear-gradient(180deg, #39ff14, #00cc66);
+    box-shadow: 0 4px 16px rgba(57, 255, 20, 0.4);
+    border-color: #7aff6e;
+    color: #032b14;
+}
+
