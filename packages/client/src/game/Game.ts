@@ -103,8 +103,9 @@ export class Game {
     const myId = networkManager.playerId;
     const myTank = myId ? this.tanks.get(myId) : null;
 
-    // 1. Gather & Send Player Input (only when alive and match is active)
-    if (myTank && !myTank.isDead && !this.isMatchOver) {
+    // 1. Gather & Send Player Input (only when alive, match is active and leave modal is closed)
+    const isLeaveModalOpen = !document.getElementById('leave-modal')?.classList.contains('hidden');
+    if (myTank && !myTank.isDead && !this.isMatchOver && !isLeaveModalOpen) {
       const input = this.inputManager.getInput();
       networkManager.sendInput(input);
     }
@@ -343,6 +344,9 @@ export class Game {
     if (this.inputManager) this.inputManager.reset();
     if (this.hudManager) this.hudManager.reset();
     if (this.particleSystem) this.particleSystem.clear();
+
+    const leaveModal = document.getElementById('leave-modal');
+    if (leaveModal) leaveModal.classList.add('hidden');
 
     this.tanks.clear();
     this.projectiles.clear();

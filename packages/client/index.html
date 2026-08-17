@@ -121,6 +121,10 @@
                 <span class="keycap">M</span>
                 <span>вкл/выкл звук</span>
               </div>
+              <div class="control-item">
+                <span class="keycap">Esc</span>
+                <span>меню / выход из матча</span>
+              </div>
             </div>
           </div>
         </div>
@@ -187,6 +191,42 @@
         <span>движение</span>
         <span>·</span>
         <span>ЛКМ — огонь</span>
+        <span>·</span>
+        <span><span class="keycap">Esc</span> меню</span>
+      </div>
+
+      <!-- Leave Game Confirmation Overlay -->
+      <div id="leave-modal" class="overlay hidden">
+        <div class="panel rise-in leave-card">
+          <div class="leave-icon">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="leaveBubbleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ff6e8a" />
+                  <stop offset="100%" stop-color="#ff3355" />
+                </linearGradient>
+              </defs>
+              <circle cx="22" cy="26" r="15" stroke="url(#leaveBubbleGrad)" stroke-width="2.5" fill="rgba(255, 110, 138, 0.15)" />
+              <circle cx="17" cy="20" r="3.5" fill="rgba(255, 255, 255, 0.85)" />
+              <circle cx="36" cy="14" r="8" stroke="#35e0ff" stroke-width="2" fill="rgba(53, 224, 255, 0.15)" />
+              <circle cx="33.5" cy="11.5" r="1.8" fill="rgba(255, 255, 255, 0.85)" />
+            </svg>
+          </div>
+          <div class="leave-title">
+            Покинуть арену?
+          </div>
+          <div class="leave-subtitle">
+            Вы действительно хотите выйти из текущего матча в главное меню?
+          </div>
+          <div class="leave-actions-row">
+            <button id="btn-leave-confirm" class="btn-bubble btn-danger" style="flex: 1; padding: 14px; font-size: 16px;">
+              ВЫЙТИ
+            </button>
+            <button id="btn-leave-cancel" class="btn-ghost" style="padding: 14px 24px; font-size: 15px;">
+              ОТМЕНА
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Death / Respawn Overlay -->

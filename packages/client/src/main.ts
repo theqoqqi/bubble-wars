@@ -84,11 +84,58 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const leaveModal = document.getElementById('leave-modal');
+  const deathModal = document.getElementById('death-modal');
+  const gameoverModal = document.getElementById('gameover-modal');
+  const btnLeaveConfirm = document.getElementById('btn-leave-confirm');
+  const btnLeaveCancel = document.getElementById('btn-leave-cancel');
+
+  const returnToMenu = () => {
+    networkManager.disconnect();
+    game.leaveGame();
+    if (leaveModal) leaveModal.classList.add('hidden');
+    if (gameoverModal) gameoverModal.classList.add('hidden');
+    if (deathModal) deathModal.classList.add('hidden');
+    if (gameHud) gameHud.classList.add('hidden');
+    if (joinModal) joinModal.classList.remove('hidden');
+  };
+
+  const toggleLeaveModal = () => {
+    // Only toggle leave modal if we are in an active game (menu is closed)
+    if (joinModal && !joinModal.classList.contains('hidden')) {
+      return;
+    }
+    if (!leaveModal) return;
+
+    if (leaveModal.classList.contains('hidden')) {
+      leaveModal.classList.remove('hidden');
+    } else {
+      leaveModal.classList.add('hidden');
+    }
+  };
+
+  // Escape key handler for leaving lobby / closing confirmation
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      toggleLeaveModal();
+    }
+  });
+
+  // Leave confirmation actions
+  if (btnLeaveConfirm) {
+    btnLeaveConfirm.addEventListener('click', returnToMenu);
+  }
+
+  if (btnLeaveCancel) {
+    btnLeaveCancel.addEventListener('click', () => {
+      if (leaveModal) leaveModal.classList.add('hidden');
+    });
+  }
+
   // Respawn button
   if (btnRespawn) {
     btnRespawn.addEventListener('click', () => {
       networkManager.respawn();
-      const deathModal = document.getElementById('death-modal');
       if (deathModal) deathModal.classList.add('hidden');
     });
   }
@@ -98,7 +145,6 @@ window.addEventListener('DOMContentLoaded', () => {
   if (btnRematch) {
     btnRematch.addEventListener('click', () => {
       networkManager.rematch();
-      const gameoverModal = document.getElementById('gameover-modal');
       if (gameoverModal) gameoverModal.classList.add('hidden');
     });
   }
@@ -106,15 +152,6 @@ window.addEventListener('DOMContentLoaded', () => {
   // Game Over Menu button
   const btnGameOverMenu = document.getElementById('btn-gameover-menu');
   if (btnGameOverMenu) {
-    btnGameOverMenu.addEventListener('click', () => {
-      networkManager.disconnect();
-      game.leaveGame();
-      const gameoverModal = document.getElementById('gameover-modal');
-      if (gameoverModal) gameoverModal.classList.add('hidden');
-      const deathModal = document.getElementById('death-modal');
-      if (deathModal) deathModal.classList.add('hidden');
-      if (gameHud) gameHud.classList.add('hidden');
-      if (joinModal) joinModal.classList.remove('hidden');
-    });
+    btnGameOverMenu.addEventListener('click', returnToMenu);
   }
 });
