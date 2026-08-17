@@ -7,8 +7,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@bubble-wars/shared": "*",
-    "phaser": "^3.88.2"
+    "@bubble-wars/shared": "*"
   },
   "devDependencies": {
     "typescript": "^5.7.3",

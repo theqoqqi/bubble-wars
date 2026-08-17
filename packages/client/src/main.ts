@@ -1,32 +1,13 @@
-import Phaser from 'phaser';
 import { TankColor } from '@bubble-wars/shared';
-import { BootScene } from './scenes/BootScene.js';
-import { ArenaScene } from './scenes/ArenaScene.js';
+import { Game } from './game/Game.js';
 import { networkManager } from './net/NetworkManager.js';
 import { soundFx } from './audio/SoundFx.js';
 
 let selectedColor: TankColor = 'cyan';
 
-// 1. Phaser Game Configuration
-const config: Phaser.Types.Core.GameConfig = {
-  type: Phaser.AUTO,
-  parent: 'game-container',
-  width: window.innerWidth,
-  height: window.innerHeight,
-  backgroundColor: '#060d1f',
-  scale: {
-    mode: Phaser.Scale.RESIZE,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-  },
-  scene: [BootScene, ArenaScene],
-  render: {
-    antialias: true,
-    pixelArt: false,
-    roundPixels: false,
-  },
-};
-
-const game = new Phaser.Game(config);
+// 1. Initialize Game Instance & Start Native Game Loop
+const game = new Game('game-container');
+game.start();
 
 // 2. DOM UI Bindings
 window.addEventListener('DOMContentLoaded', () => {
@@ -127,10 +108,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (btnGameOverMenu) {
     btnGameOverMenu.addEventListener('click', () => {
       networkManager.disconnect();
-      const arenaScene = game.scene.getScene('ArenaScene') as ArenaScene;
-      if (arenaScene) {
-        arenaScene.leaveGame();
-      }
+      game.leaveGame();
       const gameoverModal = document.getElementById('gameover-modal');
       if (gameoverModal) gameoverModal.classList.add('hidden');
       const deathModal = document.getElementById('death-modal');

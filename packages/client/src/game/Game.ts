@@ -1,4 +1,3 @@
-import Phaser from 'phaser';
 import {
   BubblePopEvent,
   GAME_CONFIG,
@@ -17,15 +16,15 @@ import { CLIENT_CONFIG } from '../config.js';
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 
-export class ArenaScene extends Phaser.Scene {
+export class Game {
   private tanks: Map<string, ClientTankState> = new Map();
   private projectiles: Map<number, ClientProjectile> = new Map();
   private clientObstacles: Map<number, ClientObstacle> = new Map();
 
-  private inputManager!: InputManager;
-  private particleSystem!: ParticleSystem;
-  private hudManager!: HudManager;
-  private gameRenderer!: GameRenderer;
+  private inputManager: InputManager;
+  private particleSystem: ParticleSystem;
+  private hudManager: HudManager;
+  private gameRenderer: GameRenderer;
 
   private unsubscribers: Array<() => void> = [];
 
@@ -35,17 +34,20 @@ export class ArenaScene extends Phaser.Scene {
   private playerFlash: number = 0;
   private gameTime: number = 0;
 
-  constructor() {
-    super({ key: 'ArenaScene' });
-  }
+  private animFrameId: number | null = null;
+  private lastTime: number = 0;
+  private isRunning: boolean = false;
 
-  public create(): void {
+  constructor(containerId: string = 'game-container') {
     this.inputManager = new InputManager();
     this.particleSystem = new ParticleSystem();
     this.hudManager = new HudManager();
-    this.gameRenderer = new GameRenderer('game-container');
+    this.gameRenderer = new GameRenderer(containerId);
 
-    // Setup Network Listeners via Typed EventEmitter
+    this.setupNetwork();
+  }
+
+  private setupNetwork(): void {
     this.unsubscribers.push(
       networkManager.on('welcome', (data) => {
         if (data.obstacles) {
@@ -69,7 +71,32 @@ export class ArenaScene extends Phaser.Scene {
     );
   }
 
-  public update(time: number, delta: number): void {
+  public start(): void {
+    if (this.isRunning) return;
+    this.isRunning = true;
+    this.lastTime = performance.now();
+
+    const loop = (currentTime: number) => {
+      if (!this.isRunning) return;
+      const delta = currentTime - this.lastTime;
+      this.lastTime = currentTime;
+
+      this.update(delta);
+      this.animFrameId = requestAnimationFrame(loop);
+    };
+
+    this.animFrameId = requestAnimationFrame(loop);
+  }
+
+  public stop(): void {
+    this.isRunning = false;
+    if (this.animFrameId !== null) {
+      cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
+    }
+  }
+
+  public update(delta: number): void {
     const dt = Math.min(0.05, delta / 1000);
     this.gameTime += dt;
 
@@ -319,5 +346,11 @@ export class ArenaScene extends Phaser.Scene {
 
     this.tanks.clear();
     this.projectiles.clear();
+  }
+
+  public destroy(): void {
+    this.stop();
+    this.unsubscribers.forEach((unsub) => unsub());
+    this.unsubscribers = [];
   }
 }
