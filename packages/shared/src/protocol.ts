@@ -1,11 +1,11 @@
 import {
     ArenaBounds,
     BubblePopEvent,
+    ColorDef,
     LeaderboardEntry,
     ObstacleSnapshot,
     PlayerInput,
     ProjectileSnapshot,
-    TankColor,
     TankSnapshot,
 } from './types.js';
 
@@ -13,7 +13,8 @@ import {
 export interface JoinMessage {
     type: 'join';
     name: string;
-    color?: TankColor;
+    color?: ColorDef;
+    blueprintId: string;
 }
 
 export interface InputMessage {
@@ -74,8 +75,8 @@ export interface KillEventMessage {
     victimId?: string;
     killerName: string;
     victimName: string;
-    killerColor: TankColor;
-    victimColor: TankColor;
+    killerColor: ColorDef;
+    victimColor: ColorDef;
     killerHue: number;
     victimHue: number;
     verb: string;
@@ -85,7 +86,7 @@ export interface GameOverMessage {
     type: 'game_over';
     winnerId: string;
     winnerName: string;
-    winnerColor: TankColor;
+    winnerColor: ColorDef;
     winnerHue: number;
     winnerIsBot: boolean;
     winnerKills: number;

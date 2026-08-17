@@ -74,6 +74,11 @@ export class CollisionHandler {
         const projA = bodyA.projectileInstance;
         const projB = bodyB.projectileInstance;
         if (projA && projB && !projA.isDestroyed && !projB.isDestroyed) {
+            // Projectiles from the same player never destroy each other
+            if (projA.ownerId === projB.ownerId) {
+                return;
+            }
+
             projA.isDestroyed = true;
             projB.isDestroyed = true;
 
@@ -110,7 +115,7 @@ export class CollisionHandler {
         if (!tank || tank.id === projectile.ownerId || tank.isDead) return;
 
         projectile.isDestroyed = true;
-        const killed = tank.takeDamage(GAME_CONFIG.PROJECTILE.DAMAGE);
+        const killed = tank.takeDamage(projectile.damage);
 
         // Small pop effect for hit
         this.context.addPopEvent({

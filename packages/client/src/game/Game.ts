@@ -119,6 +119,13 @@ export class Game {
             tank.x += (tank.targetX - tank.x) * CLIENT_CONFIG.INTERPOLATION.TANK;
             tank.y += (tank.targetY - tank.y) * CLIENT_CONFIG.INTERPOLATION.TANK;
 
+            if (tank.bodyAngle !== undefined && tank.targetBodyAngle !== undefined) {
+                let diff = (tank.targetBodyAngle - tank.bodyAngle) % (Math.PI * 2);
+                if (diff > Math.PI) diff -= Math.PI * 2;
+                if (diff < -Math.PI) diff += Math.PI * 2;
+                tank.bodyAngle += diff * Math.min(1, dt * 14);
+            }
+
             tank.flash = Math.max(0, tank.flash - dt * CLIENT_CONFIG.ANIMATION.FLASH_DECAY_TANK);
             tank.wobbleV +=
                 (-tank.wobbleS * CLIENT_CONFIG.ANIMATION.WOBBLE_SPRING -
@@ -218,6 +225,9 @@ export class Game {
                 t = {
                     id: snap.id,
                     name: snap.name,
+                    blueprintId: snap.blueprintId,
+                    bodyAngle: snap.bodyAngle,
+                    targetBodyAngle: snap.bodyAngle,
                     color: snap.color,
                     hue: snap.hue,
                     isBot: snap.isBot,
@@ -228,6 +238,7 @@ export class Game {
                     vx: snap.vx,
                     vy: snap.vy,
                     aimAngle: snap.aimAngle,
+                    guns: snap.guns,
                     hp: snap.hp,
                     maxHp: snap.maxHp,
                     isDead: snap.isDead,
@@ -244,6 +255,9 @@ export class Game {
                 this.tanks.set(snap.id, t);
             }
 
+            t.blueprintId = snap.blueprintId;
+            t.targetBodyAngle = snap.bodyAngle;
+            t.guns = snap.guns;
             t.targetX = snap.x;
             t.targetY = snap.y;
             t.vx = snap.vx;
@@ -297,6 +311,7 @@ export class Game {
                 p = {
                     id: pSnap.id,
                     ownerId: pSnap.ownerId,
+                    projectileTypeId: pSnap.projectileTypeId,
                     x: pSnap.x,
                     y: pSnap.y,
                     targetX: pSnap.x,

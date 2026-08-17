@@ -1,21 +1,25 @@
 import Matter from 'matter-js';
 import {
-    COLOR_TO_HUE,
+    ColorDef,
     GAME_CONFIG,
     PlayerInput,
-    TankColor,
+    TankBlueprint,
     TankSnapshot,
+    gunTypeRegistry,
     round1,
     round2,
+    tankBlueprintRegistry,
+    transformLocalPoint,
 } from '@bubble-wars/shared';
 import { COLLISION_CATEGORIES } from './PhysicsWorld.js';
 import { ServerProjectile } from './Projectile.js';
+import { ServerGun } from './ServerGun.js';
 import './matterTypes.js';
 
 export class ServerTank {
     public id: string;
     public name: string;
-    public color: TankColor;
+    public color: ColorDef;
     public hue: number;
     public isBot: boolean;
     public isDead: boolean = false;
@@ -23,12 +27,14 @@ export class ServerTank {
     public kills: number = 0;
     public deaths: number = 0;
 
+    public blueprint: TankBlueprint;
+    public guns: ServerGun[];
+    public bodyAngle: number = 0;
+
     public hp: number;
     public maxHp: number;
     public aimAngle: number = 0;
     public recoil: number = 0;
-    public recoilV: number = 0;
-    public lastShootTime: number = 0;
     public lastInputSeq: number = 0;
     public deathTime: number = 0;
     public invulnerableUntil: number = 0;
@@ -43,26 +49,41 @@ export class ServerTank {
     constructor(
         id: string,
         name: string,
-        color: TankColor,
+        color: ColorDef,
         x: number,
         y: number,
         isBot: boolean = false,
-        hue?: number
+        hue?: number,
+        blueprintId: string = 'classic'
     ) {
         this.id = id;
         this.name = name;
         this.color = color;
-        this.hue = hue ?? COLOR_TO_HUE[color] ?? 192;
+        this.hue = hue ?? color.hue;
         this.isBot = isBot;
-        this.maxHp = GAME_CONFIG.TANK.MAX_HP;
+
+        this.blueprint = tankBlueprintRegistry.get(blueprintId);
+        this.maxHp = this.blueprint.maxHp;
         this.hp = this.maxHp;
         this.invulnerableUntil = Date.now() + GAME_CONFIG.TANK.INVULN_TIME_MS;
 
-        const radius = GAME_CONFIG.TANK.BODY_RADIUS;
-        this.body = Matter.Bodies.circle(x, y, radius, {
-            restitution: 0.82, // Bouncy soap bubble
+        this.guns = this.blueprint.guns.map((g) => {
+            const spec = gunTypeRegistry.get(g.gunTypeId);
+            return new ServerGun(g, spec);
+        });
+
+        // Compound body from blueprint bubbles
+        const partsList = this.blueprint.body.bubbles.map((b) =>
+            Matter.Bodies.circle(x + b.offsetX, y + b.offsetY, b.radius, {
+                label: 'tank',
+            })
+        );
+
+        this.body = Matter.Body.create({
+            parts: partsList,
+            restitution: 0.82,
             friction: 0.02,
-            frictionAir: GAME_CONFIG.TANK.LINEAR_DAMPING,
+            frictionAir: this.blueprint.linearDamping,
             density: 0.005,
             collisionFilter: {
                 category: COLLISION_CATEGORIES.TANK,
@@ -76,13 +97,22 @@ export class ServerTank {
         });
 
         this.body.tankInstance = this;
+        for (const part of this.body.parts) {
+            part.tankInstance = this;
+        }
     }
 
-    public applyInput(input: PlayerInput, now: number): ServerProjectile | null {
-        if (this.isDead) return null;
+    public applyInput(input: PlayerInput, now: number): ServerProjectile[] {
+        if (this.isDead) return [];
 
         this.lastInputSeq = input.seq;
         this.aimAngle = input.aimAngle;
+
+        // Smoothly rotate body towards aim angle
+        let diff = (this.aimAngle - this.bodyAngle) % (Math.PI * 2);
+        if (diff > Math.PI) diff -= Math.PI * 2;
+        if (diff < -Math.PI) diff += Math.PI * 2;
+        this.bodyAngle += diff * 0.2;
 
         // Movement force calculation
         let fx = 0;
@@ -94,7 +124,7 @@ export class ServerTank {
 
         if (fx !== 0 || fy !== 0) {
             const len = Math.hypot(fx, fy);
-            const forceMag = GAME_CONFIG.TANK.THRUST_FORCE;
+            const forceMag = this.blueprint.thrustForce;
             const normalizedFx = (fx / len) * forceMag;
             const normalizedFy = (fy / len) * forceMag;
 
@@ -115,37 +145,54 @@ export class ServerTank {
             });
         }
 
-        // Shooting
-        const cooldown = this.isBot
-            ? GAME_CONFIG.PROJECTILE.BOT_COOLDOWN_MS
-            : GAME_CONFIG.PROJECTILE.COOLDOWN_MS;
-        if (input.shooting && now - this.lastShootTime >= cooldown) {
-            this.lastShootTime = now;
-            this.recoil = 1.0;
-            this.recoilV = 180;
+        // Modular multi-gun shooting
+        const projectiles: ServerProjectile[] = [];
 
-            const barrelLen = GAME_CONFIG.TANK.BARREL_LENGTH;
-            const spawnX = this.body.position.x + Math.cos(this.aimAngle) * barrelLen;
-            const spawnY = this.body.position.y + Math.sin(this.aimAngle) * barrelLen;
+        if (input.shooting) {
+            for (const gun of this.guns) {
+                const gunAngle = this.aimAngle + gun.mount.offsetAngle;
+                const parentBubble =
+                    this.blueprint.body.bubbles.find(
+                        (b) => b.id === gun.mount.attachedTo
+                    ) || this.blueprint.body.bubbles[0];
 
-            // Apply recoil impulse to the tank
-            const recoilImpulse = GAME_CONFIG.PROJECTILE.RECOIL_IMPULSE;
-            Matter.Body.applyForce(this.body, this.body.position, {
-                x: -Math.cos(this.aimAngle) * recoilImpulse * 0.008,
-                y: -Math.sin(this.aimAngle) * recoilImpulse * 0.008,
-            });
+                const mountPos = transformLocalPoint(
+                    this.body.position.x,
+                    this.body.position.y,
+                    this.bodyAngle,
+                    parentBubble ? parentBubble.offsetX : 0,
+                    parentBubble ? parentBubble.offsetY : 0
+                );
 
-            return new ServerProjectile(
-                this.id,
-                spawnX,
-                spawnY,
-                this.aimAngle,
-                this.color,
-                this.hue
-            );
+                for (const barrel of gun.barrels) {
+                    if (barrel.canShoot(now, this.isBot)) {
+                        const spawned = barrel.shoot(
+                            this.id,
+                            mountPos.x,
+                            mountPos.y,
+                            gunAngle,
+                            this.color,
+                            this.hue,
+                            now
+                        );
+
+                        if (spawned.length > 0) {
+                            projectiles.push(...spawned);
+
+                            const totalDamage = spawned.reduce((s, p) => s + p.damage, 0);
+                            const impulseMag = Math.min(0.04, totalDamage * 0.00035);
+                            Matter.Body.applyForce(this.body, this.body.position, {
+                                x: -Math.cos(gunAngle) * impulseMag,
+                                y: -Math.sin(gunAngle) * impulseMag,
+                            });
+                            this.recoil = 1.0;
+                        }
+                    }
+                }
+            }
         }
 
-        return null;
+        return projectiles;
     }
 
     public update(deltaMs: number): void {
@@ -161,6 +208,11 @@ export class ServerTank {
         // Recoil recovery
         if (this.recoil > 0) {
             this.recoil = Math.max(0, this.recoil - GAME_CONFIG.TANK.RECOIL_RECOVERY_SPEED);
+        }
+
+        // Update gun barrels
+        for (const gun of this.guns) {
+            gun.update(dt);
         }
     }
 
@@ -204,6 +256,8 @@ export class ServerTank {
         return {
             id: this.id,
             name: this.name,
+            blueprintId: this.blueprint.id,
+            bodyAngle: round2(this.bodyAngle),
             x: round1(this.body.position.x),
             y: round1(this.body.position.y),
             vx: round1(this.body.velocity.x),
@@ -219,6 +273,7 @@ export class ServerTank {
             isBot: this.isBot,
             isDead: this.isDead,
             recoil: round2(this.recoil),
+            guns: this.guns.map((g) => g.toSnapshot()),
             invulnT: round1(invulnLeftMs / 1000),
             flash: round2(this.flash),
             wobbleS: round2(this.wobbleS),

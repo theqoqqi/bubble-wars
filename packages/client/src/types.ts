@@ -1,9 +1,12 @@
-import { TankColor } from '@bubble-wars/shared';
+import { ColorDef, GunSnapshot } from '@bubble-wars/shared';
 
 export interface ClientTankState {
     id: string;
     name: string;
-    color: TankColor;
+    blueprintId: string;
+    bodyAngle: number;
+    targetBodyAngle: number;
+    color: ColorDef;
     hue: number;
     isBot: boolean;
     x: number;
@@ -13,6 +16,7 @@ export interface ClientTankState {
     vx: number;
     vy: number;
     aimAngle: number;
+    guns: GunSnapshot[];
     hp: number;
     maxHp: number;
     isDead: boolean;
@@ -30,6 +34,7 @@ export interface ClientTankState {
 export interface ClientProjectile {
     id: number;
     ownerId: string;
+    projectileTypeId: string;
     x: number;
     y: number;
     targetX: number;
@@ -38,7 +43,7 @@ export interface ClientProjectile {
     vy: number;
     r: number;
     hue: number;
-    color: TankColor;
+    color: ColorDef;
     trail: Array<{ x: number; y: number }>;
 }
 

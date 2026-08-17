@@ -47,10 +47,15 @@ wss.on('connection', (ws: WebSocket) => {
 
             switch (msg.type) {
                 case 'join': {
-                    const player = gameRoom.handlePlayerJoin(ws, msg.name, msg.color);
+                    const player = gameRoom.handlePlayerJoin(
+                        ws,
+                        msg.name,
+                        msg.color,
+                        msg.blueprintId
+                    );
                     playerId = player.id;
                     console.log(
-                        `[Server] Player joined: "${player.tank.name}" (${player.id}) [Color: ${player.tank.color}]`
+                        `[Server] Player joined: "${player.tank.name}" (${player.id}) [Color: ${player.tank.color}] [Blueprint: ${player.tank.blueprint.id}]`
                     );
                     break;
                 }

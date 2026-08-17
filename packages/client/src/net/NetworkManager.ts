@@ -1,12 +1,12 @@
 import {
     BubblePopEvent,
     ClientMessage,
+    ColorDef,
     EventBus,
     GameOverMessage,
     KillEventMessage,
     PlayerInput,
     ServerMessage,
-    TankColor,
     WelcomeMessage,
     WorldStateMessage,
 } from '@bubble-wars/shared';
@@ -172,11 +172,12 @@ export class NetworkManager extends EventBus<NetworkEvents> {
         }
     }
 
-    public join(name: string, color: TankColor): void {
+    public join(name: string, color: ColorDef, blueprintId: string): void {
         this.sendMessage({
             type: 'join',
             name,
             color,
+            blueprintId,
         });
     }
 

@@ -1,21 +1,29 @@
-import { ArenaBounds, TankColor } from './types.js';
+import { ArenaBounds, ColorDef } from './types.js';
 
-export const COLOR_TO_HUE: Record<TankColor, number> = {
+export const COLOR_TO_HUE: Record<string, number> = {
     cyan: 192,
     coral: 326,
     lime: 130,
     violet: 280,
     amber: 42,
     bot: 350,
+    gunmetal: 230,
+    red: 355,
+    slate: 215,
+};
+
+export const DEFAULT_BUBBLE_COLOR: ColorDef = {
+    hue: 195,
+    tint: 0.5,
 };
 
 export const KILL_VERBS = ['лопает', 'сдувает', 'распыляет', 'протыкает', 'смывает', 'взрывает'];
 
 export const BOT_DEFS = [
-    { name: 'Капитан Мыло', color: 'coral' as TankColor, hue: 326, skill: 0.85 },
-    { name: 'Пузырь-3000', color: 'amber' as TankColor, hue: 48, skill: 0.7 },
-    { name: 'Мисс Пена', color: 'lime' as TankColor, hue: 130, skill: 0.95 },
-    { name: 'Гроза Пены', color: 'violet' as TankColor, hue: 280, skill: 0.8 },
+    { name: 'Капитан Мыло', color: { hue: 326 } as ColorDef, hue: 326, skill: 0.85, blueprintId: 'classic' },
+    { name: 'Пузырь-3000', color: { hue: 48 } as ColorDef, hue: 48, skill: 0.7, blueprintId: 'classic' },
+    { name: 'Мисс Пена', color: { hue: 130 } as ColorDef, hue: 130, skill: 0.95, blueprintId: 'classic' },
+    { name: 'Гроза Пены', color: { hue: 280 } as ColorDef, hue: 280, skill: 0.8, blueprintId: 'classic' },
 ];
 
 export const GAME_CONFIG = {
@@ -40,9 +48,9 @@ export const GAME_CONFIG = {
         BARREL_BUBBLE_2_RADIUS: 7,
         BARREL_LENGTH: 40,
         MAX_HP: 100,
-        THRUST_FORCE: 0.038, // Fast, punchy acceleration
-        MAX_SPEED: 32, // High top speed
-        LINEAR_DAMPING: 0.035, // Smooth soap drift
+        THRUST_FORCE: 0.022, // Balanced smooth acceleration
+        MAX_SPEED: 18, // Controlled top speed
+        LINEAR_DAMPING: 0.04, // Smooth soap drift
         RECOIL_RECOVERY_SPEED: 0.22,
         RESPAWN_DELAY_MS: 3000,
         INVULN_TIME_MS: 2200,
@@ -50,9 +58,9 @@ export const GAME_CONFIG = {
 
     PROJECTILE: {
         RADIUS: 9,
-        SPEED: 42, // Fast projectiles to match agile tanks
+        SPEED: 28, // Smooth visible projectile flight
         DAMAGE: 16,
-        MAX_LIFETIME_MS: 1800,
+        MAX_LIFETIME_MS: 2400,
         COOLDOWN_MS: 200,
         BOT_COOLDOWN_MS: 440,
         RECOIL_IMPULSE: 1.0,
@@ -84,5 +92,5 @@ export const GAME_CONFIG = {
         violet: { primary: '#b026ff', secondary: '#6600cc', glow: '#d066ff' },
         amber: { primary: '#ffaa00', secondary: '#ff6600', glow: '#ffcc00' },
         bot: { primary: '#ff2a2a', secondary: '#880000', glow: '#ff4444' },
-    } as Record<TankColor, { primary: string; secondary: string; glow: string }>,
+    } as Record<string, { primary: string; secondary: string; glow: string }>,
 };

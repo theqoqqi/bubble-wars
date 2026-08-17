@@ -1,4 +1,11 @@
-import { GAME_CONFIG } from '@bubble-wars/shared';
+import {
+    DEFAULT_BUBBLE_COLOR,
+    GAME_CONFIG,
+    gunTypeRegistry,
+    projectileTypeRegistry,
+    tankBlueprintRegistry,
+    transformLocalPoint,
+} from '@bubble-wars/shared';
 import { ClientObstacle, ClientProjectile, ClientTankState, KillNotification } from '../types.js';
 import { ParticleSystem } from './ParticleSystem.js';
 import { CLIENT_CONFIG } from '../config.js';
@@ -7,6 +14,7 @@ import {
     createAmbient,
     drawBackdrop,
     drawBubble,
+    drawBubbleGraph,
     drawVignette,
     hsla,
 } from './render.js';
@@ -103,71 +111,132 @@ export class GameRenderer {
             });
         }
 
-        // 5. Draw Tanks (Body, Turret, Double Barrel with recoil, Health Arc, Invuln Ring, Name)
+        // 5. Draw Tanks (Modular Blueprints, Compound Bodies, Turrets, Barrels with recoil, Health Arc, Invuln Ring, Name)
         for (const t of tanks) {
             if (t.isDead) continue;
 
             const blink = t.invulnT > 0 ? 0.55 + 0.45 * Math.sin(gameTime * 18) : 1;
             const idle = Math.sin(gameTime * 2.6 + t.x) * 0.02;
-            const ca = Math.cos(t.aimAngle);
-            const sa = Math.sin(t.aimAngle);
+            const bodyAngle = t.bodyAngle;
 
-            // Barrel connector bubbles
-            for (let i = 1; i >= 0; i--) {
-                const d =
-                    GAME_CONFIG.TANK.TURRET_RADIUS +
-                    5 +
-                    GAME_CONFIG.TANK.BARREL_BUBBLE_1_RADIUS +
-                    i * (GAME_CONFIG.TANK.BARREL_BUBBLE_1_RADIUS * 2 + 1) -
-                    t.recoil * 8;
-                drawBubble(
-                    ctx,
-                    t.x + ca * d,
-                    t.y + sa * d,
-                    GAME_CONFIG.TANK.BARREL_BUBBLE_1_RADIUS - i * 1.5,
-                    t.hue + 45,
-                    {
-                        alpha: blink,
-                        glow: 0.6,
-                    }
-                );
-            }
+            // Resolve Blueprint directly from registry
+            const blueprint = tankBlueprintRegistry.get(t.blueprintId);
 
-            // Main Tank Body
-            drawBubble(ctx, t.x, t.y, GAME_CONFIG.TANK.BODY_RADIUS, t.hue, {
-                squash: clamp(t.wobbleS + idle, -0.42, 0.42),
-                sqAngle: t.wobbleA,
-                alpha: blink,
-                flash: t.flash * 0.85,
-                glow: 0.55,
-            });
-
-            // Turret Bubble
-            drawBubble(
+            // 5.1. Render Tank Hull Compound Body (with squash/wobble)
+            drawBubbleGraph(
                 ctx,
-                t.x + ca * 2,
-                t.y + sa * 2,
-                GAME_CONFIG.TANK.TURRET_RADIUS,
-                t.hue + 22,
+                blueprint.body.bubbles,
+                t.x,
+                t.y,
+                bodyAngle,
+                t.hue,
                 {
+                    squash: clamp(t.wobbleS + idle, -0.42, 0.42),
+                    sqAngle: t.wobbleA,
                     alpha: blink,
-                    rimAlpha: 0.9,
-                    glow: 0.35,
+                    flash: t.flash * 0.85,
+                    glow: 0.55,
                 }
             );
 
-            // Turret Center Gloss
-            ctx.save();
-            ctx.globalAlpha = blink;
-            ctx.fillStyle = hsla(t.hue, 70, 22, 0.75);
-            ctx.beginPath();
-            ctx.arc(t.x + ca * 6, t.y + sa * 6, 5.5, 0, PI2);
-            ctx.fill();
-            ctx.fillStyle = 'rgba(255,255,255,0.85)';
-            ctx.beginPath();
-            ctx.arc(t.x + ca * 4.8 - 1.5, t.y + sa * 4.8 - 1.5, 1.6, 0, PI2);
-            ctx.fill();
-            ctx.restore();
+            // 5.2. Render Guns mounted on Hull Bubbles
+            for (const gunDef of blueprint.guns) {
+                const parentBubble =
+                    blueprint.body.bubbles.find((b) => b.id === gunDef.attachedTo) ||
+                    blueprint.body.bubbles[0];
+
+                const mountPos = transformLocalPoint(
+                    t.x,
+                    t.y,
+                    bodyAngle,
+                    parentBubble ? parentBubble.offsetX : 0,
+                    parentBubble ? parentBubble.offsetY : 0
+                );
+
+                const gunSpec = gunTypeRegistry.get(gunDef.gunTypeId);
+                const gunAngle = t.aimAngle + gunDef.offsetAngle;
+                const gunSnapshot = t.guns.find((g) => g.id === gunDef.id);
+
+                const barrels = gunSpec.barrels;
+                const barrelSnapshots = gunSnapshot?.barrels;
+
+                // Adjust individual bubbles according to barrel recoil
+                const recoiledBubbles = gunSpec.body.bubbles.map((b) => {
+                    let recoilVal = 0;
+                    if (barrelSnapshots && barrelSnapshots.length > 0) {
+                        const matchedBarrelDef = barrels.find(
+                            (bar) => Math.abs(bar.offsetY - b.offsetY) < 2
+                        );
+                        if (matchedBarrelDef) {
+                            const matchedSnap = barrelSnapshots.find(
+                                (s) => s.id === matchedBarrelDef.id
+                            );
+                            recoilVal = matchedSnap?.recoil ?? 0;
+                        } else {
+                            recoilVal =
+                                (barrelSnapshots.reduce((max, s) => Math.max(max, s.recoil), 0) ??
+                                    0) * 0.4;
+                        }
+                    } else {
+                        recoilVal = t.recoil;
+                    }
+                    return {
+                        ...b,
+                        offsetX: b.offsetX - recoilVal * 6,
+                    };
+                });
+
+                // Render Gun Bubble Body (turret base and nozzles)
+                drawBubbleGraph(
+                    ctx,
+                    recoiledBubbles,
+                    mountPos.x,
+                    mountPos.y,
+                    gunAngle,
+                    t.hue + 22,
+                    {
+                        alpha: blink,
+                        rimAlpha: 0.9,
+                        glow: 0.35,
+                    }
+                );
+
+                // Muzzle flash on specific barrel tips during fire
+                if (barrelSnapshots && barrelSnapshots.length > 0) {
+                    for (const barrelDef of gunSpec.barrels) {
+                        const bSnap = barrelSnapshots.find((s) => s.id === barrelDef.id);
+                        const bRecoil = bSnap?.recoil ?? 0;
+                        if (bRecoil > 0.35) {
+                            const tipPos = transformLocalPoint(
+                                mountPos.x,
+                                mountPos.y,
+                                gunAngle,
+                                barrelDef.length + 2,
+                                barrelDef.offsetY
+                            );
+                            ctx.save();
+                            ctx.fillStyle = `rgba(255, 255, 255, ${bRecoil * 0.85})`;
+                            ctx.beginPath();
+                            ctx.arc(
+                                tipPos.x,
+                                tipPos.y,
+                                (barrelDef.width ?? 6) * bRecoil * 1.1,
+                                0,
+                                PI2
+                            );
+                            ctx.fill();
+                            ctx.restore();
+                        }
+                    }
+                }
+            }
+
+            // 5.3. Calculate Dynamic Bounding Radius for HUD elements
+            let maxRadius = GAME_CONFIG.TANK.BODY_RADIUS;
+            for (const b of blueprint.body.bubbles) {
+                const dist = Math.hypot(b.offsetX, b.offsetY) + b.radius;
+                if (dist > maxRadius) maxRadius = dist;
+            }
 
             // Circular Health Arc
             const pct = clamp(t.hp / t.maxHp, 0, 1);
@@ -177,14 +246,14 @@ export class GameRenderer {
             ctx.lineCap = 'round';
             ctx.strokeStyle = 'rgba(255,255,255,0.15)';
             ctx.beginPath();
-            ctx.arc(t.x, t.y, GAME_CONFIG.TANK.BODY_RADIUS + 10, 0, PI2);
+            ctx.arc(t.x, t.y, maxRadius + 10, 0, PI2);
             ctx.stroke();
             ctx.strokeStyle = hsla(8 + pct * 130, 92, 62, 0.95);
             ctx.beginPath();
             ctx.arc(
                 t.x,
                 t.y,
-                GAME_CONFIG.TANK.BODY_RADIUS + 10,
+                maxRadius + 10,
                 -Math.PI / 2,
                 -Math.PI / 2 + Math.max(0.03, pct) * PI2
             );
@@ -200,7 +269,7 @@ export class GameRenderer {
                 ctx.strokeStyle = hsla(t.hue, 95, 75, 1);
                 ctx.lineWidth = 2.2;
                 ctx.beginPath();
-                ctx.arc(t.x, t.y, GAME_CONFIG.TANK.BODY_RADIUS + 18, 0, PI2);
+                ctx.arc(t.x, t.y, maxRadius + 18, 0, PI2);
                 ctx.stroke();
                 ctx.restore();
             }
@@ -212,7 +281,7 @@ export class GameRenderer {
             ctx.shadowColor = 'rgba(3,10,22,0.9)';
             ctx.shadowBlur = 6;
             ctx.fillStyle = hsla(t.hue, 92, 80, 0.96 * blink);
-            ctx.fillText(t.name, t.x, t.y - GAME_CONFIG.TANK.BODY_RADIUS - 22);
+            ctx.fillText(t.name, t.x, t.y - maxRadius - 22);
             ctx.restore();
         }
 
@@ -225,7 +294,17 @@ export class GameRenderer {
                 ctx.arc(p.trail[i].x, p.trail[i].y, p.r * f * 0.85, 0, PI2);
                 ctx.fill();
             }
-            drawBubble(ctx, p.x, p.y, p.r, p.hue, { glow: 1, rimAlpha: 1 });
+
+            const projType = p.projectileTypeId ? projectileTypeRegistry.get(p.projectileTypeId) : null;
+            const angle = Math.atan2(p.vy, p.vx);
+            if (projType && projType.body && projType.body.bubbles.length > 0) {
+                drawBubbleGraph(ctx, projType.body.bubbles, p.x, p.y, angle, p.hue, {
+                    glow: 1,
+                    rimAlpha: 1,
+                });
+            } else {
+                drawBubble(ctx, p.x, p.y, p.r, p.hue, { glow: 1, rimAlpha: 1 });
+            }
         }
 
         // 7. Draw Particles

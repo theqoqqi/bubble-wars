@@ -1,3 +1,5 @@
+import { BubbleDef, DEFAULT_BUBBLE_COLOR } from '@bubble-wars/shared';
+
 export const hsla = (h: number, s: number, l: number, a: number) => `hsla(${h},${s}%,${l}%,${a})`;
 
 export interface BubbleOpts {
@@ -8,7 +10,10 @@ export interface BubbleOpts {
     fillAlpha?: number;
     flash?: number;
     glow?: number;
+    tint?: number;
 }
+
+export interface BubbleGraphOpts extends BubbleOpts {}
 
 type ConicCtx = CanvasRenderingContext2D & {
     createConicGradient?: (startAngle: number, x: number, y: number) => CanvasGradient;
@@ -40,7 +45,7 @@ export function drawBubble(
     x: number,
     y: number,
     r: number,
-    hue: number,
+    hue: number = DEFAULT_BUBBLE_COLOR.hue,
     o: BubbleOpts = {}
 ) {
     const {
@@ -51,6 +56,7 @@ export function drawBubble(
         fillAlpha = 1,
         flash = 0,
         glow = 0.5,
+        tint = DEFAULT_BUBBLE_COLOR.tint ?? 0.5,
     } = o;
 
     ctx.save();
@@ -63,10 +69,11 @@ export function drawBubble(
         ctx.rotate(-sqAngle);
     }
 
-    if (glow > 0) {
+    if (glow > 0 || tint > 0) {
+        const glowAlpha = (0.14 * glow + 0.22 * tint) * alpha;
         const gg = ctx.createRadialGradient(0, 0, r * 0.5, 0, 0, r * 1.35);
         gg.addColorStop(0, hsla(hue, 95, 70, 0));
-        gg.addColorStop(0.72, hsla(hue, 95, 70, 0.14 * glow));
+        gg.addColorStop(0.72, hsla(hue, 95, 70, glowAlpha));
         gg.addColorStop(1, hsla(hue, 95, 70, 0));
         ctx.fillStyle = gg;
         ctx.beginPath();
@@ -74,6 +81,7 @@ export function drawBubble(
         ctx.fill();
     }
 
+    // 1. Base Soap Film Fill
     const g = ctx.createRadialGradient(-r * 0.32, -r * 0.32, r * 0.1, 0, 0, r);
     g.addColorStop(0, hsla(hue, 100, 94, 0.12 * fillAlpha));
     g.addColorStop(0.55, hsla(hue, 95, 76, 0.09 * fillAlpha));
@@ -84,7 +92,30 @@ export function drawBubble(
     ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.fill();
 
+    // 2. Tint Overlay (if tint > 0)
+    if (tint > 0) {
+        const gTint = ctx.createRadialGradient(-r * 0.25, -r * 0.3, r * 0.05, 0, 0, r);
+        gTint.addColorStop(0, hsla(hue, 92, 85, tint * alpha));
+        gTint.addColorStop(0.45, hsla(hue, 95, 62, tint * alpha));
+        gTint.addColorStop(0.82, hsla(hue, 95, 48, tint * alpha));
+        gTint.addColorStop(1, hsla(hue, 100, 42, tint * alpha));
+        ctx.fillStyle = gTint;
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // 3. Iridescent Outer Ring
     iridescentStroke(ctx, r, hue, rimAlpha * alpha);
+
+    // 4. Tinted Outer Rim Stroke (if tint > 0)
+    if (tint > 0) {
+        ctx.strokeStyle = hsla(hue, 95, 65, 0.9 * tint * alpha);
+        ctx.lineWidth = Math.max(1.8, r * 0.14);
+        ctx.beginPath();
+        ctx.arc(0, 0, r - ctx.lineWidth * 0.35, 0, Math.PI * 2);
+        ctx.stroke();
+    }
 
     ctx.strokeStyle = hsla(hue + 90, 100, 82, 0.28 * alpha);
     ctx.lineWidth = Math.max(1.2, r * 0.07);
@@ -113,6 +144,68 @@ export function drawBubble(
         ctx.fill();
     }
     ctx.restore();
+}
+
+/**
+ * Universal procedural renderer for any graph of connected BubbleDef items (tank hull, turret, obstacle clusters, etc.)
+ */
+export function drawBubbleGraph(
+    ctx: CanvasRenderingContext2D,
+    bubbles: readonly BubbleDef[],
+    originX: number,
+    originY: number,
+    angle: number,
+    hue: number,
+    options: BubbleGraphOpts = {}
+): void {
+    if (!bubbles || bubbles.length === 0) return;
+
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+
+    // 1. Calculate world coordinates, hue, tint, and zIndex for each bubble
+    const items: Array<{
+        x: number;
+        y: number;
+        r: number;
+        attachedTo?: string;
+        hue: number;
+        tint: number;
+        zIndex: number;
+        originalIndex: number;
+    }> = [];
+
+    for (let i = 0; i < bubbles.length; i++) {
+        const b = bubbles[i];
+        const wx = originX + b.offsetX * cos - b.offsetY * sin;
+        const wy = originY + b.offsetX * sin + b.offsetY * cos;
+        const bubbleHue = b.color?.hue ?? hue ?? DEFAULT_BUBBLE_COLOR.hue;
+        const bubbleTint = b.color?.tint ?? options.tint ?? (DEFAULT_BUBBLE_COLOR.tint ?? 0.5);
+        const bubbleZIndex = b.zIndex ?? 0;
+        items.push({
+            x: wx,
+            y: wy,
+            r: b.radius,
+            attachedTo: b.attachedTo,
+            hue: bubbleHue,
+            tint: bubbleTint,
+            zIndex: bubbleZIndex,
+            originalIndex: i,
+        });
+    }
+
+    // 2. Sort bubbles by zIndex (ascending: lower zIndex rendered first / underneath).
+    // If zIndex is equal, preserve reverse order so children render under root by default.
+    items.sort((a, b) => {
+        if (a.zIndex !== b.zIndex) {
+            return a.zIndex - b.zIndex;
+        }
+        return b.originalIndex - a.originalIndex;
+    });
+
+    for (const p of items) {
+        drawBubble(ctx, p.x, p.y, p.r, p.hue, { ...options, tint: p.tint });
+    }
 }
 
 export interface AmbientBubble {

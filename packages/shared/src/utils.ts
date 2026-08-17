@@ -11,3 +11,22 @@ export function round1(v: number): number {
 export function round2(v: number): number {
     return Math.round(v * 100) / 100;
 }
+
+/**
+ * Transforms a local 2D point (localOffsetX, localOffsetY) into parent space
+ * given parent origin (parentX, parentY) and parent rotation angle.
+ */
+export function transformLocalPoint(
+    parentX: number,
+    parentY: number,
+    parentAngle: number,
+    localOffsetX: number,
+    localOffsetY: number
+): { x: number; y: number } {
+    const cos = Math.cos(parentAngle);
+    const sin = Math.sin(parentAngle);
+    return {
+        x: parentX + localOffsetX * cos - localOffsetY * sin,
+        y: parentY + localOffsetX * sin + localOffsetY * cos,
+    };
+}

@@ -8,7 +8,102 @@ export interface PlayerInput {
     seq: number;
 }
 
-export type TankColor = 'cyan' | 'coral' | 'lime' | 'violet' | 'amber' | 'bot';
+export interface ColorDef {
+    hue: number;
+    tint?: number;
+}
+
+/**
+ * Universal bubble definition for tank hulls, turrets, etc
+ */
+export interface BubbleDef {
+    id: string;
+    radius: number;
+    offsetX: number;
+    offsetY: number;
+    attachedTo?: string;
+    color?: ColorDef;
+    zIndex?: number;
+}
+
+/**
+ * Structure defining a composite body made of interconnected bubbles (tank hull, gun visual body, etc.)
+ */
+export interface BubbleBodyDef {
+    bubbles: BubbleDef[];
+}
+
+/**
+ * Tactical projectile / ammunition definition
+ */
+export interface ProjectileType {
+    id: string;
+    name: string;
+    damage: number;
+    speed: number;
+    lifetime?: number;
+    body: BubbleBodyDef;
+}
+
+/**
+ * Weapon barrel slot configuration (fire point & shooting mechanics)
+ */
+export interface GunBarrelDef {
+    id: string;
+    offsetX: number;
+    offsetY: number;
+    length: number;
+    width: number;
+    projectileTypeId: string;
+    cooldownMs: number;
+    recoilRecoverySpeed: number;
+    spreadAngle?: number;
+    bulletsPerShot?: number;
+}
+
+/**
+ * Weapon type specification (combines visual bubble body and firing barrels)
+ */
+export interface GunType {
+    id: string;
+    name: string;
+    body: BubbleBodyDef;
+    barrels: GunBarrelDef[];
+}
+
+/**
+ * Mounting a gun onto a tank blueprint bubble slot
+ */
+export interface TankGunDef {
+    id: string;
+    attachedTo: string;
+    gunTypeId: string;
+    offsetAngle: number;
+}
+
+/**
+ * Complete blueprint schema for assembling a tank
+ */
+export interface TankBlueprint {
+    id: string;
+    name: string;
+    description?: string;
+    maxHp: number;
+    thrustForce: number;
+    linearDamping: number;
+    body: BubbleBodyDef;
+    guns: TankGunDef[];
+}
+
+export interface GunBarrelSnapshot {
+    id: string;
+    recoil: number;
+}
+
+export interface GunSnapshot {
+    id: string;
+    barrels: GunBarrelSnapshot[];
+}
 
 export interface ObstacleSnapshot {
     id: number;
@@ -21,6 +116,8 @@ export interface ObstacleSnapshot {
 export interface TankSnapshot {
     id: string;
     name: string;
+    blueprintId: string;
+    bodyAngle: number;
     x: number;
     y: number;
     vx: number;
@@ -28,7 +125,7 @@ export interface TankSnapshot {
     aimAngle: number;
     hp: number;
     maxHp: number;
-    color: TankColor;
+    color: ColorDef;
     hue: number;
     score: number;
     kills: number;
@@ -36,6 +133,7 @@ export interface TankSnapshot {
     isBot: boolean;
     isDead: boolean;
     recoil: number;
+    guns: GunSnapshot[];
     invulnT: number;
     flash: number;
     wobbleS: number;
@@ -51,7 +149,8 @@ export interface ProjectileSnapshot {
     vy: number;
     r: number;
     hue: number;
-    color: TankColor;
+    color: ColorDef;
+    projectileTypeId: string;
 }
 
 export interface BubblePopEvent {
@@ -60,7 +159,7 @@ export interface BubblePopEvent {
     y: number;
     radius: number;
     hue: number;
-    color: TankColor;
+    color: ColorDef;
     isKill: boolean;
 }
 
@@ -76,6 +175,6 @@ export interface LeaderboardEntry {
     kills: number;
     deaths: number;
     isBot: boolean;
-    color: TankColor;
+    color: ColorDef;
     hue: number;
 }

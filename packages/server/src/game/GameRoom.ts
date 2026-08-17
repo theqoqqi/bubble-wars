@@ -2,12 +2,11 @@ import Matter from 'matter-js';
 import { WebSocket } from 'ws';
 import {
     BubblePopEvent,
-    COLOR_TO_HUE,
+    ColorDef,
     GAME_CONFIG,
     LeaderboardEntry,
     PlayerInput,
     ServerMessage,
-    TankColor,
 } from '@bubble-wars/shared';
 import { PhysicsWorld } from './PhysicsWorld.js';
 import { ServerTank } from './ServerTank.js';
@@ -36,7 +35,13 @@ export class GameRoom {
     private intervalId: NodeJS.Timeout | null = null;
     private pendingPopEvents: BubblePopEvent[] = [];
     private colorIndex: number = 0;
-    private availableColors: TankColor[] = ['cyan', 'coral', 'lime', 'violet', 'amber'];
+    private availableColors: ColorDef[] = [
+        { hue: 192 },
+        { hue: 326 },
+        { hue: 130 },
+        { hue: 280 },
+        { hue: 42 },
+    ];
 
     constructor() {
         this.physics = new PhysicsWorld();
@@ -116,16 +121,17 @@ export class GameRoom {
     public handlePlayerJoin(
         ws: WebSocket,
         name: string,
-        preferredColor?: TankColor
+        preferredColor?: ColorDef,
+        blueprintId: string = 'heavy'
     ): ConnectedPlayer {
         const id = `player_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
         const cleanName = (name || 'Bubble Warrior').trim().slice(0, 16);
         const color =
             preferredColor || this.availableColors[this.colorIndex++ % this.availableColors.length];
-        const hue = COLOR_TO_HUE[color] ?? 192;
+        const hue = color.hue;
 
         const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
-        const tank = new ServerTank(id, cleanName, color, pos.x, pos.y, false, hue);
+        const tank = new ServerTank(id, cleanName, color, pos.x, pos.y, false, hue, blueprintId);
 
         this.physics.addBody(tank.body);
 
@@ -225,10 +231,10 @@ export class GameRoom {
         if (!this.isMatchOver) {
             // 1. Process human player inputs
             for (const player of this.players.values()) {
-                const projectile = player.tank.applyInput(player.input, now);
-                if (projectile) {
-                    this.projectiles.push(projectile);
-                    this.physics.addBody(projectile.body);
+                const spawned = player.tank.applyInput(player.input, now);
+                for (const proj of spawned) {
+                    this.projectiles.push(proj);
+                    this.physics.addBody(proj.body);
                 }
                 player.tank.update(deltaMs);
             }
@@ -244,10 +250,10 @@ export class GameRoom {
                     }
                 } else {
                     const botInput = bot.updateAI(allTanks, this.physics, dt);
-                    const projectile = bot.tank.applyInput(botInput, now);
-                    if (projectile) {
-                        this.projectiles.push(projectile);
-                        this.physics.addBody(projectile.body);
+                    const spawned = bot.tank.applyInput(botInput, now);
+                    for (const proj of spawned) {
+                        this.projectiles.push(proj);
+                        this.physics.addBody(proj.body);
                     }
                 }
                 bot.tank.update(deltaMs);

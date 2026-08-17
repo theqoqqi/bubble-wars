@@ -1,9 +1,9 @@
 import Matter from 'matter-js';
 import {
-    COLOR_TO_HUE,
+    ColorDef,
     GAME_CONFIG,
     ProjectileSnapshot,
-    TankColor,
+    ProjectileType,
     round1,
 } from '@bubble-wars/shared';
 import { COLLISION_CATEGORIES } from './PhysicsWorld.js';
@@ -16,9 +16,12 @@ export class ServerProjectile {
     public ownerId: string;
     public body: Matter.Body;
     public spawnTime: number;
-    public color: TankColor;
+    public color: ColorDef;
     public hue: number;
     public radius: number;
+    public damage: number;
+    public lifetimeMs: number;
+    public projectileTypeId: string;
     public isDestroyed: boolean = false;
 
     constructor(
@@ -26,17 +29,22 @@ export class ServerProjectile {
         startX: number,
         startY: number,
         angle: number,
-        color: TankColor,
-        hue?: number
+        color: ColorDef,
+        hue?: number,
+        projectileType?: ProjectileType
     ) {
         this.id = projectileIdCounter++;
         this.ownerId = ownerId;
-        this.color = color;
-        this.hue = hue ?? COLOR_TO_HUE[color] ?? 192;
-        this.radius = GAME_CONFIG.PROJECTILE.RADIUS;
+        this.projectileTypeId = projectileType?.id ?? 'standard_bubble';
+        const primaryBubble = projectileType?.body?.bubbles?.[0];
+        this.color = primaryBubble?.color ?? color;
+        this.hue = hue ?? this.color.hue;
+        this.radius = primaryBubble?.radius ?? GAME_CONFIG.PROJECTILE.RADIUS;
+        this.damage = projectileType?.damage ?? GAME_CONFIG.PROJECTILE.DAMAGE;
+        this.lifetimeMs = projectileType?.lifetime ?? GAME_CONFIG.PROJECTILE.MAX_LIFETIME_MS;
         this.spawnTime = Date.now();
 
-        const speed = GAME_CONFIG.PROJECTILE.SPEED;
+        const speed = projectileType?.speed ?? GAME_CONFIG.PROJECTILE.SPEED;
         const vx = Math.cos(angle) * speed;
         const vy = Math.sin(angle) * speed;
 
@@ -62,7 +70,7 @@ export class ServerProjectile {
     }
 
     public isExpired(now: number): boolean {
-        return now - this.spawnTime >= GAME_CONFIG.PROJECTILE.MAX_LIFETIME_MS;
+        return now - this.spawnTime >= this.lifetimeMs;
     }
 
     public toSnapshot(): ProjectileSnapshot {
@@ -76,6 +84,7 @@ export class ServerProjectile {
             r: this.radius,
             hue: this.hue,
             color: this.color,
+            projectileTypeId: this.projectileTypeId,
         };
     }
 }

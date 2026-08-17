@@ -1,9 +1,17 @@
-import { TankColor } from '@bubble-wars/shared';
+import { ColorDef } from '@bubble-wars/shared';
 import { Game } from './game/Game.js';
 import { networkManager } from './net/NetworkManager.js';
 import { soundFx } from './audio/SoundFx.js';
 
-let selectedColor: TankColor = 'cyan';
+const COLOR_HUES: Record<string, number> = {
+    cyan: 192,
+    coral: 326,
+    lime: 130,
+    violet: 280,
+    amber: 42,
+};
+
+let selectedColor: ColorDef = { hue: 192 };
 
 // 1. Initialize Game Instance & Start Native Game Loop
 const game = new Game('game-container');
@@ -38,7 +46,8 @@ window.addEventListener('DOMContentLoaded', () => {
             colorDots.forEach((b) => b.classList.remove('active'));
             const target = e.currentTarget as HTMLElement;
             target.classList.add('active');
-            selectedColor = (target.dataset.color as TankColor) || 'cyan';
+            const colorName = target.dataset.color || 'cyan';
+            selectedColor = { hue: COLOR_HUES[colorName] ?? 192 };
         });
     });
 
@@ -62,7 +71,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
         try {
             await networkManager.connect();
-            networkManager.join(name, selectedColor);
+            networkManager.join(name, selectedColor, 'classic');
 
             if (joinModal) joinModal.classList.add('hidden');
             if (gameHud) gameHud.classList.remove('hidden');

@@ -1,4 +1,4 @@
-import { BOT_DEFS, GAME_CONFIG, PlayerInput, TankColor } from '@bubble-wars/shared';
+import { BOT_DEFS, GAME_CONFIG, PlayerInput } from '@bubble-wars/shared';
 import { ServerTank } from './ServerTank.js';
 import { PhysicsWorld } from './PhysicsWorld.js';
 
@@ -24,7 +24,7 @@ export class BotPlayer {
     constructor(id: string, x: number, y: number, defIndex: number = 0) {
         const def = BOT_DEFS[defIndex % BOT_DEFS.length];
         this.skill = def.skill;
-        this.tank = new ServerTank(id, def.name, def.color, x, y, true, def.hue);
+        this.tank = new ServerTank(id, def.name, def.color, x, y, true, def.hue, def.blueprintId);
         this.strafeDir = Math.random() < 0.5 ? 1 : -1;
         this.strafeT = rand(1.1, 2.6);
         this.phase = Math.random() * Math.PI * 2;
