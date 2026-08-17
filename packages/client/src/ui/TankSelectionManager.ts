@@ -25,6 +25,41 @@ export const TANK_META: Record<string, TankMetaInfo> = {
         damageRating: 3,
         difficulty: 'Легко',
     },
+    twin: {
+        role: 'ШТУРМОВИК',
+        description: 'Двухъядерный корпус с двумя независимыми мыломётами для плотного огня.',
+        speedRating: 3,
+        damageRating: 4,
+        difficulty: 'Легко',
+    },
+    sniper: {
+        role: 'СНАЙПЕР',
+        description: 'Облегчённый подвижный корпус с длинноствольной трубкой. Высокий урон и скорость пули.',
+        speedRating: 4,
+        damageRating: 5,
+        difficulty: 'Сложно',
+    },
+    shotgun: {
+        role: 'ДРОБОВИК',
+        description: 'Утолщённый мыльный пузырь с широким раструбом. Смертоносен на ближней дистанции.',
+        speedRating: 3,
+        damageRating: 4,
+        difficulty: 'Средне',
+    },
+    machinegun: {
+        role: 'ПУЛЕМЁТЧИК',
+        description: 'Скорострельный пеногенератор с непрерывным потоком мелких мыльных пуль.',
+        speedRating: 3,
+        damageRating: 3,
+        difficulty: 'Средне',
+    },
+    heavy: {
+        role: 'ДЖАГГЕРНАУТ',
+        description: 'Трёхъядерный бронированный пузырь с мортирой. Запускает огромный разрушительный шар.',
+        speedRating: 1,
+        damageRating: 5,
+        difficulty: 'Средне',
+    },
 };
 
 export class TankSelectionManager {
