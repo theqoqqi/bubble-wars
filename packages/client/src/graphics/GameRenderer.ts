@@ -1,5 +1,5 @@
 import { GAME_CONFIG } from '@bubble-wars/shared';
-import { ClientObstacle, ClientProjectile, ClientTankState } from '../types.js';
+import { ClientObstacle, ClientProjectile, ClientTankState, KillNotification } from '../types.js';
 import { ParticleSystem } from './ParticleSystem.js';
 import { CLIENT_CONFIG } from '../config.js';
 import {
@@ -56,7 +56,8 @@ export class GameRenderer {
     tanks: Iterable<ClientTankState>,
     projectiles: Iterable<ClientProjectile>,
     obstacles: Iterable<ClientObstacle>,
-    particleSystem: ParticleSystem
+    particleSystem: ParticleSystem,
+    killNotifications?: readonly KillNotification[]
   ): void {
     if (!this.ctx) return;
     const { ctx } = this;
@@ -223,9 +224,14 @@ export class GameRenderer {
     // 7. Draw Particles
     particleSystem.render(ctx);
 
+    // 8. Draw In-World Kill Notifications under Player Tank
+    if (myTank && !myTank.isDead && killNotifications && killNotifications.length > 0) {
+      this.drawKillNotifications(ctx, myTank, killNotifications, gameTime);
+    }
+
     ctx.restore();
 
-    // 8. Draw Vignette & Low HP Red Alert Pulse
+    // 9. Draw Vignette & Low HP Red Alert Pulse
     drawVignette(ctx, viewW, viewH);
 
     const lowHp = myTank && !myTank.isDead && myTank.hp <= 30 ? 0.16 + 0.12 * Math.sin(gameTime * 7) : 0;
@@ -244,6 +250,111 @@ export class GameRenderer {
       ctx.fillStyle = rg;
       ctx.fillRect(0, 0, viewW, viewH);
     }
+  }
+
+  private drawKillNotifications(
+    ctx: CanvasRenderingContext2D,
+    myTank: ClientTankState,
+    killAlerts: readonly KillNotification[],
+    gameTime: number
+  ): void {
+    if (!killAlerts || killAlerts.length === 0) return;
+
+    const baseX = myTank.x;
+    const baseY = myTank.y + GAME_CONFIG.TANK.BODY_RADIUS + 40;
+
+    killAlerts.forEach((notif, idx) => {
+      const progress = clamp(notif.timeRemaining / notif.totalTime, 0, 1);
+      const elapsed = notif.totalTime - notif.timeRemaining;
+
+      // 1. Pop-in scale bounce (first 0.22s)
+      const enterT = Math.min(1, elapsed / 0.22);
+      const scale = enterT < 1 ? 0.6 + 0.5 * Math.sin(enterT * Math.PI * 0.5) : 1;
+
+      // 2. Fade-out alpha (last 0.45s)
+      const exitT = Math.min(1, notif.timeRemaining / 0.45);
+      const alpha = clamp(exitT, 0, 1);
+
+      // 3. Float down slightly over lifetime
+      const floatOffset = (1 - progress) * 12 + idx * 48;
+      const notifY = baseY + floatOffset;
+
+      ctx.save();
+      ctx.translate(baseX, notifY);
+      ctx.scale(scale, scale);
+      ctx.globalAlpha = alpha;
+
+      // Measure components
+      const prefixText = '💥 ';
+      const victimText = notif.victimName;
+      const scoreText = ' +100';
+
+      ctx.font = '800 20px Outfit, Nunito, sans-serif';
+      const preW = ctx.measureText(prefixText).width;
+      ctx.font = '800 25px Outfit, Nunito, sans-serif';
+      const vicW = ctx.measureText(victimText).width;
+      ctx.font = '800 20px Outfit, Nunito, sans-serif';
+      const scW = ctx.measureText(scoreText).width;
+
+      const padX = 18;
+      const totalW = preW + vicW + scW + padX * 2;
+      const totalH = 40;
+      const halfW = totalW / 2;
+      const halfH = totalH / 2;
+
+      // Draw Glassmorphic Pill Background
+      ctx.save();
+      ctx.shadowColor = hsla(48, 95, 60, 0.75 * alpha);
+      ctx.shadowBlur = 18;
+
+      // Background rounded pill
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(-halfW, -halfH, totalW, totalH, 20);
+      } else {
+        ctx.rect(-halfW, -halfH, totalW, totalH);
+      }
+      ctx.fillStyle = 'rgba(6, 20, 42, 0.92)';
+      ctx.fill();
+
+      // Border outline with gold shimmer
+      const borderHue = 45 + Math.sin(gameTime * 6) * 15;
+      ctx.strokeStyle = hsla(borderHue, 95, 65, 0.9);
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+      ctx.restore();
+
+      // Draw Texts with Middle Baseline Alignment
+      ctx.textBaseline = 'middle';
+      let curX = -halfW + padX;
+      const textY = 1;
+
+      // Prefix "💥 "
+      ctx.font = '800 20px Outfit, Nunito, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#ffe36e';
+      ctx.shadowColor = 'rgba(0,0,0,0.8)';
+      ctx.shadowBlur = 6;
+      ctx.fillText(prefixText, curX, textY);
+      curX += preW;
+
+      // Victim Name in their tank hue
+      ctx.font = '800 25px Outfit, Nunito, sans-serif';
+      ctx.fillStyle = hsla(notif.victimHue, 95, 75, 1);
+      ctx.shadowColor = hsla(notif.victimHue, 95, 60, 0.9);
+      ctx.shadowBlur = 12;
+      ctx.fillText(victimText, curX, textY);
+      curX += vicW;
+
+      // Score " +100"
+      ctx.font = '800 20px Outfit, Nunito, sans-serif';
+      ctx.fillStyle = '#35e0ff';
+      ctx.shadowColor = 'rgba(53, 224, 255, 0.85)';
+      ctx.shadowBlur = 10;
+      ctx.fillText(scoreText, curX, textY);
+
+      ctx.restore();
+    });
   }
 
   public destroy(): void {

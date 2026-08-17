@@ -23,6 +23,7 @@ export const CLIENT_CONFIG = {
   },
   HUD: {
     KILL_FEED_TIMEOUT_MS: 4000,
+    KILL_ALERT_DURATION_SEC: 1.5,
   },
   RENDER: {
     CAMERA_LERP: 0.1,

@@ -7,7 +7,7 @@ import {
 } from '@bubble-wars/shared';
 import { networkManager } from '../net/NetworkManager.js';
 import { soundFx } from '../audio/SoundFx.js';
-import { ClientObstacle, ClientProjectile, ClientTankState } from '../types.js';
+import { ClientObstacle, ClientProjectile, ClientTankState, KillNotification } from '../types.js';
 import { InputManager } from '../input/InputManager.js';
 import { ParticleSystem } from '../graphics/ParticleSystem.js';
 import { HudManager } from '../ui/HudManager.js';
@@ -34,6 +34,7 @@ export class Game {
   private playerFlash: number = 0;
   private gameTime: number = 0;
   private lastKiller: { name: string; hue: number; verb?: string } | null = null;
+  private killAlerts: KillNotification[] = [];
 
   private animFrameId: number | null = null;
   private lastTime: number = 0;
@@ -149,11 +150,19 @@ export class Game {
     // 5. Update Particle Simulation
     this.particleSystem.update(dt);
 
-    // 6. Screen shake and flash decay
+    // 6. Update Kill Alerts
+    for (let i = this.killAlerts.length - 1; i >= 0; i--) {
+      this.killAlerts[i].timeRemaining -= dt;
+      if (this.killAlerts[i].timeRemaining <= 0) {
+        this.killAlerts.splice(i, 1);
+      }
+    }
+
+    // 7. Screen shake and flash decay
     this.shake = Math.max(0, this.shake - dt * CLIENT_CONFIG.ANIMATION.SHAKE_DECAY);
     this.playerFlash = Math.max(0, this.playerFlash - dt * CLIENT_CONFIG.ANIMATION.FLASH_DECAY_PLAYER);
 
-    // 7. Render Everything on Custom Canvas
+    // 8. Render Everything on Custom Canvas
     this.gameRenderer.render(
       this.gameTime,
       this.shake,
@@ -162,7 +171,8 @@ export class Game {
       this.tanks.values(),
       this.projectiles.values(),
       this.clientObstacles.values(),
-      this.particleSystem
+      this.particleSystem,
+      this.killAlerts
     );
   }
 
@@ -336,6 +346,7 @@ export class Game {
     const myId = networkManager.playerId;
     const myTank = myId ? this.tanks.get(myId) : null;
 
+    // 1. If local player was the victim:
     if (
       (data.victimId && data.victimId === myId) ||
       (myTank && myTank.name === data.victimName)
@@ -345,6 +356,24 @@ export class Game {
         hue: data.killerHue,
         verb: data.verb,
       };
+    }
+
+    // 2. If local player scored the kill:
+    if (
+      (data.killerId && data.killerId === myId) ||
+      (myTank && myTank.name === data.killerName)
+    ) {
+      this.killAlerts.push({
+        id: Date.now() + Math.random(),
+        victimName: data.victimName,
+        victimHue: data.victimHue,
+        timeRemaining: CLIENT_CONFIG.HUD.KILL_ALERT_DURATION_SEC,
+        totalTime: CLIENT_CONFIG.HUD.KILL_ALERT_DURATION_SEC,
+      });
+
+      if (this.killAlerts.length > 3) {
+        this.killAlerts.shift();
+      }
     }
   }
 
@@ -358,6 +387,7 @@ export class Game {
   public leaveGame(): void {
     this.isMatchOver = false;
     this.lastKiller = null;
+    this.killAlerts = [];
     if (this.inputManager) this.inputManager.reset();
     if (this.hudManager) this.hudManager.reset();
     if (this.particleSystem) this.particleSystem.clear();

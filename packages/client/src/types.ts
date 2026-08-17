@@ -63,3 +63,11 @@ export interface Particle {
   hue: number;
   kind: 'drop' | 'ring' | 'spark';
 }
+
+export interface KillNotification {
+  id: number;
+  victimName: string;
+  victimHue: number;
+  timeRemaining: number;
+  totalTime: number;
+}
