@@ -4,7 +4,6 @@ import {
   BubblePopEvent,
   COLOR_TO_HUE,
   GAME_CONFIG,
-  KILL_VERBS,
   LeaderboardEntry,
   PlayerInput,
   ServerMessage,
@@ -14,6 +13,7 @@ import { PhysicsWorld } from './PhysicsWorld.js';
 import { ServerTank } from './ServerTank.js';
 import { ServerProjectile } from './Projectile.js';
 import { BotPlayer } from './BotPlayer.js';
+import { CollisionHandler } from './CollisionHandler.js';
 
 interface ConnectedPlayer {
   id: string;
@@ -28,6 +28,7 @@ export class GameRoom {
   public fragLimit: number = 10;
   public isMatchOver: boolean = false;
   public matchOverTime: number = 0;
+  private collisionHandler: CollisionHandler;
   private players: Map<string, ConnectedPlayer> = new Map();
   private bots: BotPlayer[] = [];
   private projectiles: ServerProjectile[] = [];
@@ -39,163 +40,17 @@ export class GameRoom {
 
   constructor() {
     this.physics = new PhysicsWorld();
-    this.setupCollisionHandlers();
+    this.collisionHandler = new CollisionHandler({
+      findTankById: (id) => this.findTankById(id),
+      addPopEvent: (event) => this.pendingPopEvents.push(event),
+      broadcast: (msg) => this.broadcast(msg),
+      isMatchOver: () => this.isMatchOver,
+      getFragLimit: () => this.fragLimit,
+      triggerGameOver: (killer) => this.triggerGameOver(killer),
+    });
+    this.collisionHandler.setup(this.physics.engine);
     this.spawnInitialBots();
     this.startLoop();
-  }
-
-  private setupCollisionHandlers(): void {
-    Matter.Events.on(this.physics.engine, 'collisionStart', (event) => {
-      for (const pair of event.pairs) {
-        const { bodyA, bodyB } = pair;
-
-        let projectileBody: Matter.Body | null = null;
-        let otherBody: Matter.Body | null = null;
-
-        if (bodyA.label === 'projectile') {
-          projectileBody = bodyA;
-          otherBody = bodyB;
-        } else if (bodyB.label === 'projectile') {
-          projectileBody = bodyB;
-          otherBody = bodyA;
-        }
-
-        // Projectile vs Projectile collision (destroy each other on impact!)
-        if (bodyA.label === 'projectile' && bodyB.label === 'projectile') {
-          const projA: ServerProjectile = (bodyA as any).projectileInstance;
-          const projB: ServerProjectile = (bodyB as any).projectileInstance;
-          if (projA && projB && !projA.isDestroyed && !projB.isDestroyed) {
-            projA.isDestroyed = true;
-            projB.isDestroyed = true;
-
-            const midX = (bodyA.position.x + bodyB.position.x) / 2;
-            const midY = (bodyA.position.y + bodyB.position.y) / 2;
-
-            this.pendingPopEvents.push({
-              id: `${Date.now()}_clash_${projA.id}`,
-              x: midX,
-              y: midY,
-              radius: projA.radius * 1.8,
-              hue: projA.hue,
-              color: projA.color,
-              isKill: false,
-            });
-            this.pendingPopEvents.push({
-              id: `${Date.now()}_clash_${projB.id}`,
-              x: midX,
-              y: midY,
-              radius: projB.radius * 1.8,
-              hue: projB.hue,
-              color: projB.color,
-              isKill: false,
-            });
-          }
-          continue;
-        }
-
-        // Projectile collisions with Tank / Obstacle / Wall
-        if (projectileBody && otherBody) {
-          const projectile: ServerProjectile = (projectileBody as any).projectileInstance;
-          if (!projectile || projectile.isDestroyed) continue;
-
-          if (otherBody.label === 'tank') {
-            const tank: ServerTank = (otherBody as any).tankInstance;
-            if (tank && tank.id !== projectile.ownerId && !tank.isDead) {
-              projectile.isDestroyed = true;
-              const killed = tank.takeDamage(GAME_CONFIG.PROJECTILE.DAMAGE);
-
-              // Small pop effect for hit
-              this.pendingPopEvents.push({
-                id: `${Date.now()}_${Math.random()}`,
-                x: projectileBody.position.x,
-                y: projectileBody.position.y,
-                radius: projectile.radius * 1.6,
-                hue: projectile.hue,
-                color: projectile.color,
-                isKill: false,
-              });
-
-              if (killed) {
-                const killer = this.findTankById(projectile.ownerId);
-                if (killer) {
-                  killer.score += 100;
-                  killer.kills += 1;
-
-                  const verb = KILL_VERBS[Math.floor(Math.random() * KILL_VERBS.length)];
-                  this.broadcast({
-                    type: 'kill',
-                    killerName: killer.name,
-                    victimName: tank.name,
-                    killerColor: killer.color,
-                    victimColor: tank.color,
-                    killerHue: killer.hue,
-                    victimHue: tank.hue,
-                    verb,
-                  });
-
-                  if (!this.isMatchOver && killer.kills >= this.fragLimit) {
-                    this.triggerGameOver(killer);
-                  }
-                }
-
-                // Big pop explosion on tank death
-                this.pendingPopEvents.push({
-                  id: `${Date.now()}_kill_${tank.id}`,
-                  x: tank.body.position.x,
-                  y: tank.body.position.y,
-                  radius: GAME_CONFIG.TANK.BODY_RADIUS * 2.4,
-                  hue: tank.hue,
-                  color: tank.color,
-                  isKill: true,
-                });
-              }
-            }
-          } else if (otherBody.label === 'obstacle') {
-            // Push obstacle on bullet impact and pop bullet
-            projectile.isDestroyed = true;
-            Matter.Body.applyForce(otherBody, projectileBody.position, {
-              x: projectileBody.velocity.x * 0.0006,
-              y: projectileBody.velocity.y * 0.0006,
-            });
-            this.pendingPopEvents.push({
-              id: `${Date.now()}_${Math.random()}`,
-              x: projectileBody.position.x,
-              y: projectileBody.position.y,
-              radius: projectile.radius * 1.5,
-              hue: projectile.hue,
-              color: projectile.color,
-              isKill: false,
-            });
-          } else if (otherBody.label === 'wall') {
-            // Pop on wall impact
-            projectile.isDestroyed = true;
-            this.pendingPopEvents.push({
-              id: `${Date.now()}_${Math.random()}`,
-              x: projectileBody.position.x,
-              y: projectileBody.position.y,
-              radius: projectile.radius * 1.4,
-              hue: projectile.hue,
-              color: projectile.color,
-              isKill: false,
-            });
-          }
-        }
-
-        // Tank vs Obstacle or Tank vs Tank collisions (trigger wobbles)
-        if (bodyA.label === 'tank' && bodyB.label === 'obstacle') {
-          const tank: ServerTank = (bodyA as any).tankInstance;
-          if (tank) tank.addWobble(Math.random() * Math.PI * 2, 0.18);
-        } else if (bodyB.label === 'tank' && bodyA.label === 'obstacle') {
-          const tank: ServerTank = (bodyB as any).tankInstance;
-          if (tank) tank.addWobble(Math.random() * Math.PI * 2, 0.18);
-        } else if (bodyA.label === 'tank' && bodyB.label === 'tank') {
-          const tankA: ServerTank = (bodyA as any).tankInstance;
-          const tankB: ServerTank = (bodyB as any).tankInstance;
-          if (tankA) tankA.addWobble(Math.random() * Math.PI * 2, 0.22);
-          if (tankB) tankB.addWobble(Math.random() * Math.PI * 2, 0.22);
-        }
-      }
-    });
   }
 
   private spawnInitialBots(): void {
