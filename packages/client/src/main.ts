@@ -93,6 +93,16 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     if (nameInput) {
+        const savedPlayerName = localStorage.getItem('bubble_player_name');
+        if (savedPlayerName) {
+            nameInput.value = savedPlayerName;
+        }
+        nameInput.addEventListener('input', () => {
+            const trimmed = nameInput.value.trim();
+            if (trimmed) {
+                localStorage.setItem('bubble_player_name', trimmed);
+            }
+        });
         nameInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 startGame();
