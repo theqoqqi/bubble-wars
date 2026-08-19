@@ -32,6 +32,9 @@ window.addEventListener('DOMContentLoaded', () => {
     const serverInput = document.getElementById('server-url-input') as HTMLInputElement;
     const hudPlayerName = document.getElementById('hud-player-name');
     const btnMute = document.getElementById('btn-mute');
+    const volumeSlider = document.getElementById('sound-volume-slider') as HTMLInputElement | null;
+    const volumeValue = document.getElementById('sound-volume-value');
+    const sliderIcon = document.getElementById('sound-slider-icon');
     const btnPlay = document.getElementById('btn-play');
     const btnRespawn = document.getElementById('btn-respawn');
     const colorDots = document.querySelectorAll('.color-dot, .color-btn');
@@ -66,13 +69,103 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Sound toggle
+    const updateSoundUI = () => {
+        const isMuted = soundFx.isMuted;
+        const vol = soundFx.getVolume();
+        const pct = Math.round(vol * 100);
+
+        if (volumeSlider) {
+            volumeSlider.value = isMuted ? '0' : pct.toString();
+        }
+        if (volumeValue) {
+            volumeValue.textContent = isMuted ? '0%' : `${pct}%`;
+        }
+
+        const icon = isMuted || vol === 0 ? '🔇' : vol < 0.4 ? '🔉' : '🔊';
+        if (btnMute) btnMute.textContent = icon;
+        if (sliderIcon) sliderIcon.textContent = icon;
+    };
+
+    // Initialize sound UI with saved settings
+    updateSoundUI();
+
+    // Sound toggle & volume slider controls
+    const soundControlWrap = document.getElementById('sound-control-wrap');
+    const soundSliderPopup = document.getElementById('sound-slider-popup');
+    let soundPopupHideTimer: number | null = null;
+    let isDraggingVolume = false;
+
+    const showSoundPopup = () => {
+        if (soundPopupHideTimer !== null) {
+            window.clearTimeout(soundPopupHideTimer);
+            soundPopupHideTimer = null;
+        }
+        soundSliderPopup?.classList.add('active');
+    };
+
+    const scheduleHideSoundPopup = () => {
+        if (isDraggingVolume) return;
+        if (soundPopupHideTimer !== null) {
+            window.clearTimeout(soundPopupHideTimer);
+        }
+        soundPopupHideTimer = window.setTimeout(() => {
+            if (!isDraggingVolume) {
+                soundSliderPopup?.classList.remove('active');
+            }
+            soundPopupHideTimer = null;
+        }, 350);
+    };
+
+    if (soundControlWrap) {
+        soundControlWrap.addEventListener('mouseenter', showSoundPopup);
+        soundControlWrap.addEventListener('mouseleave', scheduleHideSoundPopup);
+    }
+
     if (btnMute) {
         btnMute.addEventListener('click', () => {
-            const isMuted = soundFx.toggleMute();
-            btnMute.textContent = isMuted ? '🔇' : '🔊';
+            soundFx.toggleMute();
+            updateSoundUI();
         });
     }
+
+    if (volumeSlider) {
+        volumeSlider.addEventListener('mousedown', () => {
+            isDraggingVolume = true;
+            showSoundPopup();
+        });
+        volumeSlider.addEventListener('touchstart', () => {
+            isDraggingVolume = true;
+            showSoundPopup();
+        });
+        volumeSlider.addEventListener('input', () => {
+            const val = parseFloat(volumeSlider.value) / 100;
+            soundFx.setVolume(val);
+            updateSoundUI();
+        });
+    }
+
+    window.addEventListener('mouseup', () => {
+        if (isDraggingVolume) {
+            isDraggingVolume = false;
+            scheduleHideSoundPopup();
+        }
+    });
+    window.addEventListener('touchend', () => {
+        if (isDraggingVolume) {
+            isDraggingVolume = false;
+            scheduleHideSoundPopup();
+        }
+    });
+
+    // Keyboard shortcut 'M' for mute/unmute
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'KeyM') {
+            const activeTag = (document.activeElement?.tagName || '').toLowerCase();
+            if (activeTag === 'input' || activeTag === 'textarea') return;
+            soundFx.toggleMute();
+            updateSoundUI();
+        }
+    });
 
     const startGame = async () => {
         soundFx.unlock();

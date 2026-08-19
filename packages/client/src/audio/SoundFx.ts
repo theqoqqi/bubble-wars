@@ -5,6 +5,7 @@ export class SoundFx {
     private master: GainNode | null = null;
     private noiseBuf: AudioBuffer | null = null;
     public isMuted: boolean = false;
+    private volume: number = 0.55;
 
     public init(): void {
         try {
@@ -16,7 +17,18 @@ export class SoundFx {
                 if (!AC) return;
                 this.ctx = new AC();
                 this.master = this.ctx.createGain();
-                this.master.gain.value = 0.55;
+
+                const savedVol = localStorage.getItem('bubble_sound_volume');
+                if (savedVol !== null) {
+                    const v = parseFloat(savedVol);
+                    if (!isNaN(v) && v >= 0 && v <= 1) this.volume = v;
+                }
+                const savedMuted = localStorage.getItem('bubble_sound_muted');
+                if (savedMuted !== null) {
+                    this.isMuted = savedMuted === 'true';
+                }
+
+                this.master.gain.value = this.isMuted ? 0 : this.volume;
                 this.master.connect(this.ctx.destination);
                 const len = Math.floor(this.ctx.sampleRate * 0.5);
                 this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
@@ -35,8 +47,62 @@ export class SoundFx {
         this.init();
     }
 
+    public getVolume(): number {
+        return this.volume;
+    }
+
+    public setVolume(vol: number): void {
+        this.volume = Math.max(0, Math.min(1, vol));
+        try {
+            localStorage.setItem('bubble_sound_volume', this.volume.toString());
+        } catch {
+            /* ignore */
+        }
+
+        if (this.volume > 0 && this.isMuted) {
+            this.isMuted = false;
+            try {
+                localStorage.setItem('bubble_sound_muted', 'false');
+            } catch {
+                /* ignore */
+            }
+        } else if (this.volume === 0 && !this.isMuted) {
+            this.isMuted = true;
+            try {
+                localStorage.setItem('bubble_sound_muted', 'true');
+            } catch {
+                /* ignore */
+            }
+        }
+
+        if (this.master) {
+            this.master.gain.value = this.isMuted ? 0 : this.volume;
+        }
+    }
+
     public toggleMute(): boolean {
         this.isMuted = !this.isMuted;
+        try {
+            localStorage.setItem('bubble_sound_muted', this.isMuted.toString());
+        } catch {
+            /* ignore */
+        }
+        if (this.master) {
+            this.master.gain.value = this.isMuted ? 0 : this.volume;
+        }
+        return this.isMuted;
+    }
+
+    public setMuted(muted: boolean): boolean {
+        this.isMuted = muted;
+        try {
+            localStorage.setItem('bubble_sound_muted', this.isMuted.toString());
+        } catch {
+            /* ignore */
+        }
+        if (this.master) {
+            this.master.gain.value = this.isMuted ? 0 : this.volume;
+        }
         return this.isMuted;
     }
 

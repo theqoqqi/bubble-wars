@@ -298,7 +298,23 @@
                 </div>
 
                 <div class="hud-actions">
-                    <button id="btn-mute" class="btn-icon" title="Звук (M)">🔊</button>
+                    <div class="sound-control-wrapper" id="sound-control-wrap">
+                        <div class="sound-slider-popup" id="sound-slider-popup">
+                            <span id="sound-slider-icon" class="sound-slider-icon">🔊</span>
+                            <input
+                                id="sound-volume-slider"
+                                class="sound-range-slider"
+                                type="range"
+                                min="0"
+                                max="100"
+                                value="55"
+                                step="1"
+                                aria-label="Громкость"
+                            />
+                            <span id="sound-volume-value" class="sound-slider-val">55%</span>
+                        </div>
+                        <button id="btn-mute" class="btn-icon" title="Звук (M)">🔊</button>
+                    </div>
                 </div>
             </div>
 
