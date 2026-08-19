@@ -36,7 +36,7 @@ export class PhysicsWorld {
         });
         this.world = this.engine.world;
         this.createWalls();
-        this.createObstacles();
+        this.generateRandomObstacles();
     }
 
     private createWalls(): void {
@@ -77,14 +77,57 @@ export class PhysicsWorld {
         Matter.Composite.add(this.world, this.walls);
     }
 
-    private createObstacles(): void {
-        this.obstacles = GAME_CONFIG.OBSTACLES.map((spot, idx) => {
-            const x = spot.x;
-            const y = spot.y;
-            const r = spot.r;
+    public generateRandomObstacles(): void {
+        // 1. Remove existing obstacles from Matter.js world
+        for (const o of this.obstacles) {
+            Matter.Composite.remove(this.world, o.body);
+        }
+        this.obstacles = [];
 
-            const body = Matter.Bodies.circle(x, y, r, {
-                isStatic: false, // Pushable dynamic obstacles!
+        const { radius } = GAME_CONFIG.ARENA;
+        // Random count of obstacles: 6 to 12
+        const targetCount = 6 + Math.floor(Math.random() * 7);
+        const maxDistFromCenter = radius - 360;
+        const obstacleHues = [185, 200, 215, 230, 245, 260, 275, 290];
+
+        const placed: { x: number; y: number; r: number; hue: number }[] = [];
+
+        for (let i = 0; i < targetCount; i++) {
+            let placedObstacle = false;
+
+            for (let attempt = 0; attempt < 50; attempt++) {
+                // Random radius: 50 to 250 px
+                const r = 50 + Math.random() * 50 + Math.random() * Math.random() * 150;
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 100 + Math.sqrt(Math.random()) * Math.max(50, maxDistFromCenter - r);
+                const x = Math.cos(angle) * dist;
+                const y = Math.sin(angle) * dist;
+
+                let overlap = false;
+                for (const p of placed) {
+                    const d = Math.hypot(x - p.x, y - p.y);
+                    if (d < r + p.r + 75) {
+                        overlap = true;
+                        break;
+                    }
+                }
+
+                if (!overlap) {
+                    const hue = obstacleHues[Math.floor(Math.random() * obstacleHues.length)];
+                    placed.push({ x, y, r, hue });
+                    placedObstacle = true;
+                    break;
+                }
+            }
+
+            if (!placedObstacle && placed.length >= 5) {
+                break;
+            }
+        }
+
+        this.obstacles = placed.map((spot, idx) => {
+            const body = Matter.Bodies.circle(spot.x, spot.y, spot.r, {
+                isStatic: false, // Pushable dynamic obstacles
                 restitution: 0.85,
                 friction: 0.02,
                 frictionAir: 0.035, // Low water drag
@@ -100,16 +143,16 @@ export class PhysicsWorld {
                 label: 'obstacle',
             });
 
-            body.obstacleData = { id: idx + 1, r, hue: spot.hue };
+            body.obstacleData = { id: idx + 1, r: spot.r, hue: spot.hue };
             Matter.Composite.add(this.world, body);
 
             return {
                 body,
                 id: idx + 1,
-                r,
+                r: spot.r,
                 hue: spot.hue,
-                homeX: x,
-                homeY: y,
+                homeX: spot.x,
+                homeY: spot.y,
                 driftAngle: Math.random() * Math.PI * 2,
                 driftSpeed: 1.2 + Math.random() * 1.6,
                 phase: Math.random() * Math.PI * 2,

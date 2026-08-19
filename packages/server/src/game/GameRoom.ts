@@ -388,6 +388,9 @@ export class GameRoom {
         this.isMatchOver = false;
         this.matchOverTime = 0;
 
+        // Generate fresh random obstacles for the new match
+        this.physics.generateRandomObstacles();
+
         // Reset all player tank scores and respawn
         for (const player of this.players.values()) {
             player.tank.score = 0;

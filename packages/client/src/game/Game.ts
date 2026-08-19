@@ -52,6 +52,7 @@ export class Game {
     private setupNetwork(): void {
         this.unsubscribers.push(
             networkManager.on('welcome', (data) => {
+                this.clientObstacles.clear();
                 if (data.obstacles) {
                     for (const o of data.obstacles) {
                         this.clientObstacles.set(o.id, {
@@ -231,8 +232,10 @@ export class Game {
         const myId = networkManager.playerId;
 
         // Process Obstacles
+        const receivedObstacleIds = new Set<number>();
         if (data.obstacles && data.obstacles.length > 0) {
             for (const o of data.obstacles) {
+                receivedObstacleIds.add(o.id);
                 let co = this.clientObstacles.get(o.id);
                 if (!co) {
                     co = {
@@ -250,6 +253,11 @@ export class Game {
                 co.targetY = o.y;
                 co.r = o.r;
                 co.hue = o.hue;
+            }
+        }
+        for (const id of this.clientObstacles.keys()) {
+            if (!receivedObstacleIds.has(id)) {
+                this.clientObstacles.delete(id);
             }
         }
 
