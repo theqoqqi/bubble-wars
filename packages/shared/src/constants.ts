@@ -69,8 +69,7 @@ export const GAME_CONFIG = {
     TICK_INTERVAL_MS: 1000 / 40, // 25ms
 
     ARENA: {
-        width: 2400,
-        height: 1800,
+        radius: 1800,
         SPAWN_MARGIN: 300,
     } as ArenaBounds & { SPAWN_MARGIN: number },
 
@@ -112,15 +111,15 @@ export const GAME_CONFIG = {
     },
 
     OBSTACLES: [
-        { fx: 0.24, fy: 0.3, fr: 0.075, hue: 210 },
-        { fx: 0.76, fy: 0.3, fr: 0.065, hue: 250 },
-        { fx: 0.5, fy: 0.52, fr: 0.095, hue: 225 },
-        { fx: 0.24, fy: 0.74, fr: 0.06, hue: 265 },
-        { fx: 0.76, fy: 0.74, fr: 0.078, hue: 200 },
-        { fx: 0.5, fy: 0.18, fr: 0.052, hue: 235 },
-        { fx: 0.5, fy: 0.84, fr: 0.055, hue: 190 },
-        { fx: 0.15, fy: 0.52, fr: 0.065, hue: 215 },
-        { fx: 0.85, fy: 0.52, fr: 0.065, hue: 245 },
+        { x: -750, y: -600, r: 220, hue: 210 },
+        { x: 750, y: -600, r: 195, hue: 250 },
+        { x: 0, y: 50, r: 285, hue: 225 },
+        { x: -750, y: 700, r: 180, hue: 265 },
+        { x: 750, y: 700, r: 235, hue: 200 },
+        { x: 0, y: -950, r: 155, hue: 235 },
+        { x: 0, y: 1000, r: 165, hue: 190 },
+        { x: -1050, y: 50, r: 195, hue: 215 },
+        { x: 1050, y: 50, r: 195, hue: 245 },
     ],
 
     COLORS: {

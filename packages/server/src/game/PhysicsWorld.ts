@@ -40,8 +40,12 @@ export class PhysicsWorld {
     }
 
     private createWalls(): void {
-        const { width, height } = GAME_CONFIG.ARENA;
+        const { radius } = GAME_CONFIG.ARENA;
+        const segmentsCount = 64;
+        const angleStep = (Math.PI * 2) / segmentsCount;
+        const chordLen = 2 * radius * Math.sin(angleStep / 2) * 1.08;
         const thickness = 160;
+
         const wallOpts: Matter.IBodyDefinition = {
             isStatic: true,
             restitution: 0.9,
@@ -56,48 +60,28 @@ export class PhysicsWorld {
             label: 'wall',
         };
 
-        // Top, Bottom, Left, Right
-        const top = Matter.Bodies.rectangle(
-            width / 2,
-            -thickness / 2,
-            width + thickness * 2,
-            thickness,
-            wallOpts
-        );
-        const bottom = Matter.Bodies.rectangle(
-            width / 2,
-            height + thickness / 2,
-            width + thickness * 2,
-            thickness,
-            wallOpts
-        );
-        const left = Matter.Bodies.rectangle(
-            -thickness / 2,
-            height / 2,
-            thickness,
-            height + thickness * 2,
-            wallOpts
-        );
-        const right = Matter.Bodies.rectangle(
-            width + thickness / 2,
-            height / 2,
-            thickness,
-            height + thickness * 2,
-            wallOpts
-        );
+        this.walls = [];
+        for (let i = 0; i < segmentsCount; i++) {
+            const angle = i * angleStep;
+            const distFromCenter = radius + thickness / 2;
+            const x = Math.cos(angle) * distFromCenter;
+            const y = Math.sin(angle) * distFromCenter;
 
-        this.walls = [top, bottom, left, right];
+            const segment = Matter.Bodies.rectangle(x, y, thickness, chordLen, {
+                ...wallOpts,
+                angle: angle,
+            });
+            this.walls.push(segment);
+        }
+
         Matter.Composite.add(this.world, this.walls);
     }
 
     private createObstacles(): void {
-        const { width, height } = GAME_CONFIG.ARENA;
-        const minDim = Math.min(width, height);
-
         this.obstacles = GAME_CONFIG.OBSTACLES.map((spot, idx) => {
-            const x = spot.fx * width;
-            const y = spot.fy * height;
-            const r = spot.fr * minDim;
+            const x = spot.x;
+            const y = spot.y;
+            const r = spot.r;
 
             const body = Matter.Bodies.circle(x, y, r, {
                 isStatic: false, // Pushable dynamic obstacles!
@@ -136,7 +120,7 @@ export class PhysicsWorld {
 
     public step(deltaMs: number): void {
         const dt = deltaMs / 1000;
-        const { width, height } = GAME_CONFIG.ARENA;
+        const { radius } = GAME_CONFIG.ARENA;
         const margin = 280;
 
         // Apply gentle wandering drift & arena repelling forces to migrating obstacles
@@ -158,16 +142,17 @@ export class PhysicsWorld {
                 fy += (dy / distToHome) * pull;
             }
 
-            // 3. Wall and corner avoidance (pushes bubbles back towards center)
+            // 3. Circular Wall avoidance (pushes bubbles back towards center (0,0))
             const px = o.body.position.x;
             const py = o.body.position.y;
+            const distFromCenter = Math.hypot(px, py);
+            const maxDist = radius - margin;
 
-            if (px < margin) fx += ((margin - px) / margin) * 0.0025 * o.body.mass;
-            if (px > width - margin)
-                fx -= ((px - (width - margin)) / margin) * 0.0025 * o.body.mass;
-            if (py < margin) fy += ((margin - py) / margin) * 0.0025 * o.body.mass;
-            if (py > height - margin)
-                fy -= ((py - (height - margin)) / margin) * 0.0025 * o.body.mass;
+            if (distFromCenter > maxDist && distFromCenter > 0) {
+                const push = ((distFromCenter - maxDist) / margin) * 0.0025 * o.body.mass;
+                fx -= (px / distFromCenter) * push;
+                fy -= (py / distFromCenter) * push;
+            }
 
             Matter.Body.applyForce(o.body, o.body.position, { x: fx, y: fy });
 
@@ -205,13 +190,16 @@ export class PhysicsWorld {
     }
 
     public getRandomSpawnPosition(margin: number = 240): { x: number; y: number } {
-        const { width, height } = GAME_CONFIG.ARENA;
+        const { radius } = GAME_CONFIG.ARENA;
+        const maxSpawnRadius = Math.max(100, radius - margin);
         let attempts = 0;
 
-        while (attempts < 20) {
+        while (attempts < 30) {
             attempts++;
-            const x = margin + Math.random() * (width - margin * 2);
-            const y = margin + Math.random() * (height - margin * 2);
+            const angle = Math.random() * Math.PI * 2;
+            const r = Math.sqrt(Math.random()) * maxSpawnRadius;
+            const x = Math.cos(angle) * r;
+            const y = Math.sin(angle) * r;
 
             let safe = true;
             for (const o of this.obstacles) {
@@ -225,6 +213,6 @@ export class PhysicsWorld {
             if (safe) return { x, y };
         }
 
-        return { x: width / 2, y: height / 2 };
+        return { x: 0, y: 0 };
     }
 }

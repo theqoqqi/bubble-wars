@@ -29,7 +29,7 @@ export class GameRenderer {
     private onResize = () => this.resizeCanvas();
 
     constructor(parentContainerId: string = 'game-container') {
-        const { width, height } = GAME_CONFIG.ARENA;
+        const { radius } = GAME_CONFIG.ARENA;
 
         this.customCanvas = document.createElement('canvas');
         this.customCanvas.id = 'bubble-canvas';
@@ -47,7 +47,7 @@ export class GameRenderer {
         this.resizeCanvas();
         window.addEventListener('resize', this.onResize);
 
-        this.ambient = createAmbient(width, height);
+        this.ambient = createAmbient(radius * 2, radius * 2);
     }
 
     public resizeCanvas(): void {
@@ -79,9 +79,9 @@ export class GameRenderer {
         // 1. Draw dynamic underwater backdrop with floating ambient bubbles
         drawBackdrop(ctx, viewW, viewH, gameTime, this.ambient, 0.016);
 
-        // 2. Camera Transform centered on Player Tank
-        const camX = myTank ? myTank.x : GAME_CONFIG.ARENA.width / 2;
-        const camY = myTank ? myTank.y : GAME_CONFIG.ARENA.height / 2;
+        // 2. Camera Transform centered on Player Tank (or center of arena (0,0))
+        const camX = myTank ? myTank.x : 0;
+        const camY = myTank ? myTank.y : 0;
 
         const sx = (Math.random() - 0.5) * 2 * shake;
         const sy = (Math.random() - 0.5) * 2 * shake;
@@ -90,15 +90,21 @@ export class GameRenderer {
         ctx.translate(viewW / 2 + sx, viewH / 2 + sy);
         ctx.translate(-camX, -camY);
 
-        // 3. Draw Arena Boundary Walls
-        const { width: aW, height: aH } = GAME_CONFIG.ARENA;
+        // 3. Draw Arena Boundary Walls (Circular)
+        const { radius: aRadius } = GAME_CONFIG.ARENA;
+
         ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 0, aRadius, 0, Math.PI * 2);
         ctx.strokeStyle = 'rgba(0, 240, 255, 0.15)';
         ctx.lineWidth = 14;
-        ctx.strokeRect(0, 0, aW, aH);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(0, 0, aRadius, 0, Math.PI * 2);
         ctx.strokeStyle = 'rgba(0, 240, 255, 0.75)';
         ctx.lineWidth = 3;
-        ctx.strokeRect(0, 0, aW, aH);
+        ctx.stroke();
         ctx.restore();
 
         // 4. Draw Obstacles (Giant pulsing iridescent bubbles smoothly migrating)

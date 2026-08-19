@@ -166,8 +166,7 @@ export interface BubblePopEvent {
 }
 
 export interface ArenaBounds {
-    width: number;
-    height: number;
+    radius: number;
 }
 
 export interface LeaderboardEntry {

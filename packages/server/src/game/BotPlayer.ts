@@ -122,26 +122,24 @@ export class BotPlayer {
                 }
             }
         } else {
-            const arenaW = GAME_CONFIG.ARENA.width;
-            const arenaH = GAME_CONFIG.ARENA.height;
-            this.aimTarget = Math.atan2(
-                arenaH / 2 - this.tank.body.position.y,
-                arenaW / 2 - this.tank.body.position.x
-            );
+            this.aimTarget = Math.atan2(-this.tank.body.position.y, -this.tank.body.position.x);
             this.tank.aimAngle += angDiff(this.tank.aimAngle, this.aimTarget) * Math.min(1, 8 * dt);
             shooting = false;
         }
 
-        // 2. Arena Boundary Avoidance
+        // 2. Arena Boundary Avoidance (Circular)
         const margin = 180;
-        const { width, height } = GAME_CONFIG.ARENA;
+        const { radius } = GAME_CONFIG.ARENA;
         const tx = this.tank.body.position.x;
         const ty = this.tank.body.position.y;
+        const distFromCenter = Math.hypot(tx, ty);
+        const maxDist = radius - margin;
 
-        if (tx < margin) mx += (margin - tx) / margin;
-        if (tx > width - margin) mx -= (tx - (width - margin)) / margin;
-        if (ty < margin) my += (margin - ty) / margin;
-        if (ty > height - margin) my -= (ty - (height - margin)) / margin;
+        if (distFromCenter > maxDist && distFromCenter > 0) {
+            const push = (distFromCenter - maxDist) / margin;
+            mx -= (tx / distFromCenter) * push * 1.5;
+            my -= (ty / distFromCenter) * push * 1.5;
+        }
 
         // 3. Obstacle Avoidance (Repelling forces from all obstacles)
         for (const o of physics?.obstacles || []) {
