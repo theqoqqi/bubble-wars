@@ -12,7 +12,9 @@ const COLOR_HUES: Record<string, number> = {
     amber: 42,
 };
 
-let selectedColor: ColorDef = { hue: 192 };
+const savedColorName = localStorage.getItem('bubble_player_color') || 'cyan';
+const initialHue = COLOR_HUES[savedColorName] ?? 192;
+let selectedColor: ColorDef = { hue: initialHue };
 const tankSelectionManager = new TankSelectionManager(selectedColor);
 
 // 1. Initialize Game Instance & Start Native Game Loop
@@ -44,13 +46,21 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Color selection
+    // Color selection & active state restoration
     colorDots.forEach((btn) => {
+        const btnColor = (btn as HTMLElement).dataset.color || 'cyan';
+        if (btnColor === savedColorName) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+
         btn.addEventListener('click', (e) => {
             colorDots.forEach((b) => b.classList.remove('active'));
             const target = e.currentTarget as HTMLElement;
             target.classList.add('active');
             const colorName = target.dataset.color || 'cyan';
+            localStorage.setItem('bubble_player_color', colorName);
             selectedColor = { hue: COLOR_HUES[colorName] ?? 192 };
             tankSelectionManager.setColor(selectedColor);
         });
@@ -68,6 +78,7 @@ window.addEventListener('DOMContentLoaded', () => {
         soundFx.unlock();
 
         const name = nameInput?.value.trim() || 'BubbleHero';
+        localStorage.setItem('bubble_player_name', name);
         if (hudPlayerName) hudPlayerName.textContent = name;
 
         if (serverInput && serverInput.value.trim()) {
