@@ -45,12 +45,16 @@ export const BOT_DEFS: BotDef[] = BOT_NAMES.map((name, i) => {
     };
 });
 
-export function getRandomBotDef(excludeNames?: Set<string>): BotDef {
+export function getRandomBotName(excludeNames?: Set<string>): string {
     const availableNames =
         excludeNames && excludeNames.size < BOT_NAMES.length
             ? BOT_NAMES.filter((n) => !excludeNames.has(n))
             : BOT_NAMES;
-    const name = availableNames[Math.floor(Math.random() * availableNames.length)];
+    return availableNames[Math.floor(Math.random() * availableNames.length)];
+}
+
+export function getRandomBotDef(excludeNames?: Set<string>): BotDef {
+    const name = getRandomBotName(excludeNames);
     const hue = BOT_HUES[Math.floor(Math.random() * BOT_HUES.length)];
     const blueprintId = BOT_BLUEPRINTS[Math.floor(Math.random() * BOT_BLUEPRINTS.length)];
     const skill = 0.65 + Math.random() * 0.28;

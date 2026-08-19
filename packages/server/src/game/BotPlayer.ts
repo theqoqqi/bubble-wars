@@ -1,4 +1,4 @@
-import { BOT_DEFS, getRandomBotDef, GAME_CONFIG, PlayerInput } from '@bubble-wars/shared';
+import { BOT_BLUEPRINTS, BOT_HUES, GAME_CONFIG, PlayerInput } from '@bubble-wars/shared';
 import { ServerTank } from './ServerTank.js';
 import { PhysicsWorld } from './PhysicsWorld.js';
 
@@ -21,13 +21,20 @@ export class BotPlayer {
     private phase: number;
     private aimTarget: number = 0;
 
-    constructor(id: string, x: number, y: number, defIndex?: number, usedNames?: Set<string>) {
-        const def = typeof defIndex === 'number'
-            ? BOT_DEFS[defIndex % BOT_DEFS.length]
-            : getRandomBotDef(usedNames);
-
-        this.skill = def.skill;
-        this.tank = new ServerTank(id, def.name, def.color, x, y, true, def.hue, def.blueprintId);
+    constructor(
+        id: string,
+        name: string,
+        x: number,
+        y: number,
+        hue?: number,
+        blueprintId?: string,
+        skill?: number
+    ) {
+        const botHue = hue ?? BOT_HUES[Math.floor(Math.random() * BOT_HUES.length)];
+        const botBlueprint =
+            blueprintId ?? BOT_BLUEPRINTS[Math.floor(Math.random() * BOT_BLUEPRINTS.length)];
+        this.skill = skill ?? (0.65 + Math.random() * 0.28);
+        this.tank = new ServerTank(id, name, { hue: botHue }, x, y, true, botHue, botBlueprint);
         this.strafeDir = Math.random() < 0.5 ? 1 : -1;
         this.strafeT = rand(1.1, 2.6);
         this.phase = Math.random() * Math.PI * 2;

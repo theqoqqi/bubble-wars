@@ -1,6 +1,7 @@
 import Matter from 'matter-js';
 import { WebSocket } from 'ws';
 import {
+    BOT_NAMES,
     BubblePopEvent,
     ColorDef,
     GAME_CONFIG,
@@ -30,6 +31,7 @@ export class GameRoom {
     private collisionHandler: CollisionHandler;
     private players: Map<string, ConnectedPlayer> = new Map();
     private bots: BotPlayer[] = [];
+    private freeNames: string[] = [];
     private projectiles: ServerProjectile[] = [];
     private tickCount: number = 0;
     private intervalId: NodeJS.Timeout | null = null;
@@ -54,7 +56,7 @@ export class GameRoom {
             triggerGameOver: (killer) => this.triggerGameOver(killer),
         });
         this.collisionHandler.setup(this.physics.engine);
-        this.spawnInitialBots();
+        this.respawnAllBots();
         this.startLoop();
     }
 
@@ -75,13 +77,28 @@ export class GameRoom {
             .slice(0, 10);
     }
 
-    private spawnInitialBots(): void {
-        const count = GAME_CONFIG.BOT.SPAWN_COUNT;
-        const usedNames = new Set<string>();
+    private getRandomBotName(): string {
+        if (this.freeNames.length === 0) {
+            this.freeNames = [...BOT_NAMES];
+        }
+
+        const idx = Math.floor(Math.random() * this.freeNames.length);
+        const [picked] = this.freeNames.splice(idx, 1);
+
+        return picked;
+    }
+
+    private respawnAllBots(): void {
+        for (const bot of this.bots) {
+            this.physics.removeBody(bot.tank.body);
+        }
+        this.bots = [];
+
+        const count = this.botCount;
         for (let i = 0; i < count; i++) {
+            const name = this.getRandomBotName();
             const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
-            const bot = new BotPlayer(`bot_${i + 1}`, pos.x, pos.y, undefined, usedNames);
-            usedNames.add(bot.tank.name);
+            const bot = new BotPlayer(`bot_${Date.now()}_${i + 1}`, name, pos.x, pos.y);
             this.bots.push(bot);
             this.physics.addBody(bot.tank.body);
         }
@@ -332,13 +349,13 @@ export class GameRoom {
 
     public setBotCount(targetCount: number): number {
         const count = Math.max(0, Math.min(15, Math.floor(targetCount)));
-        const usedNames = new Set<string>(this.bots.map((b) => b.tank.name));
+        this.botCount = count;
 
         while (this.bots.length < count) {
             const idx = this.bots.length;
+            const name = this.getRandomBotName();
             const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
-            const bot = new BotPlayer(`bot_${Date.now()}_${idx + 1}`, pos.x, pos.y, undefined, usedNames);
-            usedNames.add(bot.tank.name);
+            const bot = new BotPlayer(`bot_${Date.now()}_${idx + 1}`, name, pos.x, pos.y);
             this.bots.push(bot);
             this.physics.addBody(bot.tank.body);
         }
@@ -371,7 +388,7 @@ export class GameRoom {
         this.isMatchOver = false;
         this.matchOverTime = 0;
 
-        // Reset all tank scores and respawn
+        // Reset all player tank scores and respawn
         for (const player of this.players.values()) {
             player.tank.score = 0;
             player.tank.kills = 0;
@@ -380,13 +397,8 @@ export class GameRoom {
             player.tank.respawn(pos.x, pos.y);
         }
 
-        for (const bot of this.bots) {
-            bot.tank.score = 0;
-            bot.tank.kills = 0;
-            bot.tank.deaths = 0;
-            const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
-            bot.tank.respawn(pos.x, pos.y);
-        }
+        // Spawn a brand new random set of bots for the new match
+        this.respawnAllBots();
 
         // Clear projectiles
         for (const proj of this.projectiles) {
