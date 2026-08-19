@@ -1,4 +1,4 @@
-import { ColorDef } from '@bubble-wars/shared';
+import { ColorDef, getRandomBotName } from '@bubble-wars/shared';
 import { Game } from './game/Game.js';
 import { networkManager } from './net/NetworkManager.js';
 import { soundFx } from './audio/SoundFx.js';
@@ -29,6 +29,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const gameHud = document.getElementById('game-hud');
     const joinForm = document.getElementById('join-form') as HTMLFormElement;
     const nameInput = document.getElementById('player-name-input') as HTMLInputElement;
+    const btnRandomName = document.getElementById('btn-random-name');
     const serverInput = document.getElementById('server-url-input') as HTMLInputElement;
     const hudPlayerName = document.getElementById('hud-player-name');
     const btnMute = document.getElementById('btn-mute');
@@ -212,6 +213,47 @@ window.addEventListener('DOMContentLoaded', () => {
                 startGame();
             }
         });
+
+        if (btnRandomName) {
+            let rollTimeout: number | null = null;
+
+            btnRandomName.addEventListener('click', () => {
+                if (rollTimeout !== null) {
+                    clearTimeout(rollTimeout);
+                    rollTimeout = null;
+                }
+
+                btnRandomName.classList.remove('spinning');
+                void btnRandomName.offsetWidth; // force DOM reflow to restart animation
+                btnRandomName.classList.add('spinning');
+
+                const startTime = Date.now();
+                const duration = 3000;
+
+                const rollTick = () => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(1, elapsed / duration);
+                    const randomName = getRandomBotName();
+                    nameInput.value = randomName;
+                    localStorage.setItem('bubble_player_name', randomName);
+
+                    if (progress < 1) {
+                        const nextDelay = 40 + Math.pow(progress, 2.5) * 360;
+                        rollTimeout = window.setTimeout(rollTick, nextDelay);
+                    } else {
+                        rollTimeout = null;
+                        nameInput.focus();
+                        nameInput.select();
+                    }
+                };
+
+                rollTick();
+            });
+
+            btnRandomName.addEventListener('animationend', () => {
+                btnRandomName.classList.remove('spinning');
+            });
+        }
     }
 
     const leaveModal = document.getElementById('leave-modal');
