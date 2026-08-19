@@ -34,7 +34,7 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
         lifetime: 2200,
         body: {
             bubbles: [
-                { id: 'core', offsetX: 0, offsetY: 0, radius: 10, color: { hue: 28, tint: 0.9 } },
+                { id: 'core', offsetX: 0, offsetY: 0, radius: 6, stretch: 2, color: { hue: 28, tint: 0.9 } },
             ],
         },
     },
