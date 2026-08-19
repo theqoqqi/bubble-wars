@@ -21,8 +21,8 @@ export const KILL_VERBS = ['лопает', 'сдувает', 'распыляет
 
 export const BOT_DEFS = [
     { name: 'Капитан Мыло', color: { hue: 326 } as ColorDef, hue: 326, skill: 0.85, blueprintId: 'heavy' },
-    { name: 'Пузырь-3000', color: { hue: 48 } as ColorDef, hue: 48, skill: 0.7, blueprintId: 'twin' },
-    { name: 'Мисс Пена', color: { hue: 130 } as ColorDef, hue: 130, skill: 0.95, blueprintId: 'sniper' },
+    { name: 'Пузырь-3000', color: { hue: 48 } as ColorDef, hue: 48, skill: 0.7, blueprintId: 'sniper' },
+    { name: 'Мисс Пена', color: { hue: 130 } as ColorDef, hue: 130, skill: 0.95, blueprintId: 'twin' },
     { name: 'Гроза Пены', color: { hue: 280 } as ColorDef, hue: 280, skill: 0.8, blueprintId: 'shotgun' },
 ];
 
