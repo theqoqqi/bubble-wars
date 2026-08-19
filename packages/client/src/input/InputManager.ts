@@ -60,6 +60,10 @@ export class InputManager {
         };
     }
 
+    public getMouse(): { x: number; y: number; down: boolean } {
+        return this.mouse;
+    }
+
     public reset(): void {
         this.keys.clear();
         this.mouse.down = false;

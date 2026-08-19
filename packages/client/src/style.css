@@ -40,6 +40,27 @@ body {
     z-index: 1;
 }
 
+/* ---------- In-Game Custom Crosshair Mode ---------- */
+body.crosshair-active,
+body.crosshair-active #game-container,
+body.crosshair-active #bubble-canvas {
+    cursor: none;
+}
+
+body.crosshair-active .hud-actions,
+body.crosshair-active .hud-actions button,
+body.crosshair-active .overlay,
+body.crosshair-active .overlay * {
+    cursor: auto;
+}
+
+body.crosshair-active .hud-actions button,
+body.crosshair-active .overlay button,
+body.crosshair-active .overlay a,
+body.crosshair-active .color-dot {
+    cursor: pointer;
+}
+
 /* ---------- panels ---------- */
 .panel {
     background: linear-gradient(160deg, rgba(16, 48, 78, 0.82), rgba(7, 22, 40, 0.9));

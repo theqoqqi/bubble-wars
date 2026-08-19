@@ -65,7 +65,8 @@ export class GameRenderer {
         projectiles: Iterable<ClientProjectile>,
         obstacles: Iterable<ClientObstacle>,
         particleSystem: ParticleSystem,
-        killNotifications?: readonly KillNotification[]
+        killNotifications?: readonly KillNotification[],
+        crosshair?: { x: number; y: number; down: boolean; visible: boolean; hue?: number }
     ): void {
         if (!this.ctx) return;
         const { ctx } = this;
@@ -337,6 +338,82 @@ export class GameRenderer {
             ctx.fillStyle = rg;
             ctx.fillRect(0, 0, viewW, viewH);
         }
+
+        // 10. Draw In-Game Custom Bubble Crosshair
+        if (crosshair && crosshair.visible) {
+            this.drawCrosshair(ctx, crosshair, gameTime);
+        }
+    }
+
+    private drawCrosshair(
+        ctx: CanvasRenderingContext2D,
+        crosshair: { x: number; y: number; down: boolean; hue?: number },
+        gameTime: number
+    ): void {
+        const { x, y, down } = crosshair;
+        const hue = crosshair.hue ?? 192;
+
+        ctx.save();
+        ctx.translate(x, y);
+
+        const baseRadius = down ? 20 : 16;
+        const ringColor = hsla(hue, 100, 70, down ? 0.95 : 0.85);
+        const glowColor = hsla(hue, 100, 60, down ? 0.9 : 0.6);
+
+        // Subtle continuous rotation
+        const rot = gameTime * 1.5;
+
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = down ? 14 : 8;
+
+        // 1. Draw outer segmented arcs
+        ctx.lineWidth = down ? 2.2 : 1.8;
+        ctx.strokeStyle = ringColor;
+
+        const arcLen = Math.PI * 0.36;
+        const gap = Math.PI * 0.14;
+        for (let i = 0; i < 4; i++) {
+            const startAngle = rot + i * (arcLen + gap);
+            ctx.beginPath();
+            ctx.arc(0, 0, baseRadius, startAngle, startAngle + arcLen);
+            ctx.stroke();
+        }
+
+        // 2. Soap bubble highlight glint (top-left)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.beginPath();
+        ctx.arc(-baseRadius * 0.55, -baseRadius * 0.55, 1.8, 0, PI2);
+        ctx.fill();
+
+        // 3. Four directional ticks
+        const innerDist = down ? 7 : 5;
+        const outerDist = down ? 13 : 10;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.lineWidth = 1.5;
+
+        ctx.beginPath();
+        // Top
+        ctx.moveTo(0, -innerDist);
+        ctx.lineTo(0, -outerDist);
+        // Bottom
+        ctx.moveTo(0, innerDist);
+        ctx.lineTo(0, outerDist);
+        // Left
+        ctx.moveTo(-innerDist, 0);
+        ctx.lineTo(-outerDist, 0);
+        // Right
+        ctx.moveTo(innerDist, 0);
+        ctx.lineTo(outerDist, 0);
+        ctx.stroke();
+
+        // 4. Center Dot
+        ctx.fillStyle = down ? '#ffffff' : hsla(hue, 100, 85, 0.95);
+        ctx.shadowBlur = down ? 10 : 6;
+        ctx.beginPath();
+        ctx.arc(0, 0, down ? 2.5 : 2, 0, PI2);
+        ctx.fill();
+
+        ctx.restore();
     }
 
     private drawKillNotifications(

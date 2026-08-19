@@ -174,6 +174,36 @@ export class Game {
             this.playerFlash - dt * CLIENT_CONFIG.ANIMATION.FLASH_DECAY_PLAYER
         );
 
+        // Check active modal states for cursor and input
+        const isJoinModalOpen = !document
+            .getElementById('join-modal')
+            ?.classList.contains('hidden');
+        const isTankModalOpen = !document
+            .getElementById('tank-modal')
+            ?.classList.contains('hidden');
+        const isDeathModalOpen = !document
+            .getElementById('death-modal')
+            ?.classList.contains('hidden');
+        const isGameOverModalOpen = !document
+            .getElementById('gameover-modal')
+            ?.classList.contains('hidden');
+        const isAnyModalOpen =
+            isLeaveModalOpen ||
+            isJoinModalOpen ||
+            isTankModalOpen ||
+            isDeathModalOpen ||
+            isGameOverModalOpen;
+
+        const showCrosshair = !!myTank && !myTank.isDead && !this.isMatchOver && !isAnyModalOpen;
+
+        if (showCrosshair) {
+            document.body.classList.add('crosshair-active');
+        } else {
+            document.body.classList.remove('crosshair-active');
+        }
+
+        const mouse = this.inputManager.getMouse();
+
         // 8. Render Everything on Custom Canvas
         this.gameRenderer.render(
             this.gameTime,
@@ -184,7 +214,14 @@ export class Game {
             this.projectiles.values(),
             this.clientObstacles.values(),
             this.particleSystem,
-            this.killAlerts
+            this.killAlerts,
+            {
+                x: mouse.x,
+                y: mouse.y,
+                down: mouse.down,
+                visible: showCrosshair,
+                hue: myTank?.hue,
+            }
         );
     }
 
@@ -414,6 +451,7 @@ export class Game {
         this.isMatchOver = false;
         this.lastKiller = null;
         this.killAlerts = [];
+        document.body.classList.remove('crosshair-active');
         if (this.inputManager) this.inputManager.reset();
         if (this.hudManager) this.hudManager.reset();
         if (this.particleSystem) this.particleSystem.clear();
@@ -427,6 +465,7 @@ export class Game {
 
     public destroy(): void {
         this.stop();
+        document.body.classList.remove('crosshair-active');
         this.unsubscribers.forEach((unsub) => unsub());
         this.unsubscribers = [];
     }
