@@ -19,12 +19,50 @@ export const DEFAULT_BUBBLE_COLOR: ColorDef = {
 
 export const KILL_VERBS = ['лопает', 'сдувает', 'распыляет', 'протыкает', 'смывает', 'взрывает'];
 
-export const BOT_DEFS = [
-    { name: 'Капитан Мыло', color: { hue: 326 } as ColorDef, hue: 326, skill: 0.85, blueprintId: 'heavy' },
-    { name: 'Пузырь-3000', color: { hue: 48 } as ColorDef, hue: 48, skill: 0.7, blueprintId: 'sniper' },
-    { name: 'Мисс Пена', color: { hue: 130 } as ColorDef, hue: 130, skill: 0.95, blueprintId: 'twin' },
-    { name: 'Гроза Пены', color: { hue: 280 } as ColorDef, hue: 280, skill: 0.8, blueprintId: 'shotgun' },
-];
+import botNamesJson from './data/botNames.json';
+
+export interface BotDef {
+    name: string;
+    color: ColorDef;
+    hue: number;
+    skill: number;
+    blueprintId: string;
+}
+
+export const BOT_NAMES: readonly string[] = botNamesJson;
+
+export const BOT_BLUEPRINTS = ['classic', 'twin', 'sniper', 'shotgun', 'machinegun', 'heavy'];
+export const BOT_HUES = [326, 48, 130, 280, 192, 15, 80, 160, 220, 260, 350];
+
+export const BOT_DEFS: BotDef[] = BOT_NAMES.map((name, i) => {
+    const hue = BOT_HUES[i % BOT_HUES.length];
+    return {
+        name,
+        color: { hue },
+        hue,
+        skill: 0.7 + ((i * 7) % 25) / 100,
+        blueprintId: BOT_BLUEPRINTS[i % BOT_BLUEPRINTS.length],
+    };
+});
+
+export function getRandomBotDef(excludeNames?: Set<string>): BotDef {
+    const availableNames =
+        excludeNames && excludeNames.size < BOT_NAMES.length
+            ? BOT_NAMES.filter((n) => !excludeNames.has(n))
+            : BOT_NAMES;
+    const name = availableNames[Math.floor(Math.random() * availableNames.length)];
+    const hue = BOT_HUES[Math.floor(Math.random() * BOT_HUES.length)];
+    const blueprintId = BOT_BLUEPRINTS[Math.floor(Math.random() * BOT_BLUEPRINTS.length)];
+    const skill = 0.65 + Math.random() * 0.28;
+
+    return {
+        name,
+        color: { hue },
+        hue,
+        skill,
+        blueprintId,
+    };
+}
 
 export const GAME_CONFIG = {
     TICK_RATE: 40, // 40 FPS server tick

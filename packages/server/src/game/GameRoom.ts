@@ -77,9 +77,11 @@ export class GameRoom {
 
     private spawnInitialBots(): void {
         const count = GAME_CONFIG.BOT.SPAWN_COUNT;
+        const usedNames = new Set<string>();
         for (let i = 0; i < count; i++) {
             const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
-            const bot = new BotPlayer(`bot_${i + 1}`, pos.x, pos.y, i);
+            const bot = new BotPlayer(`bot_${i + 1}`, pos.x, pos.y, undefined, usedNames);
+            usedNames.add(bot.tank.name);
             this.bots.push(bot);
             this.physics.addBody(bot.tank.body);
         }
@@ -330,11 +332,13 @@ export class GameRoom {
 
     public setBotCount(targetCount: number): number {
         const count = Math.max(0, Math.min(15, Math.floor(targetCount)));
+        const usedNames = new Set<string>(this.bots.map((b) => b.tank.name));
 
         while (this.bots.length < count) {
             const idx = this.bots.length;
             const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
-            const bot = new BotPlayer(`bot_${Date.now()}_${idx + 1}`, pos.x, pos.y, idx);
+            const bot = new BotPlayer(`bot_${Date.now()}_${idx + 1}`, pos.x, pos.y, undefined, usedNames);
+            usedNames.add(bot.tank.name);
             this.bots.push(bot);
             this.physics.addBody(bot.tank.body);
         }
