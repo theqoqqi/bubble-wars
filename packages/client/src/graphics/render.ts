@@ -11,6 +11,8 @@ export interface BubbleOpts {
     flash?: number;
     glow?: number;
     tint?: number;
+    stretch?: number;
+    rotation?: number;
 }
 
 export interface BubbleGraphOpts extends BubbleOpts {}
@@ -57,11 +59,21 @@ export function drawBubble(
         flash = 0,
         glow = 0.5,
         tint = DEFAULT_BUBBLE_COLOR.tint ?? 0.5,
+        stretch = 1,
+        rotation = 0,
     } = o;
 
     ctx.save();
     ctx.translate(x, y);
     ctx.globalAlpha = alpha;
+
+    if (rotation !== 0) {
+        ctx.rotate(rotation);
+    }
+
+    if (stretch !== 1) {
+        ctx.scale(stretch, 1);
+    }
 
     if (squash !== 0) {
         ctx.rotate(sqAngle);
@@ -172,6 +184,8 @@ export function drawBubbleGraph(
         hue: number;
         tint: number;
         zIndex: number;
+        stretch: number;
+        rotation: number;
         originalIndex: number;
     }> = [];
 
@@ -182,6 +196,8 @@ export function drawBubbleGraph(
         const bubbleHue = b.color?.hue ?? hue ?? DEFAULT_BUBBLE_COLOR.hue;
         const bubbleTint = b.color?.tint ?? options.tint ?? (DEFAULT_BUBBLE_COLOR.tint ?? 0.5);
         const bubbleZIndex = b.zIndex ?? 0;
+        const bubbleStretch = b.stretch ?? 1;
+        const bubbleRotation = angle + (b.rotation ?? 0);
         items.push({
             x: wx,
             y: wy,
@@ -190,6 +206,8 @@ export function drawBubbleGraph(
             hue: bubbleHue,
             tint: bubbleTint,
             zIndex: bubbleZIndex,
+            stretch: bubbleStretch,
+            rotation: bubbleRotation,
             originalIndex: i,
         });
     }
@@ -204,7 +222,12 @@ export function drawBubbleGraph(
     });
 
     for (const p of items) {
-        drawBubble(ctx, p.x, p.y, p.r, p.hue, { ...options, tint: p.tint });
+        drawBubble(ctx, p.x, p.y, p.r, p.hue, {
+            ...options,
+            tint: p.tint,
+            stretch: p.stretch,
+            rotation: p.rotation,
+        });
     }
 }
 

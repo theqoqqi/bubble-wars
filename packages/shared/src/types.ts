@@ -24,6 +24,8 @@ export interface BubbleDef {
     attachedTo?: string;
     color?: ColorDef;
     zIndex?: number;
+    stretch?: number;
+    rotation?: number;
 }
 
 /**
