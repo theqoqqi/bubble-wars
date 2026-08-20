@@ -1,5 +1,5 @@
 import Matter from 'matter-js';
-import { BubblePopEvent } from '@bubble-wars/shared';
+import { BubblePopEvent, TargetType, subPoints } from '@bubble-wars/shared';
 import { ServerProjectile } from './Projectile.js';
 import { ServerTank } from './ServerTank.js';
 import { GameRoom } from './GameRoom.js';
@@ -80,8 +80,8 @@ export class CollisionHandler {
                 return;
             }
 
-            projA.isDestroyed = true;
-            projB.isDestroyed = true;
+            this.tryBounceOrDestroy(projA, 'projectile', subPoints(bodyA.position, bodyB.position));
+            this.tryBounceOrDestroy(projB, 'projectile', subPoints(bodyB.position, bodyA.position));
 
             const midX = (bodyA.position.x + bodyB.position.x) / 2;
             const midY = (bodyA.position.y + bodyB.position.y) / 2;
@@ -135,7 +135,13 @@ export class CollisionHandler {
         projectile.hitTankIds.add(tank.id);
         projectile.hitsLeft--;
 
-        if (projectile.hitsLeft <= 0) {
+        const bounced = this.tryBounce(
+            projectile,
+            'tank',
+            subPoints(projectileBody.position, tank.body.position)
+        );
+
+        if (projectile.hitsLeft <= 0 && !bounced) {
             projectile.isDestroyed = true;
         }
 
@@ -173,11 +179,16 @@ export class CollisionHandler {
         projectileBody: Matter.Body,
         obstacleBody: Matter.Body
     ): void {
-        projectile.isDestroyed = true;
         Matter.Body.applyForce(obstacleBody, projectileBody.position, {
             x: projectileBody.velocity.x * 0.0006,
             y: projectileBody.velocity.y * 0.0006,
         });
+
+        this.tryBounceOrDestroy(
+            projectile,
+            'obstacle',
+            subPoints(projectileBody.position, obstacleBody.position)
+        );
 
         const ctx: ImpactContext = {
             game: this.context.game,
@@ -202,7 +213,10 @@ export class CollisionHandler {
         projectile: ServerProjectile,
         projectileBody: Matter.Body
     ): void {
-        projectile.isDestroyed = true;
+        this.tryBounceOrDestroy(projectile, 'map_boundary', {
+            x: -projectileBody.position.x,
+            y: -projectileBody.position.y,
+        });
 
         const ctx: ImpactContext = {
             game: this.context.game,
@@ -221,6 +235,37 @@ export class CollisionHandler {
             color: projectile.color,
             isKill: false,
         });
+    }
+
+    /**
+     * Выполняет отскок снаряда, если рикошет разрешён для данного типа цели.
+     * Возвращает true, если произошёл успешный отскок.
+     */
+    private tryBounce(
+        projectile: ServerProjectile,
+        targetType: TargetType,
+        normal: { x: number; y: number }
+    ): boolean {
+        if (!projectile.canBounceFrom(targetType)) {
+            return false;
+        }
+
+        projectile.bouncesLeft--;
+        projectile.reflectVelocity(normal);
+        return true;
+    }
+
+    /**
+     * Выполняет отскок снаряда либо помечает его как уничтоженный при отсутствии отскока.
+     */
+    private tryBounceOrDestroy(
+        projectile: ServerProjectile,
+        targetType: TargetType,
+        normal: { x: number; y: number }
+    ): void {
+        if (!this.tryBounce(projectile, targetType, normal)) {
+            projectile.isDestroyed = true;
+        }
     }
 
     private handleTankObstacle(tank: ServerTank | undefined): void {

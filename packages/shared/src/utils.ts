@@ -13,6 +13,19 @@ export function round2(v: number): number {
 }
 
 /**
+ * Subtracts coordinates of point B from point A (a - b)
+ */
+export function subPoints(
+    a: { x: number; y: number },
+    b: { x: number; y: number }
+): { x: number; y: number } {
+    return {
+        x: a.x - b.x,
+        y: a.y - b.y,
+    };
+}
+
+/**
  * Transforms a local 2D point (localOffsetX, localOffsetY) into parent space
  * given parent origin (parentX, parentY) and parent rotation angle.
  */

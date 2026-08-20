@@ -37,6 +37,8 @@ export interface BubbleBodyDef {
     bubbles: BubbleDef[];
 }
 
+export type TargetType = 'map_boundary' | 'obstacle' | 'tank' | 'projectile';
+
 /**
  * Tactical projectile / ammunition definition
  */
@@ -48,6 +50,8 @@ export interface ProjectileType {
     lifetime?: number;
     body: BubbleBodyDef;
     maxHits?: number;
+    bounces?: number;
+    bounceFrom?: TargetType[];
     onHit?: ImpactEffect[];
     onExpire?: ImpactEffect[];
 }
