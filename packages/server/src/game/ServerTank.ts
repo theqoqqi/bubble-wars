@@ -14,6 +14,7 @@ import {
 import { COLLISION_CATEGORIES } from './PhysicsWorld.js';
 import { ServerProjectile } from './Projectile.js';
 import { ServerGun } from './ServerGun.js';
+import { StatusEffectManager } from './effects/index.js';
 import './matterTypes.js';
 
 export class ServerTank {
@@ -29,6 +30,7 @@ export class ServerTank {
 
     public blueprint: TankBlueprint;
     public guns: ServerGun[];
+    public statusEffects: StatusEffectManager;
     public bodyAngle: number = 0;
 
     public hp: number;
@@ -64,6 +66,7 @@ export class ServerTank {
         this.hue = hue ?? color.hue;
         this.isBot = isBot;
 
+        this.statusEffects = new StatusEffectManager(this);
         this.blueprint = tankBlueprintRegistry.get(blueprintId);
         this.maxHp = this.blueprint.maxHp;
         this.hp = this.maxHp;
@@ -126,7 +129,8 @@ export class ServerTank {
 
         if (fx !== 0 || fy !== 0) {
             const len = Math.hypot(fx, fy);
-            const forceMag = this.blueprint.thrustForce;
+            const baseThrust = this.blueprint.thrustForce;
+            const forceMag = this.statusEffects.modifyThrust(baseThrust);
             const normalizedFx = (fx / len) * forceMag;
             const normalizedFy = (fy / len) * forceMag;
 
@@ -200,6 +204,9 @@ export class ServerTank {
     public update(deltaMs: number): void {
         const dt = deltaMs / 1000;
 
+        // Status effects update
+        this.statusEffects.update(dt);
+
         // Flash decay
         this.flash = Math.max(0, this.flash - dt * 3.2);
 
@@ -227,14 +234,18 @@ export class ServerTank {
     public takeDamage(amount: number, sourceTank?: ServerTank): boolean {
         if (this.isDead || Date.now() < this.invulnerableUntil) return false;
 
+        const effectiveDamage = this.statusEffects.modifyDamage(amount);
+        if (effectiveDamage <= 0) return false;
+
         this.flash = 1.0;
         this.addWobble(Math.random() * Math.PI * 2, 0.25);
-        this.hp = Math.max(0, this.hp - amount);
+        this.hp = Math.max(0, this.hp - effectiveDamage);
 
         if (this.hp <= 0) {
             this.isDead = true;
             this.deaths++;
             this.deathTime = Date.now();
+            this.statusEffects.clear();
             this.onDeath?.(this, sourceTank);
             return true; // Tank was killed
         }
@@ -260,6 +271,7 @@ export class ServerTank {
     }
 
     public respawn(x: number, y: number): void {
+        this.statusEffects.clear();
         this.hp = this.maxHp;
         this.isDead = false;
         this.recoil = 0;
@@ -299,6 +311,7 @@ export class ServerTank {
             flash: round2(this.flash),
             wobbleS: round2(this.wobbleS),
             wobbleA: round2(this.wobbleA),
+            effects: this.statusEffects.getSnapshots(),
         };
     }
 }

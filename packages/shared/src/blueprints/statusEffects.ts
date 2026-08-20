@@ -1,0 +1,7 @@
+import { Registry } from '../Registry.js';
+import { StatusEffectDef } from '../types.js';
+
+export const DEFAULT_STATUS_EFFECTS: StatusEffectDef[] = [
+];
+
+export const statusEffectRegistry = new Registry<StatusEffectDef>('StatusEffectRegistry');

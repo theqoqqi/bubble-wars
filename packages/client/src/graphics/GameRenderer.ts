@@ -8,6 +8,7 @@ import {
 } from '@bubble-wars/shared';
 import { ClientObstacle, ClientProjectile, ClientTankState, KillNotification } from '../types.js';
 import { ParticleSystem } from './ParticleSystem.js';
+import { ClientStatusManager } from '../status/ClientStatusManager.js';
 import { CLIENT_CONFIG } from '../config.js';
 import {
     AmbientBubble,
@@ -65,6 +66,7 @@ export class GameRenderer {
         projectiles: Iterable<ClientProjectile>,
         obstacles: Iterable<ClientObstacle>,
         particleSystem: ParticleSystem,
+        statusManager: ClientStatusManager,
         killNotifications?: readonly KillNotification[],
         crosshair?: { x: number; y: number; down: boolean; visible: boolean; hue?: number }
     ): void {
@@ -238,7 +240,10 @@ export class GameRenderer {
                 }
             }
 
-            // 5.3. Calculate Dynamic Bounding Radius for HUD elements
+            // 5.3. Render Active Status Effects in World (auras, freeze crusts, foam overlays)
+            statusManager.renderWorldOverlays(ctx, t, gameTime);
+
+            // 5.4. Calculate Dynamic Bounding Radius for HUD elements
             let maxRadius = GAME_CONFIG.TANK.BODY_RADIUS;
             for (const b of blueprint.body.bubbles) {
                 const dist = Math.hypot(b.offsetX, b.offsetY) + b.radius;
@@ -266,6 +271,9 @@ export class GameRenderer {
             );
             ctx.stroke();
             ctx.restore();
+
+            // 5.5. Render Active Status Badges under the tank
+            statusManager.renderBadges(ctx, t, t.x, t.y + maxRadius + 24, gameTime);
 
             // Invulnerability Ring
             if (t.invulnT > 0) {

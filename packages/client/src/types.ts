@@ -1,4 +1,4 @@
-import { ColorDef, GunSnapshot } from '@bubble-wars/shared';
+import { ColorDef, GunSnapshot, StatusSnapshot } from '@bubble-wars/shared';
 
 export interface ClientTankState {
     id: string;
@@ -29,6 +29,7 @@ export interface ClientTankState {
     wobbleS: number;
     wobbleA: number;
     wobbleV: number;
+    effects?: StatusSnapshot[];
 }
 
 export interface ClientProjectile {

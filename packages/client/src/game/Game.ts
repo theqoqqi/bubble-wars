@@ -6,15 +6,16 @@ import {
     KillEventMessage,
     WorldStateMessage,
 } from '@bubble-wars/shared';
-import { networkManager } from '../net/NetworkManager.js';
-import { soundFx } from '../audio/SoundFx.js';
-import { ClientObstacle, ClientProjectile, ClientTankState, KillNotification } from '../types.js';
-import { InputManager } from '../input/InputManager.js';
-import { ParticleSystem } from '../graphics/ParticleSystem.js';
-import { HudManager } from '../ui/HudManager.js';
-import { GameRenderer } from '../graphics/GameRenderer.js';
-import { CLIENT_CONFIG } from '../config.js';
-import { ClientImpactContext, ClientImpactExecutor, initClientEffects } from '../effects/index.js';
+import {networkManager} from '../net/NetworkManager.js';
+import {soundFx} from '../audio/SoundFx.js';
+import {ClientObstacle, ClientProjectile, ClientTankState, KillNotification} from '../types.js';
+import {InputManager} from '../input/InputManager.js';
+import {ParticleSystem} from '../graphics/ParticleSystem.js';
+import {HudManager} from '../ui/HudManager.js';
+import {GameRenderer} from '../graphics/GameRenderer.js';
+import {CLIENT_CONFIG} from '../config.js';
+import {ClientImpactContext, ClientImpactExecutor, initClientEffects} from '../effects/index.js';
+import {ClientStatusContext, ClientStatusManager, initClientStatuses} from '../status/index.js';
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 
@@ -23,6 +24,7 @@ export class Game {
     private projectiles: Map<number, ClientProjectile> = new Map();
     private clientObstacles: Map<number, ClientObstacle> = new Map();
     private impactExecutor = new ClientImpactExecutor();
+    private statusManager = new ClientStatusManager();
 
     private inputManager: InputManager;
     private particleSystem: ParticleSystem;
@@ -50,6 +52,7 @@ export class Game {
         this.gameRenderer = new GameRenderer(containerId);
 
         initClientEffects(this.impactExecutor);
+        initClientStatuses(this.statusManager);
         this.setupNetwork();
     }
 
@@ -165,6 +168,13 @@ export class Game {
         // 5. Update Particle Simulation
         this.particleSystem.update(dt);
 
+        // Update Status Effects Simulation
+        this.statusManager.update(dt, this.tanks.values(), {
+            soundFx,
+            particleSystem: this.particleSystem,
+            gameTime: this.gameTime,
+        });
+
         // 6. Update Kill Alerts
         for (let i = this.killAlerts.length - 1; i >= 0; i--) {
             this.killAlerts[i].timeRemaining -= dt;
@@ -220,6 +230,7 @@ export class Game {
             this.projectiles.values(),
             this.clientObstacles.values(),
             this.particleSystem,
+            this.statusManager,
             this.killAlerts,
             {
                 x: mouse.x,
@@ -235,6 +246,12 @@ export class Game {
         const receivedTankIds = new Set<string>();
         const receivedProjIds = new Set<number>();
         const myId = networkManager.playerId;
+
+        const statusCtx: ClientStatusContext = {
+            soundFx,
+            particleSystem: this.particleSystem,
+            gameTime: this.gameTime,
+        };
 
         // Process Obstacles
         const receivedObstacleIds = new Set<number>();
@@ -301,6 +318,7 @@ export class Game {
                     wobbleS: snap.wobbleS,
                     wobbleA: snap.wobbleA,
                     wobbleV: 0,
+                    effects: snap.effects,
                 };
                 this.tanks.set(snap.id, t);
             }
@@ -323,7 +341,11 @@ export class Game {
             t.flash = snap.flash;
             t.wobbleS = snap.wobbleS;
             t.wobbleA = snap.wobbleA;
+            t.effects = snap.effects;
             t.isDead = snap.isDead;
+
+            // Synchronize status effects lifecycle
+            this.statusManager.syncTankStatuses(t, snap.effects, statusCtx);
 
             // Update Local Player UI
             if (snap.id === myId) {
@@ -348,6 +370,7 @@ export class Game {
         // Clean up deleted tanks
         for (const id of this.tanks.keys()) {
             if (!receivedTankIds.has(id)) {
+                this.statusManager.clearTank(id, statusCtx);
                 this.tanks.delete(id);
             }
         }

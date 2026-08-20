@@ -1,4 +1,6 @@
-import { ImpactEffect } from './effects/index.js';
+import {BaseImpactEffect, ImpactEffect} from './effects/index.js';
+
+import { Identifiable } from './Registry.js';
 
 export interface PlayerInput {
     up: boolean;
@@ -38,6 +40,23 @@ export interface BubbleBodyDef {
 }
 
 export type TargetType = 'map_boundary' | 'obstacle' | 'tank' | 'projectile';
+
+/**
+ * Contract for registering status effect types in statusEffectRegistry
+ */
+export interface StatusEffectDef extends Identifiable {
+    id: string;
+    name: string;
+    description?: string;
+}
+
+/**
+ * Network snapshot of an active status effect on a tank
+ */
+export interface StatusSnapshot {
+    id: string;
+    remainingMs: number;
+}
 
 /**
  * Tactical projectile / ammunition definition
@@ -149,6 +168,7 @@ export interface TankSnapshot {
     flash: number;
     wobbleS: number;
     wobbleA: number;
+    effects?: StatusSnapshot[];
 }
 
 export interface ProjectileSnapshot {
