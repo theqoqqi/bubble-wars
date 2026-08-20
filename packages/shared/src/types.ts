@@ -47,6 +47,7 @@ export interface ProjectileType {
     speed: number;
     lifetime?: number;
     body: BubbleBodyDef;
+    maxHits?: number;
     onHit?: ImpactEffect[];
     onExpire?: ImpactEffect[];
 }

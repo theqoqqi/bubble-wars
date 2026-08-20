@@ -130,9 +130,16 @@ export class CollisionHandler {
     ): void {
         if (this.context.isMatchOver()) return;
         if (!tank || tank.id === projectile.ownerId || tank.isDead) return;
+        if (projectile.hitTankIds.has(tank.id)) return;
+
+        projectile.hitTankIds.add(tank.id);
+        projectile.hitsLeft--;
+
+        if (projectile.hitsLeft <= 0) {
+            projectile.isDestroyed = true;
+        }
 
         const killer = this.context.findTankById(projectile.ownerId) ?? undefined;
-        projectile.isDestroyed = true;
 
         const ctx: ImpactContext = {
             game: this.context.game,

@@ -26,6 +26,8 @@ export class ServerProjectile {
     public onHit?: ImpactEffect[];
     public onExpire?: ImpactEffect[];
     public isDestroyed: boolean = false;
+    public hitsLeft: number = 1;
+    public hitTankIds: Set<string> = new Set();
 
     constructor(
         ownerId: string,
@@ -41,6 +43,7 @@ export class ServerProjectile {
         this.projectileTypeId = projectileType?.id ?? 'standard_bubble';
         this.onHit = projectileType?.onHit;
         this.onExpire = projectileType?.onExpire;
+        this.hitsLeft = projectileType?.maxHits ?? 1;
         const primaryBubble = projectileType?.body?.bubbles?.[0];
         this.color = primaryBubble?.color ?? color;
         this.hue = hue ?? this.color.hue;
@@ -54,10 +57,8 @@ export class ServerProjectile {
         const vy = Math.sin(angle) * speed;
 
         this.body = Matter.Bodies.circle(startX, startY, this.radius, {
-            restitution: 0.95,
-            friction: 0.01,
-            frictionAir: 0.003,
-            density: 0.002,
+            isSensor: true,
+            frictionAir: 0,
             collisionFilter: {
                 category: COLLISION_CATEGORIES.PROJECTILE,
                 mask:
