@@ -2,9 +2,13 @@ import Matter from 'matter-js';
 import { BubblePopEvent } from '@bubble-wars/shared';
 import { ServerProjectile } from './Projectile.js';
 import { ServerTank } from './ServerTank.js';
+import { GameRoom } from './GameRoom.js';
+import { ImpactContext, ImpactEffectExecutor } from './effects/ImpactEffectExecutor.js';
 import './matterTypes.js';
 
 export interface CollisionContext {
+    game: GameRoom;
+    impactExecutor: ImpactEffectExecutor;
     findTankById(id: string): ServerTank | null | undefined;
     addPopEvent(event: BubblePopEvent): void;
     isMatchOver(): boolean;
@@ -52,7 +56,7 @@ export class CollisionHandler {
             } else if (otherBody.label === 'obstacle') {
                 this.handleProjectileObstacle(projectile, projectileBody, otherBody);
             } else if (otherBody.label === 'wall') {
-                this.handleProjectileWall(projectile, projectileBody);
+                this.handleProjectileMapBoundary(projectile, projectileBody);
             }
             return;
         }
@@ -81,6 +85,22 @@ export class CollisionHandler {
 
             const midX = (bodyA.position.x + bodyB.position.x) / 2;
             const midY = (bodyA.position.y + bodyB.position.y) / 2;
+
+            const ctxA: ImpactContext = {
+                game: this.context.game,
+                position: { x: midX, y: midY },
+                sourceTank: this.context.findTankById(projA.ownerId) ?? undefined,
+                target: { type: 'projectile', projectile: projB },
+            };
+            const ctxB: ImpactContext = {
+                game: this.context.game,
+                position: { x: midX, y: midY },
+                sourceTank: this.context.findTankById(projB.ownerId) ?? undefined,
+                target: { type: 'projectile', projectile: projA },
+            };
+
+            this.context.impactExecutor.execute(projA.onHit, ctxA);
+            this.context.impactExecutor.execute(projB.onHit, ctxB);
 
             this.context.addPopEvent({
                 id: `${Date.now()}_clash_${projA.id}`,
@@ -113,7 +133,21 @@ export class CollisionHandler {
 
         const killer = this.context.findTankById(projectile.ownerId) ?? undefined;
         projectile.isDestroyed = true;
-        tank.takeDamage(projectile.damage, killer);
+
+        const ctx: ImpactContext = {
+            game: this.context.game,
+            position: { x: projectileBody.position.x, y: projectileBody.position.y },
+            sourceTank: killer,
+            target: { type: 'tank', tank },
+        };
+
+        // 1. Direct projectile damage
+        if (projectile.damage > 0) {
+            tank.takeDamage(projectile.damage, killer);
+        }
+
+        // 2. onHit impact effects
+        this.context.impactExecutor.execute(projectile.onHit, ctx);
 
         // Small pop effect for hit
         this.context.addPopEvent({
@@ -137,6 +171,15 @@ export class CollisionHandler {
             x: projectileBody.velocity.x * 0.0006,
             y: projectileBody.velocity.y * 0.0006,
         });
+
+        const ctx: ImpactContext = {
+            game: this.context.game,
+            position: { x: projectileBody.position.x, y: projectileBody.position.y },
+            sourceTank: this.context.findTankById(projectile.ownerId) ?? undefined,
+            target: { type: 'obstacle', body: obstacleBody, obstacleId: obstacleBody.id },
+        };
+        this.context.impactExecutor.execute(projectile.onHit, ctx);
+
         this.context.addPopEvent({
             id: `${Date.now()}_${Math.random()}`,
             x: projectileBody.position.x,
@@ -148,8 +191,20 @@ export class CollisionHandler {
         });
     }
 
-    private handleProjectileWall(projectile: ServerProjectile, projectileBody: Matter.Body): void {
+    private handleProjectileMapBoundary(
+        projectile: ServerProjectile,
+        projectileBody: Matter.Body
+    ): void {
         projectile.isDestroyed = true;
+
+        const ctx: ImpactContext = {
+            game: this.context.game,
+            position: { x: projectileBody.position.x, y: projectileBody.position.y },
+            sourceTank: this.context.findTankById(projectile.ownerId) ?? undefined,
+            target: { type: 'map_boundary' },
+        };
+        this.context.impactExecutor.execute(projectile.onHit, ctx);
+
         this.context.addPopEvent({
             id: `${Date.now()}_${Math.random()}`,
             x: projectileBody.position.x,

@@ -2,6 +2,7 @@ import {
     BubblePopEvent,
     GAME_CONFIG,
     GameOverMessage,
+    ImpactEvent,
     KillEventMessage,
     WorldStateMessage,
 } from '@bubble-wars/shared';
@@ -13,6 +14,7 @@ import { ParticleSystem } from '../graphics/ParticleSystem.js';
 import { HudManager } from '../ui/HudManager.js';
 import { GameRenderer } from '../graphics/GameRenderer.js';
 import { CLIENT_CONFIG } from '../config.js';
+import { ClientImpactContext, ClientImpactExecutor, initClientEffects } from '../effects/index.js';
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 
@@ -20,6 +22,7 @@ export class Game {
     private tanks: Map<string, ClientTankState> = new Map();
     private projectiles: Map<number, ClientProjectile> = new Map();
     private clientObstacles: Map<number, ClientObstacle> = new Map();
+    private impactExecutor = new ClientImpactExecutor();
 
     private inputManager: InputManager;
     private particleSystem: ParticleSystem;
@@ -46,6 +49,7 @@ export class Game {
         this.hudManager = new HudManager();
         this.gameRenderer = new GameRenderer(containerId);
 
+        initClientEffects(this.impactExecutor);
         this.setupNetwork();
     }
 
@@ -70,7 +74,8 @@ export class Game {
             networkManager.on('world_state', (data) => this.handleWorldState(data)),
             networkManager.on('bubble_pop', (event) => this.handleBubblePop(event)),
             networkManager.on('kill', (data) => this.handleKillEvent(data)),
-            networkManager.on('game_over', (data) => this.handleGameOver(data))
+            networkManager.on('game_over', (data) => this.handleGameOver(data)),
+            networkManager.on('impact', (event) => this.handleImpact(event))
         );
     }
 
@@ -409,6 +414,15 @@ export class Game {
         }
 
         this.particleSystem.emitPop(event.x, event.y, event.radius, event.hue, event.isKill);
+    }
+
+    private handleImpact(event: ImpactEvent): void {
+        const ctx: ClientImpactContext = {
+            particleSystem: this.particleSystem,
+            soundFx: soundFx,
+        };
+
+        this.impactExecutor.execute(event, ctx);
     }
 
     private handleKillEvent(data: KillEventMessage): void {

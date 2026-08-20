@@ -2,6 +2,7 @@ import Matter from 'matter-js';
 import {
     ColorDef,
     GAME_CONFIG,
+    ImpactEffect,
     ProjectileSnapshot,
     ProjectileType,
     round1,
@@ -22,6 +23,8 @@ export class ServerProjectile {
     public damage: number;
     public lifetimeMs: number;
     public projectileTypeId: string;
+    public onHit?: ImpactEffect[];
+    public onExpire?: ImpactEffect[];
     public isDestroyed: boolean = false;
 
     constructor(
@@ -36,6 +39,8 @@ export class ServerProjectile {
         this.id = projectileIdCounter++;
         this.ownerId = ownerId;
         this.projectileTypeId = projectileType?.id ?? 'standard_bubble';
+        this.onHit = projectileType?.onHit;
+        this.onExpire = projectileType?.onExpire;
         const primaryBubble = projectileType?.body?.bubbles?.[0];
         this.color = primaryBubble?.color ?? color;
         this.hue = hue ?? this.color.hue;

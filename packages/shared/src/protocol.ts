@@ -8,6 +8,7 @@ import {
     ProjectileSnapshot,
     TankSnapshot,
 } from './types.js';
+import { ImpactEvent } from './effects/index.js';
 
 // Client -> Server
 export interface JoinMessage {
@@ -94,10 +95,16 @@ export interface GameOverMessage {
     leaderboard: LeaderboardEntry[];
 }
 
+export interface ImpactMessage {
+    type: 'impact';
+    event: ImpactEvent;
+}
+
 export type ServerMessage =
     | WelcomeMessage
     | WorldStateMessage
     | BubblePopMessage
     | PongMessage
     | KillEventMessage
-    | GameOverMessage;
+    | GameOverMessage
+    | ImpactMessage;

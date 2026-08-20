@@ -5,6 +5,7 @@ import {
     BubblePopEvent,
     ColorDef,
     GAME_CONFIG,
+    ImpactEvent,
     KILL_VERBS,
     LeaderboardEntry,
     PlayerInput,
@@ -15,6 +16,7 @@ import { ServerTank } from './ServerTank.js';
 import { ServerProjectile } from './Projectile.js';
 import { BotPlayer } from './BotPlayer.js';
 import { CollisionHandler } from './CollisionHandler.js';
+import { ImpactContext, ImpactEffectExecutor, initEffects } from './effects/index.js';
 
 interface ConnectedPlayer {
     id: string;
@@ -29,6 +31,7 @@ export class GameRoom {
     public fragLimit: number = GAME_CONFIG.MATCH.DEFAULT_FRAG_LIMIT;
     public isMatchOver: boolean = false;
     public matchOverTime: number = 0;
+    public impactExecutor: ImpactEffectExecutor = new ImpactEffectExecutor();
     private collisionHandler: CollisionHandler;
     private players: Map<string, ConnectedPlayer> = new Map();
     private bots: BotPlayer[] = [];
@@ -37,6 +40,7 @@ export class GameRoom {
     private tickCount: number = 0;
     private intervalId: NodeJS.Timeout | null = null;
     private pendingPopEvents: BubblePopEvent[] = [];
+    private pendingImpactEvents: ImpactEvent[] = [];
     private colorIndex: number = 0;
     private availableColors: ColorDef[] = [
         { hue: 192 },
@@ -48,7 +52,10 @@ export class GameRoom {
 
     constructor() {
         this.physics = new PhysicsWorld();
+        initEffects(this.impactExecutor);
         this.collisionHandler = new CollisionHandler({
+            game: this,
+            impactExecutor: this.impactExecutor,
             findTankById: (id) => this.findTankById(id),
             addPopEvent: (event) => this.pendingPopEvents.push(event),
             isMatchOver: () => this.isMatchOver,
@@ -251,6 +258,10 @@ export class GameRoom {
         }
     }
 
+    public addImpactEvent(event: ImpactEvent): void {
+        this.pendingImpactEvents.push(event);
+    }
+
     private findTankById(id: string): ServerTank | null {
         const player = this.players.get(id);
         if (player) return player.tank;
@@ -258,7 +269,7 @@ export class GameRoom {
         return bot ? bot.tank : null;
     }
 
-    private getAllTanks(): ServerTank[] {
+    public getAllTanks(): ServerTank[] {
         const tanks: ServerTank[] = [];
         for (const player of this.players.values()) {
             tanks.push(player.tank);
@@ -321,6 +332,14 @@ export class GameRoom {
             for (let i = this.projectiles.length - 1; i >= 0; i--) {
                 const proj = this.projectiles[i];
                 if (proj.isDestroyed || proj.isExpired(now)) {
+                    if (!proj.isDestroyed && proj.isExpired(now)) {
+                        const ctx: ImpactContext = {
+                            game: this,
+                            position: { x: proj.body.position.x, y: proj.body.position.y },
+                            sourceTank: this.findTankById(proj.ownerId) ?? undefined,
+                        };
+                        this.impactExecutor.execute(proj.onExpire, ctx);
+                    }
                     this.physics.removeBody(proj.body);
                     this.projectiles.splice(i, 1);
                 }
@@ -345,7 +364,18 @@ export class GameRoom {
             this.pendingPopEvents = [];
         }
 
-        // 6. Construct leaderboard
+        // 6. Send pending impact events
+        if (this.pendingImpactEvents.length > 0) {
+            for (const event of this.pendingImpactEvents) {
+                this.broadcast({
+                    type: 'impact',
+                    event,
+                });
+            }
+            this.pendingImpactEvents = [];
+        }
+
+        // 7. Construct leaderboard
         const leaderboard = this.buildLeaderboard(allTanks);
 
         // 7. Broadcast world snapshot

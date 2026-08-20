@@ -1,3 +1,5 @@
+import { ImpactEffect } from './effects/index.js';
+
 export interface PlayerInput {
     up: boolean;
     down: boolean;
@@ -45,6 +47,8 @@ export interface ProjectileType {
     speed: number;
     lifetime?: number;
     body: BubbleBodyDef;
+    onHit?: ImpactEffect[];
+    onExpire?: ImpactEffect[];
 }
 
 /**

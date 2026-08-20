@@ -4,6 +4,7 @@ import {
     ColorDef,
     EventBus,
     GameOverMessage,
+    ImpactEvent,
     KillEventMessage,
     PlayerInput,
     ServerMessage,
@@ -18,6 +19,7 @@ export interface NetworkEvents {
     kill: KillEventMessage;
     game_over: GameOverMessage;
     disconnect: void;
+    impact: ImpactEvent;
 }
 
 export class NetworkManager extends EventBus<NetworkEvents> {
@@ -164,6 +166,11 @@ export class NetworkManager extends EventBus<NetworkEvents> {
 
                 case 'pong': {
                     this.latency = Math.max(0, Math.round((Date.now() - msg.clientTime) / 2));
+                    break;
+                }
+
+                case 'impact': {
+                    this.emit('impact', msg.event);
                     break;
                 }
             }
