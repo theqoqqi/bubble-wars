@@ -241,6 +241,24 @@ export class ServerTank {
         return false;
     }
 
+    /**
+     * Возвращает минимальное расстояние от точки (pointX, pointY) до границы корпуса танка
+     */
+    public getDistanceToPoint(pointX: number, pointY: number): number {
+        if (this.body.parts && this.body.parts.length > 1) {
+            let minDist = Infinity;
+            for (let i = 1; i < this.body.parts.length; i++) {
+                const part = this.body.parts[i];
+                const r = part.circleRadius ?? GAME_CONFIG.TANK.BODY_RADIUS;
+                const d = Math.hypot(part.position.x - pointX, part.position.y - pointY) - r;
+                if (d < minDist) minDist = d;
+            }
+            return Math.max(0, minDist);
+        }
+        const dist = Math.hypot(this.body.position.x - pointX, this.body.position.y - pointY);
+        return Math.max(0, dist - GAME_CONFIG.TANK.BODY_RADIUS);
+    }
+
     public respawn(x: number, y: number): void {
         this.hp = this.maxHp;
         this.isDead = false;

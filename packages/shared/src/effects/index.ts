@@ -1,8 +1,9 @@
 export * from './types.js';
+export * from './SplashEffect.js';
 
-import { BaseImpactEffect } from './types.js';
+import { SplashImpactEffect } from './SplashEffect.js';
 
 /**
  * Дискриминированное объединение всех поддерживаемых серверных эффектов воздействия
  */
-export type ImpactEffect = BaseImpactEffect;
+export type ImpactEffect = SplashImpactEffect;
