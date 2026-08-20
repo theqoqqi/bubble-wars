@@ -44,6 +44,8 @@ export class ServerTank {
     public wobbleA: number = 0;
     public wobbleV: number = 0;
 
+    public onDeath?: (victim: ServerTank, killer?: ServerTank) => void;
+
     public body: Matter.Body;
 
     constructor(
@@ -222,7 +224,7 @@ export class ServerTank {
         this.wobbleV += strength * 7;
     }
 
-    public takeDamage(amount: number): boolean {
+    public takeDamage(amount: number, sourceTank?: ServerTank): boolean {
         if (this.isDead || Date.now() < this.invulnerableUntil) return false;
 
         this.flash = 1.0;
@@ -233,6 +235,7 @@ export class ServerTank {
             this.isDead = true;
             this.deaths++;
             this.deathTime = Date.now();
+            this.onDeath?.(this, sourceTank);
             return true; // Tank was killed
         }
         return false;

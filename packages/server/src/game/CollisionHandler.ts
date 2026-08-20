@@ -1,5 +1,5 @@
 import Matter from 'matter-js';
-import { BubblePopEvent, GAME_CONFIG, KILL_VERBS, ServerMessage } from '@bubble-wars/shared';
+import { BubblePopEvent } from '@bubble-wars/shared';
 import { ServerProjectile } from './Projectile.js';
 import { ServerTank } from './ServerTank.js';
 import './matterTypes.js';
@@ -7,10 +7,7 @@ import './matterTypes.js';
 export interface CollisionContext {
     findTankById(id: string): ServerTank | null | undefined;
     addPopEvent(event: BubblePopEvent): void;
-    broadcast(msg: ServerMessage): void;
     isMatchOver(): boolean;
-    getFragLimit(): number;
-    triggerGameOver(killer: ServerTank): void;
 }
 
 export class CollisionHandler {
@@ -114,8 +111,9 @@ export class CollisionHandler {
         if (this.context.isMatchOver()) return;
         if (!tank || tank.id === projectile.ownerId || tank.isDead) return;
 
+        const killer = this.context.findTankById(projectile.ownerId) ?? undefined;
         projectile.isDestroyed = true;
-        const killed = tank.takeDamage(projectile.damage);
+        tank.takeDamage(projectile.damage, killer);
 
         // Small pop effect for hit
         this.context.addPopEvent({
@@ -127,43 +125,6 @@ export class CollisionHandler {
             color: projectile.color,
             isKill: false,
         });
-
-        if (killed) {
-            const killer = this.context.findTankById(projectile.ownerId);
-            if (killer) {
-                killer.score += 100;
-                killer.kills += 1;
-
-                const verb = KILL_VERBS[Math.floor(Math.random() * KILL_VERBS.length)];
-                this.context.broadcast({
-                    type: 'kill',
-                    killerId: killer.id,
-                    victimId: tank.id,
-                    killerName: killer.name,
-                    victimName: tank.name,
-                    killerColor: killer.color,
-                    victimColor: tank.color,
-                    killerHue: killer.hue,
-                    victimHue: tank.hue,
-                    verb,
-                });
-
-                if (!this.context.isMatchOver() && killer.kills >= this.context.getFragLimit()) {
-                    this.context.triggerGameOver(killer);
-                }
-            }
-
-            // Big pop explosion on tank death
-            this.context.addPopEvent({
-                id: `${Date.now()}_kill_${tank.id}`,
-                x: tank.body.position.x,
-                y: tank.body.position.y,
-                radius: GAME_CONFIG.TANK.BODY_RADIUS * 2.4,
-                hue: tank.hue,
-                color: tank.color,
-                isKill: true,
-            });
-        }
     }
 
     private handleProjectileObstacle(

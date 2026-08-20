@@ -5,6 +5,7 @@ import {
     BubblePopEvent,
     ColorDef,
     GAME_CONFIG,
+    KILL_VERBS,
     LeaderboardEntry,
     PlayerInput,
     ServerMessage,
@@ -50,10 +51,7 @@ export class GameRoom {
         this.collisionHandler = new CollisionHandler({
             findTankById: (id) => this.findTankById(id),
             addPopEvent: (event) => this.pendingPopEvents.push(event),
-            broadcast: (msg) => this.broadcast(msg),
             isMatchOver: () => this.isMatchOver,
-            getFragLimit: () => this.fragLimit,
-            triggerGameOver: (killer) => this.triggerGameOver(killer),
         });
         this.collisionHandler.setup(this.physics.engine);
         this.respawnAllBots();
@@ -99,9 +97,46 @@ export class GameRoom {
             const name = this.getRandomBotName();
             const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
             const bot = new BotPlayer(`bot_${Date.now()}_${i + 1}`, name, pos.x, pos.y);
+            bot.tank.onDeath = (victim, killer) => this.handleTankDeath(victim, killer);
             this.bots.push(bot);
             this.physics.addBody(bot.tank.body);
         }
+    }
+
+    public handleTankDeath(victim: ServerTank, killer?: ServerTank): void {
+        if (killer) {
+            killer.score += 100;
+            killer.kills += 1;
+
+            const verb = KILL_VERBS[Math.floor(Math.random() * KILL_VERBS.length)];
+            this.broadcast({
+                type: 'kill',
+                killerId: killer.id,
+                victimId: victim.id,
+                killerName: killer.name,
+                victimName: victim.name,
+                killerColor: killer.color,
+                victimColor: victim.color,
+                killerHue: killer.hue,
+                victimHue: victim.hue,
+                verb,
+            });
+
+            if (!this.isMatchOver && killer.kills >= this.fragLimit) {
+                this.triggerGameOver(killer);
+            }
+        }
+
+        // Pop explosion on tank death
+        this.pendingPopEvents.push({
+            id: `${Date.now()}_kill_${victim.id}`,
+            x: victim.body.position.x,
+            y: victim.body.position.y,
+            radius: GAME_CONFIG.TANK.BODY_RADIUS * 2.4,
+            hue: victim.hue,
+            color: victim.color,
+            isKill: true,
+        });
     }
 
     public triggerGameOver(winner: ServerTank): void {
@@ -151,6 +186,7 @@ export class GameRoom {
 
         const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
         const tank = new ServerTank(id, cleanName, color, pos.x, pos.y, false, hue, blueprintId);
+        tank.onDeath = (victim, killer) => this.handleTankDeath(victim, killer);
 
         this.physics.addBody(tank.body);
 
