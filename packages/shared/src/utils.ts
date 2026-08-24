@@ -1,3 +1,5 @@
+import { BubbleBodyDef, BubbleDef, TankBlueprint } from './types.js';
+
 /**
  * Round number to 1 decimal place (0.1 precision for network snapshots)
  */
@@ -42,4 +44,45 @@ export function transformLocalPoint(
         x: parentX + localOffsetX * cos - localOffsetY * sin,
         y: parentY + localOffsetX * sin + localOffsetY * cos,
     };
+}
+
+/**
+ * Returns the root bubble of a composite body definition (first bubble by convention)
+ */
+export function getRootBubble(body: BubbleBodyDef): BubbleDef {
+    return body.bubbles[0];
+}
+
+export interface BubbleWorldTransform {
+    x: number;
+    y: number;
+    radius: number;
+}
+
+/**
+ * Transforms a local BubbleDef into world space coordinates and radius based on parent origin and angle
+ */
+export function getBubbleWorldTransform(
+    bubble: BubbleDef,
+    originX: number,
+    originY: number,
+    angle: number
+): BubbleWorldTransform {
+    if (bubble.offsetX !== 0 || bubble.offsetY !== 0) {
+        const pt = transformLocalPoint(originX, originY, angle, bubble.offsetX, bubble.offsetY);
+        return { x: pt.x, y: pt.y, radius: bubble.radius };
+    }
+
+    return { x: originX, y: originY, radius: bubble.radius };
+}
+
+/**
+ * Convenience helper to calculate the world transform (x, y, radius) of a tank's root bubble
+ */
+export function getTankRootBubbleTransform(
+    tank: { x: number; y: number; bodyAngle: number },
+    blueprint: TankBlueprint
+): BubbleWorldTransform {
+    const rootBubble = getRootBubble(blueprint.body);
+    return getBubbleWorldTransform(rootBubble, tank.x, tank.y, tank.bodyAngle);
 }
