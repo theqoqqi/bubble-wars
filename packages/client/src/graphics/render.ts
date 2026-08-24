@@ -231,6 +231,64 @@ export function drawBubbleGraph(
     }
 }
 
+export interface OrbitBubblesOpts {
+    count?: number;
+    orbitOffset?: number;
+    speed?: number;
+    baseRadius?: number;
+    radiusVariance?: number;
+    wobbleAmplitude?: number;
+    wobbleSpeed?: number;
+    hue?: number;
+    bubbleOpts?: BubbleOpts;
+}
+
+/**
+ * Procedural renderer for orbiting bubbles around a parent bubble center.
+ */
+export function drawOrbitBubbles(
+    ctx: CanvasRenderingContext2D,
+    cx: number,
+    cy: number,
+    hostRadius: number,
+    gameTime: number,
+    opts: OrbitBubblesOpts = {}
+): void {
+    const {
+        count = 6,
+        orbitOffset = 6,
+        speed = 1.8,
+        baseRadius = 5.5,
+        radiusVariance = 1.2,
+        wobbleAmplitude = 3,
+        wobbleSpeed = 4.5,
+        hue = 255,
+        bubbleOpts = {
+            glow: 0,
+            tint: 0.7,
+            rimAlpha: 0.9,
+            fillAlpha: 0.8,
+        },
+    } = opts;
+
+    ctx.save();
+
+    const orbitRadius = hostRadius + orbitOffset;
+
+    for (let i = 0; i < count; i++) {
+        const angle = gameTime * speed + (i * Math.PI * 2) / count;
+        const wobble = Math.sin(gameTime * wobbleSpeed + i * 1.5) * wobbleAmplitude;
+        const r = baseRadius + Math.sin(gameTime * 3 + i) * radiusVariance;
+
+        const bx = cx + Math.cos(angle) * (orbitRadius + wobble);
+        const by = cy + Math.sin(angle) * (orbitRadius + wobble);
+
+        drawBubble(ctx, bx, by, r, hue, bubbleOpts);
+    }
+
+    ctx.restore();
+}
+
 export interface AmbientBubble {
     x: number;
     y: number;
