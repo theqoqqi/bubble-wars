@@ -1,11 +1,9 @@
-import { GAME_CONFIG, PlayerInput } from '@bubble-wars/shared';
-import { soundFx } from '../audio/SoundFx.js';
+import { PlayerInput } from '@bubble-wars/shared';
 
 export class InputManager {
     private keys = new Set<string>();
     private mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2, down: false };
     private inputSeq: number = 0;
-    private lastShootTime: number = 0;
 
     private onKeyDown = (e: KeyboardEvent) => this.keys.add(e.code);
     private onKeyUp = (e: KeyboardEvent) => this.keys.delete(e.code);
@@ -59,11 +57,6 @@ export class InputManager {
         const aimAngle = Math.atan2(this.mouse.y - screenCenterY, this.mouse.x - screenCenterX);
 
         const shooting = this.mouse.down || this.keys.has('Space');
-
-        if (shooting && Date.now() - this.lastShootTime >= GAME_CONFIG.PROJECTILE.COOLDOWN_MS) {
-            soundFx.playShoot();
-            this.lastShootTime = Date.now();
-        }
 
         return {
             up: !!up,

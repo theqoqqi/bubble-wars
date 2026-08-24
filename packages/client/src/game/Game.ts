@@ -397,6 +397,10 @@ export class Game {
                     trail: [],
                 };
                 this.projectiles.set(pSnap.id, p);
+
+                if (pSnap.ownerId === myId) {
+                    soundFx.playShoot();
+                }
             }
 
             p.targetX = pSnap.x;
