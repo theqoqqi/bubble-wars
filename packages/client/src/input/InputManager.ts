@@ -14,10 +14,24 @@ export class InputManager {
         this.mouse.y = e.clientY;
     };
     private onMouseDown = (e: MouseEvent) => {
-        if (e.button === 0) this.mouse.down = true;
+        if (e.button === 0) {
+            this.mouse.down = true;
+        } else {
+            e.preventDefault();
+        }
     };
-    private onMouseUp = () => {
-        this.mouse.down = false;
+    private onMouseUp = (e: MouseEvent) => {
+        if (e.button === 0) {
+            this.mouse.down = false;
+        } else {
+            e.preventDefault();
+        }
+    };
+    private onContextMenu = (e: MouseEvent) => {
+        e.preventDefault();
+    };
+    private onAuxClick = (e: MouseEvent) => {
+        e.preventDefault();
     };
 
     constructor() {
@@ -30,6 +44,8 @@ export class InputManager {
         window.addEventListener('mousemove', this.onMouseMove);
         window.addEventListener('mousedown', this.onMouseDown);
         window.addEventListener('mouseup', this.onMouseUp);
+        window.addEventListener('contextmenu', this.onContextMenu);
+        window.addEventListener('auxclick', this.onAuxClick);
     }
 
     public getInput(): PlayerInput {
@@ -75,6 +91,8 @@ export class InputManager {
         window.removeEventListener('mousemove', this.onMouseMove);
         window.removeEventListener('mousedown', this.onMouseDown);
         window.removeEventListener('mouseup', this.onMouseUp);
+        window.removeEventListener('contextmenu', this.onContextMenu);
+        window.removeEventListener('auxclick', this.onAuxClick);
         this.reset();
     }
 }
