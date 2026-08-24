@@ -16,6 +16,7 @@ export interface JoinMessage {
     name: string;
     color?: ColorDef;
     blueprintId: string;
+    sessionToken?: string;
 }
 
 export interface InputMessage {
@@ -43,6 +44,8 @@ export type ClientMessage =
 export interface WelcomeMessage {
     type: 'welcome';
     playerId: string;
+    sessionToken: string;
+    reconnected?: boolean;
     arena: ArenaBounds;
     obstacles: ObstacleSnapshot[];
     fragLimit: number;

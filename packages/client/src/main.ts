@@ -168,11 +168,15 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const startGame = async () => {
+    const startGame = async (sessionToken?: string) => {
         soundFx.unlock();
 
-        const name = nameInput?.value.trim() || 'BubbleHero';
+        const name =
+            nameInput?.value.trim() ||
+            localStorage.getItem('bubble_player_name') ||
+            'BubbleHero';
         localStorage.setItem('bubble_player_name', name);
+        sessionStorage.setItem('bubble_game_active', 'true');
         if (hudPlayerName) hudPlayerName.textContent = name;
 
         if (serverInput && serverInput.value.trim()) {
@@ -181,11 +185,19 @@ window.addEventListener('DOMContentLoaded', () => {
 
         try {
             await networkManager.connect();
-            networkManager.join(name, selectedColor, tankSelectionManager.selectedBlueprintId);
+            networkManager.join(
+                name,
+                selectedColor,
+                tankSelectionManager.selectedBlueprintId,
+                sessionToken
+            );
 
             if (joinModal) joinModal.classList.add('hidden');
             if (gameHud) gameHud.classList.remove('hidden');
         } catch (err) {
+            networkManager.clearSession();
+            if (joinModal) joinModal.classList.remove('hidden');
+            if (gameHud) gameHud.classList.add('hidden');
             alert(
                 `Не удалось подключиться к серверу Bubble Wars (${networkManager.serverUrl}).\nУбедитесь, что сервер запущен и доступен!`
             );
@@ -194,7 +206,7 @@ window.addEventListener('DOMContentLoaded', () => {
     };
 
     if (btnPlay) {
-        btnPlay.addEventListener('click', startGame);
+        btnPlay.addEventListener('click', () => startGame());
     }
 
     if (nameInput) {
@@ -263,6 +275,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const btnLeaveCancel = document.getElementById('btn-leave-cancel');
 
     const returnToMenu = () => {
+        networkManager.clearSession();
         networkManager.disconnect();
         game.leaveGame();
         if (leaveModal) leaveModal.classList.add('hidden');
@@ -325,5 +338,12 @@ window.addEventListener('DOMContentLoaded', () => {
     const btnGameOverMenu = document.getElementById('btn-gameover-menu');
     if (btnGameOverMenu) {
         btnGameOverMenu.addEventListener('click', returnToMenu);
+    }
+
+    // Auto-reconnect if session was active in this specific tab before reload
+    const isGameActive = sessionStorage.getItem('bubble_game_active') === 'true';
+    const savedSessionToken = sessionStorage.getItem('bubble_session_token');
+    if (isGameActive && savedSessionToken) {
+        startGame(savedSessionToken);
     }
 });

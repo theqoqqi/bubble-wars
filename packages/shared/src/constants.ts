@@ -77,6 +77,10 @@ export const GAME_CONFIG = {
         SPAWN_MARGIN: 300,
     } as ArenaBounds & { SPAWN_MARGIN: number },
 
+    PLAYER: {
+        RECONNECT_TIMEOUT_MS: 30000, // 30 секунд ожидания реконнекта игрока
+    },
+
     MATCH: {
         DEFAULT_FRAG_LIMIT: 10,
         AUTO_RESET_DELAY_MS: 12000,

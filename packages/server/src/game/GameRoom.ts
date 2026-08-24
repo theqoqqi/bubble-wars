@@ -20,9 +20,12 @@ import { ImpactContext, ImpactEffectExecutor, initEffects } from './effects/inde
 
 interface ConnectedPlayer {
     id: string;
-    ws: WebSocket;
+    sessionToken: string;
+    ws: WebSocket | null;
     tank: ServerTank;
     input: PlayerInput;
+    disconnectedAt: number | null;
+    disconnectTimeout: NodeJS.Timeout | null;
 }
 
 export class GameRoom {
@@ -34,6 +37,7 @@ export class GameRoom {
     public impactExecutor: ImpactEffectExecutor = new ImpactEffectExecutor();
     private collisionHandler: CollisionHandler;
     private players: Map<string, ConnectedPlayer> = new Map();
+    private playersByToken: Map<string, ConnectedPlayer> = new Map();
     private bots: BotPlayer[] = [];
     private freeNames: string[] = [];
     private projectiles: ServerProjectile[] = [];
@@ -183,9 +187,61 @@ export class GameRoom {
         ws: WebSocket,
         name: string,
         preferredColor?: ColorDef,
-        blueprintId: string = 'heavy'
+        blueprintId: string = 'heavy',
+        sessionToken?: string
     ): ConnectedPlayer {
+        // 1. Check if reconnecting with an existing valid sessionToken
+        if (sessionToken && this.playersByToken.has(sessionToken)) {
+            const player = this.playersByToken.get(sessionToken)!;
+
+            // Cancel any pending disconnect cleanup timeout
+            if (player.disconnectTimeout) {
+                clearTimeout(player.disconnectTimeout);
+                player.disconnectTimeout = null;
+            }
+
+            // Close previous socket if still open (e.g. duplicate tab or rapid refresh)
+            if (player.ws && player.ws !== ws && player.ws.readyState === WebSocket.OPEN) {
+                try {
+                    player.ws.close(4000, 'Reconnected from another session');
+                } catch {
+                    /* ignore */
+                }
+            }
+
+            player.ws = ws;
+            player.disconnectedAt = null;
+            player.input = {
+                up: false,
+                down: false,
+                left: false,
+                right: false,
+                aimAngle: player.tank.aimAngle,
+                shooting: false,
+                seq: 0,
+            };
+
+            // Send welcome confirmation with existing playerId, sessionToken and reconnected flag
+            this.sendTo(ws, {
+                type: 'welcome',
+                playerId: player.id,
+                sessionToken: player.sessionToken,
+                reconnected: true,
+                arena: GAME_CONFIG.ARENA,
+                obstacles: this.physics.getObstacleSnapshots(),
+                fragLimit: this.fragLimit,
+            });
+
+            console.log(
+                `[Server] Player reconnected: "${player.tank.name}" (${player.id}) [Score: ${player.tank.score}, Kills: ${player.tank.kills}]`
+            );
+
+            return player;
+        }
+
+        // 2. New player join
         const id = `player_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+        const newSessionToken = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
         const cleanName = (name || 'Bubble Warrior').trim().slice(0, 16);
         const color =
             preferredColor || this.availableColors[this.colorIndex++ % this.availableColors.length];
@@ -199,6 +255,7 @@ export class GameRoom {
 
         const player: ConnectedPlayer = {
             id,
+            sessionToken: newSessionToken,
             ws,
             tank,
             input: {
@@ -210,14 +267,19 @@ export class GameRoom {
                 shooting: false,
                 seq: 0,
             },
+            disconnectedAt: null,
+            disconnectTimeout: null,
         };
 
         this.players.set(id, player);
+        this.playersByToken.set(newSessionToken, player);
 
-        // Send welcome with obstacles and fragLimit
+        // Send welcome with session token
         this.sendTo(ws, {
             type: 'welcome',
             playerId: id,
+            sessionToken: newSessionToken,
+            reconnected: false,
             arena: GAME_CONFIG.ARENA,
             obstacles: this.physics.getObstacleSnapshots(),
             fragLimit: this.fragLimit,
@@ -252,9 +314,45 @@ export class GameRoom {
 
     public handlePlayerDisconnect(playerId: string): void {
         const player = this.players.get(playerId);
+        if (!player) return;
+
+        player.ws = null;
+        player.disconnectedAt = Date.now();
+        player.input = {
+            up: false,
+            down: false,
+            left: false,
+            right: false,
+            aimAngle: player.tank.aimAngle,
+            shooting: false,
+            seq: 0,
+        };
+
+        if (player.disconnectTimeout) {
+            clearTimeout(player.disconnectTimeout);
+            player.disconnectTimeout = null;
+        }
+
+        player.disconnectTimeout = setTimeout(() => {
+            if (player.ws === null) {
+                console.log(
+                    `[Server] Reconnect timeout expired for "${player.tank.name}" (${player.id}). Removing from room.`
+                );
+                this.removePlayerCompletely(player.id);
+            }
+        }, GAME_CONFIG.PLAYER.RECONNECT_TIMEOUT_MS);
+    }
+
+    public removePlayerCompletely(playerId: string): void {
+        const player = this.players.get(playerId);
         if (player) {
+            if (player.disconnectTimeout) {
+                clearTimeout(player.disconnectTimeout);
+                player.disconnectTimeout = null;
+            }
             this.physics.removeBody(player.tank.body);
             this.players.delete(playerId);
+            this.playersByToken.delete(player.sessionToken);
         }
     }
 
@@ -398,8 +496,8 @@ export class GameRoom {
         }
     }
 
-    private sendTo(ws: WebSocket, msg: ServerMessage): void {
-        if (ws.readyState === WebSocket.OPEN) {
+    private sendTo(ws: WebSocket | null, msg: ServerMessage): void {
+        if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(msg));
         }
     }
@@ -407,7 +505,7 @@ export class GameRoom {
     private broadcast(msg: ServerMessage): void {
         const data = JSON.stringify(msg);
         for (const player of this.players.values()) {
-            if (player.ws.readyState === WebSocket.OPEN) {
+            if (player.ws && player.ws.readyState === WebSocket.OPEN) {
                 player.ws.send(data);
             }
         }
@@ -479,12 +577,14 @@ export class GameRoom {
     public kickPlayer(id: string): boolean {
         const player = this.players.get(id);
         if (player) {
-            try {
-                player.ws.close(4001, 'Kicked by administrator');
-            } catch {
-                /* ignore */
+            if (player.ws && player.ws.readyState === WebSocket.OPEN) {
+                try {
+                    player.ws.close(4001, 'Kicked by administrator');
+                } catch {
+                    /* ignore */
+                }
             }
-            this.handlePlayerDisconnect(id);
+            this.removePlayerCompletely(id);
             return true;
         }
         return false;
@@ -496,6 +596,8 @@ export class GameRoom {
             botCount: this.bots.length,
             fragLimit: this.fragLimit || 10,
             playersCount: this.players.size,
+            activePlayersCount: Array.from(this.players.values()).filter((p) => p.ws !== null)
+                .length,
             botsCount: this.bots.length,
             projectilesCount: this.projectiles.length,
             uptimeSeconds: Math.floor(process.uptime()),
@@ -518,6 +620,13 @@ export class GameRoom {
     public cleanup(): void {
         if (this.intervalId) {
             clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
+        for (const player of this.players.values()) {
+            if (player.disconnectTimeout) {
+                clearTimeout(player.disconnectTimeout);
+                player.disconnectTimeout = null;
+            }
         }
     }
 }

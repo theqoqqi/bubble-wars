@@ -51,12 +51,10 @@ wss.on('connection', (ws: WebSocket) => {
                         ws,
                         msg.name,
                         msg.color,
-                        msg.blueprintId
+                        msg.blueprintId,
+                        msg.sessionToken
                     );
                     playerId = player.id;
-                    console.log(
-                        `[Server] Player joined: "${player.tank.name}" (${player.id}) [Color: ${player.tank.color}] [Blueprint: ${player.tank.blueprint.id}]`
-                    );
                     break;
                 }
 

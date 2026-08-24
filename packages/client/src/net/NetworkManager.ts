@@ -5,6 +5,7 @@ import {
     EventBus,
     GameOverMessage,
     ImpactEvent,
+    JoinMessage,
     KillEventMessage,
     PlayerInput,
     ServerMessage,
@@ -26,12 +27,14 @@ export class NetworkManager extends EventBus<NetworkEvents> {
     private ws: WebSocket | null = null;
     public serverUrl: string;
     public playerId: string | null = null;
+    public sessionToken: string | null = null;
     public latency: number = 0;
     private pingInterval: number | null = null;
 
     constructor() {
         super();
         this.serverUrl = this.resolveServerUrl();
+        this.sessionToken = sessionStorage.getItem('bubble_session_token');
     }
 
     public setServerUrl(url: string): void {
@@ -133,6 +136,12 @@ export class NetworkManager extends EventBus<NetworkEvents> {
         this.playerId = null;
     }
 
+    public clearSession(): void {
+        this.sessionToken = null;
+        sessionStorage.removeItem('bubble_session_token');
+        sessionStorage.removeItem('bubble_game_active');
+    }
+
     private handleMessage(dataStr: string): void {
         try {
             const msg: ServerMessage = JSON.parse(dataStr);
@@ -140,6 +149,10 @@ export class NetworkManager extends EventBus<NetworkEvents> {
             switch (msg.type) {
                 case 'welcome': {
                     this.playerId = msg.playerId;
+                    if (msg.sessionToken) {
+                        this.sessionToken = msg.sessionToken;
+                        sessionStorage.setItem('bubble_session_token', msg.sessionToken);
+                    }
                     this.emit('welcome', msg);
                     break;
                 }
@@ -179,13 +192,16 @@ export class NetworkManager extends EventBus<NetworkEvents> {
         }
     }
 
-    public join(name: string, color: ColorDef, blueprintId: string): void {
-        this.sendMessage({
+    public join(name: string, color: ColorDef, blueprintId: string, sessionToken?: string | null): void {
+        const token = sessionToken || this.sessionToken;
+        const msg: JoinMessage = {
             type: 'join',
             name,
             color,
             blueprintId,
-        });
+            ...(token ? { sessionToken: token } : {}),
+        };
+        this.sendMessage(msg);
     }
 
     public sendInput(input: PlayerInput): void {
