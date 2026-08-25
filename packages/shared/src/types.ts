@@ -59,6 +59,33 @@ export interface StatusSnapshot {
 }
 
 /**
+ * Procedural Web Audio synthesis specifications
+ */
+export type SoundWaveType = 'sine' | 'triangle' | 'square' | 'sawtooth';
+
+export interface BaseSoundLayer {
+    duration: number;
+    volume: number;
+    delay?: number;
+}
+
+export interface OscillatorSoundLayer extends BaseSoundLayer {
+    type: 'oscillator';
+    wave: SoundWaveType;
+    fromFreq: number;
+    toFreq: number;
+}
+
+export interface NoiseSoundLayer extends BaseSoundLayer {
+    type: 'noise';
+    freq: number;
+    q: number;
+}
+
+export type SoundLayerSpec = OscillatorSoundLayer | NoiseSoundLayer;
+export type ProceduralSoundSpec = SoundLayerSpec[];
+
+/**
  * Tactical projectile / ammunition definition
  */
 export interface ProjectileType {

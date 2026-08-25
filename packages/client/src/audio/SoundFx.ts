@@ -1,4 +1,5 @@
 /* Процедурный синтез звуков на базе Web Audio API */
+import { ProceduralSoundSpec, projectileTypeRegistry } from '@bubble-wars/shared';
 
 export class SoundFx {
     private ctx: AudioContext | null = null;
@@ -168,6 +169,35 @@ export class SoundFx {
 
     public playHit(): void {
         this.osc('triangle', 250, 130, 0.07, 0.3);
+    }
+
+    public playSound(spec?: ProceduralSoundSpec): void {
+        if (!spec) {
+            return;
+        }
+        for (const layer of spec) {
+            switch (layer.type) {
+                case 'oscillator':
+                    this.osc(
+                        layer.wave,
+                        layer.fromFreq,
+                        layer.toFreq,
+                        layer.duration,
+                        layer.volume,
+                        layer.delay ?? 0
+                    );
+                    break;
+                case 'noise':
+                    this.noise(
+                        layer.duration,
+                        layer.volume,
+                        layer.freq,
+                        layer.q,
+                        layer.delay ?? 0
+                    );
+                    break;
+            }
+        }
     }
 
     public playKill(): void {
