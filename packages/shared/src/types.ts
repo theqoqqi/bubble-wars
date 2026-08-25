@@ -100,6 +100,8 @@ export interface ProjectileType {
     bounceFrom?: TargetType[];
     onHit?: ImpactEffect[];
     onExpire?: ImpactEffect[];
+    shootSound?: ProceduralSoundSpec;
+    hitSound?: ProceduralSoundSpec;
 }
 
 /**
@@ -219,6 +221,7 @@ export interface BubblePopEvent {
     hue: number;
     color: ColorDef;
     isKill: boolean;
+    projectileTypeId?: string;
 }
 
 export interface ArenaBounds {

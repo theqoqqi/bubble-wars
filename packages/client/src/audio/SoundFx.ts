@@ -162,13 +162,16 @@ export class SoundFx {
         this.noise(0.05 + 0.08 * size, 0.4, 2500 - 1500 * size, 1.1);
     }
 
-    public playShoot(): void {
-        this.osc('sine', 470, 790, 0.08, 0.26);
-        this.noise(0.03, 0.1, 3400, 1);
+    public playShoot(projectileTypeId: string): void {
+        const projectileType = projectileTypeRegistry.tryGet(projectileTypeId);
+
+        this.playSound(projectileType?.shootSound);
     }
 
-    public playHit(): void {
-        this.osc('triangle', 250, 130, 0.07, 0.3);
+    public playHit(projectileTypeId: string): void {
+        const projectileType = projectileTypeRegistry.tryGet(projectileTypeId);
+
+        this.playSound(projectileType?.hitSound);
     }
 
     public playSound(spec?: ProceduralSoundSpec): void {

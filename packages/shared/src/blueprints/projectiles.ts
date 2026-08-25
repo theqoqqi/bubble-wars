@@ -13,6 +13,14 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
                 { id: 'core', offsetX: 0, offsetY: 0, radius: 9, color: { hue: 28, tint: 0.9 } },
             ],
         },
+        shootSound: [
+            { type: 'oscillator', wave: 'sine', fromFreq: 470, toFreq: 790, duration: 0.08, volume: 0.26 },
+            { type: 'noise', freq: 3400, q: 1, duration: 0.03, volume: 0.1 },
+        ],
+        hitSound: [
+            { type: 'oscillator', wave: 'triangle', fromFreq: 320, toFreq: 140, duration: 0.08, volume: 0.28 },
+            { type: 'noise', freq: 2200, q: 1.2, duration: 0.04, volume: 0.15 },
+        ],
     },
     {
         id: 'twin_bubble',
@@ -25,6 +33,14 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
                 { id: 'core', offsetX: 0, offsetY: 0, radius: 8, color: { hue: 28, tint: 0.9 } },
             ],
         },
+        shootSound: [
+            { type: 'oscillator', wave: 'sine', fromFreq: 520, toFreq: 820, duration: 0.06, volume: 0.12 },
+            { type: 'noise', freq: 3200, q: 0.9, duration: 0.03, volume: 0.1 },
+        ],
+        hitSound: [
+            { type: 'oscillator', wave: 'triangle', fromFreq: 360, toFreq: 160, duration: 0.06, volume: 0.2 },
+            { type: 'noise', freq: 2400, q: 1.1, duration: 0.03, volume: 0.12 },
+        ],
     },
     {
         id: 'piercing_bubble',
@@ -37,6 +53,15 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
                 { id: 'core', offsetX: 0, offsetY: 0, radius: 6, stretch: 2, color: { hue: 28, tint: 0.9 } },
             ],
         },
+        shootSound: [
+            { type: 'oscillator', wave: 'sine', fromFreq: 880, toFreq: 220, duration: 0.14, volume: 0.38 },
+            { type: 'noise', freq: 4500, q: 1.4, duration: 0.06, volume: 0.22 },
+        ],
+        hitSound: [
+            { type: 'oscillator', wave: 'sine', fromFreq: 420, toFreq: 110, duration: 0.16, volume: 0.32 },
+            { type: 'noise', freq: 10600, q: 4.8, duration: 0.44, volume: 0.28 },
+            { type: 'oscillator', wave: 'triangle', fromFreq: 340, toFreq: 50, duration: 0.06, volume: 0.24 },
+        ],
     },
     {
         id: 'pellet',
@@ -49,6 +74,14 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
                 { id: 'core', offsetX: 0, offsetY: 0, radius: 5, color: { hue: 28, tint: 0.9 } },
             ],
         },
+        shootSound: [
+            { type: 'oscillator', wave: 'triangle', fromFreq: 320, toFreq: 90, duration: 0.1, volume: 0.06 },
+            { type: 'noise', freq: 2800, q: 1.2, duration: 0.08, volume: 0.08 },
+        ],
+        hitSound: [
+            { type: 'oscillator', wave: 'triangle', fromFreq: 280, toFreq: 120, duration: 0.06, volume: 0.08 },
+            { type: 'noise', freq: 2000, q: 1.0, duration: 0.04, volume: 0.08 },
+        ],
     },
     {
         id: 'foam_round',
@@ -61,6 +94,14 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
                 { id: 'core', offsetX: 0, offsetY: 0, radius: 7, color: { hue: 28, tint: 0.9 } },
             ],
         },
+        shootSound: [
+            { type: 'oscillator', wave: 'sine', fromFreq: 220, toFreq: 440, duration: 0.14, volume: 0.18 },
+            { type: 'noise', freq: 3800, q: 0.8, duration: 0.02, volume: 0.08 },
+        ],
+        hitSound: [
+            { type: 'oscillator', wave: 'sine', fromFreq: 80, toFreq: 20, duration: 0.05, volume: 0.0016 },
+            { type: 'noise', freq: 100, q: 0.9, duration: 0.8, volume: 0.08 },
+        ],
     },
     {
         id: 'heavy_bubble',
@@ -73,6 +114,14 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
                 { id: 'core', offsetX: 0, offsetY: 0, radius: 18, color: { hue: 28, tint: 0.9 } },
             ],
         },
+        shootSound: [
+            { type: 'oscillator', wave: 'sine', fromFreq: 220, toFreq: 50, duration: 0.42, volume: 0.85 },
+            { type: 'noise', freq: 1200, q: 1.2, duration: 0.12, volume: 0.35 },
+        ],
+        hitSound: [
+            { type: 'oscillator', wave: 'sine', fromFreq: 200, toFreq: 40, duration: 0.32, volume: 0.65 },
+            { type: 'noise', freq: 800, q: 1.3, duration: 0.18, volume: 0.35 },
+        ],
     },
 ];
 

@@ -110,6 +110,7 @@ export class CollisionHandler {
                 hue: projA.hue,
                 color: projA.color,
                 isKill: false,
+                projectileTypeId: projA.projectileTypeId,
             });
             this.context.addPopEvent({
                 id: `${Date.now()}_clash_${projB.id}`,
@@ -119,6 +120,7 @@ export class CollisionHandler {
                 hue: projB.hue,
                 color: projB.color,
                 isKill: false,
+                projectileTypeId: projB.projectileTypeId,
             });
         }
     }
@@ -171,6 +173,7 @@ export class CollisionHandler {
             hue: projectile.hue,
             color: projectile.color,
             isKill: false,
+            projectileTypeId: projectile.projectileTypeId,
         });
     }
 
@@ -206,6 +209,7 @@ export class CollisionHandler {
             hue: projectile.hue,
             color: projectile.color,
             isKill: false,
+            projectileTypeId: projectile.projectileTypeId,
         });
     }
 
@@ -234,6 +238,7 @@ export class CollisionHandler {
             hue: projectile.hue,
             color: projectile.color,
             isKill: false,
+            projectileTypeId: projectile.projectileTypeId,
         });
     }
 

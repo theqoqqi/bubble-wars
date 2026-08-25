@@ -399,7 +399,7 @@ export class Game {
                 this.projectiles.set(pSnap.id, p);
 
                 if (pSnap.ownerId === myId) {
-                    soundFx.playShoot();
+                    soundFx.playShoot(p.projectileTypeId);
                 }
             }
 
@@ -433,6 +433,8 @@ export class Game {
     private handleBubblePop(event: BubblePopEvent): void {
         if (event.isKill) {
             soundFx.playKill();
+        } else if (event.projectileTypeId) {
+            soundFx.playHit(event.projectileTypeId);
         } else {
             soundFx.playBubblePop(event.radius);
         }
