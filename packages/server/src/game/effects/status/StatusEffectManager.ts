@@ -68,10 +68,10 @@ export class StatusEffectManager {
 
     /**
      * Network snapshot of active status effects.
-     * Returns undefined if no active effects, saving JSON bandwidth.
+     * Returns an empty array if no active effects.
      */
-    public getSnapshots(): StatusSnapshot[] | undefined {
-        if (this.activeEffects.size === 0) return undefined;
+    public getSnapshots(): StatusSnapshot[] {
+        if (this.activeEffects.size === 0) return [];
         return Array.from(this.activeEffects.values()).map((e) => ({
             id: e.id,
             remainingMs: Math.max(0, Math.round(e.durationMs)),

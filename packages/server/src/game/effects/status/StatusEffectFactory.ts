@@ -3,8 +3,8 @@ import type { ServerTank } from '../../ServerTank.js';
 
 export type StatusEffectCreator = (
     durationMs: number,
-    params?: any,
-    sourceTank?: ServerTank
+    params: any,
+    sourceTank: ServerTank | null
 ) => StatusEffect;
 
 export class StatusEffectFactory {
@@ -17,8 +17,8 @@ export class StatusEffectFactory {
     public static create(
         id: string,
         durationMs: number,
-        params?: any,
-        sourceTank?: ServerTank
+        params: any,
+        sourceTank: ServerTank | null
     ): StatusEffect | null {
         const creator = this.creators.get(id);
         return creator ? creator(durationMs, params, sourceTank) : null;

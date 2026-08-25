@@ -9,7 +9,7 @@ import './matterTypes.js';
 export interface CollisionContext {
     game: GameRoom;
     impactExecutor: ImpactEffectExecutor;
-    findTankById(id: string): ServerTank | null | undefined;
+    findTankById(id: string): ServerTank | null;
     addPopEvent(event: BubblePopEvent): void;
     isMatchOver(): boolean;
 }
@@ -89,13 +89,13 @@ export class CollisionHandler {
             const ctxA: ImpactContext = {
                 game: this.context.game,
                 position: { x: midX, y: midY },
-                sourceTank: this.context.findTankById(projA.ownerId) ?? undefined,
+                sourceTank: this.context.findTankById(projA.ownerId),
                 target: { type: 'projectile', projectile: projB },
             };
             const ctxB: ImpactContext = {
                 game: this.context.game,
                 position: { x: midX, y: midY },
-                sourceTank: this.context.findTankById(projB.ownerId) ?? undefined,
+                sourceTank: this.context.findTankById(projB.ownerId),
                 target: { type: 'projectile', projectile: projA },
             };
 
@@ -147,7 +147,7 @@ export class CollisionHandler {
             projectile.isDestroyed = true;
         }
 
-        const killer = this.context.findTankById(projectile.ownerId) ?? undefined;
+        const killer = this.context.findTankById(projectile.ownerId);
 
         const ctx: ImpactContext = {
             game: this.context.game,
@@ -196,7 +196,7 @@ export class CollisionHandler {
         const ctx: ImpactContext = {
             game: this.context.game,
             position: { x: projectileBody.position.x, y: projectileBody.position.y },
-            sourceTank: this.context.findTankById(projectile.ownerId) ?? undefined,
+            sourceTank: this.context.findTankById(projectile.ownerId),
             target: { type: 'obstacle', body: obstacleBody, obstacleId: obstacleBody.id },
         };
         this.context.impactExecutor.execute(projectile.onHit, ctx);
@@ -225,7 +225,7 @@ export class CollisionHandler {
         const ctx: ImpactContext = {
             game: this.context.game,
             position: { x: projectileBody.position.x, y: projectileBody.position.y },
-            sourceTank: this.context.findTankById(projectile.ownerId) ?? undefined,
+            sourceTank: this.context.findTankById(projectile.ownerId),
             target: { type: 'map_boundary' },
         };
         this.context.impactExecutor.execute(projectile.onHit, ctx);
@@ -273,11 +273,11 @@ export class CollisionHandler {
         }
     }
 
-    private handleTankObstacle(tank: ServerTank | undefined): void {
+    private handleTankObstacle(tank?: ServerTank): void {
         if (tank) tank.addWobble(Math.random() * Math.PI * 2, 0.18);
     }
 
-    private handleTankTank(tankA: ServerTank | undefined, tankB: ServerTank | undefined): void {
+    private handleTankTank(tankA?: ServerTank, tankB?: ServerTank): void {
         if (tankA) tankA.addWobble(Math.random() * Math.PI * 2, 0.22);
         if (tankB) tankB.addWobble(Math.random() * Math.PI * 2, 0.22);
     }

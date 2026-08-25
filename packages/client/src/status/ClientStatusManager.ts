@@ -25,7 +25,7 @@ export class ClientStatusManager {
         return this.registry.get(id);
     }
 
-    public tryGet(id: string): ClientStatusEffect | undefined {
+    public tryGet(id: string): ClientStatusEffect | null {
         return this.registry.tryGet(id);
     }
 
@@ -34,7 +34,7 @@ export class ClientStatusManager {
      */
     public syncTankStatuses(
         tank: ClientTankState,
-        snapshots: StatusSnapshot[] | undefined,
+        snapshots: StatusSnapshot[],
         ctx: ClientStatusContext
     ): void {
         let activeMap = this.tankStatuses.get(tank.id);
@@ -45,7 +45,7 @@ export class ClientStatusManager {
 
         const currentIds = new Set<string>();
 
-        if (snapshots && snapshots.length > 0) {
+        if (snapshots.length > 0) {
             for (const snap of snapshots) {
                 currentIds.add(snap.id);
                 const handler = this.registry.tryGet(snap.id);

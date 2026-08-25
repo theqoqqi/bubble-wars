@@ -86,7 +86,7 @@ export class GameRoom {
             .slice(0, 10);
     }
 
-    public handleTankDeath(victim: ServerTank, killer?: ServerTank): void {
+    public handleTankDeath(victim: ServerTank, killer: ServerTank | null): void {
         if (killer) {
             killer.score += 100;
             killer.kills += 1;
@@ -406,7 +406,7 @@ export class GameRoom {
                         const ctx: ImpactContext = {
                             game: this,
                             position: { x: proj.body.position.x, y: proj.body.position.y },
-                            sourceTank: this.findTankById(proj.ownerId) ?? undefined,
+                            sourceTank: this.findTankById(proj.ownerId),
                         };
                         this.impactExecutor.execute(proj.onExpire, ctx);
                     }

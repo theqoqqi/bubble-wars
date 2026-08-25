@@ -46,7 +46,7 @@ export class ServerTank {
     public wobbleA: number = 0;
     public wobbleV: number = 0;
 
-    public onDeath?: (victim: ServerTank, killer?: ServerTank) => void;
+    public onDeath?: (victim: ServerTank, killer: ServerTank | null) => void;
 
     public body: Matter.Body;
 
@@ -231,7 +231,7 @@ export class ServerTank {
         this.wobbleV += strength * 7;
     }
 
-    public takeDamage(amount: number, sourceTank?: ServerTank): boolean {
+    public takeDamage(amount: number, sourceTank: ServerTank | null): boolean {
         if (this.isDead || Date.now() < this.invulnerableUntil) return false;
 
         const effectiveDamage = this.statusEffects.modifyDamage(amount);

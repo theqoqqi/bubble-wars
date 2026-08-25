@@ -24,8 +24,8 @@ export class ServerProjectile {
     public damage: number;
     public lifetimeMs: number;
     public projectileTypeId: string;
-    public onHit?: ImpactEffect[];
-    public onExpire?: ImpactEffect[];
+    public onHit: ImpactEffect[];
+    public onExpire: ImpactEffect[];
     public isDestroyed: boolean = false;
     public hitsLeft: number = 1;
     public hitTankIds: Set<string> = new Set();
@@ -44,8 +44,8 @@ export class ServerProjectile {
         this.id = projectileIdCounter++;
         this.ownerId = ownerId;
         this.projectileTypeId = projectileType?.id ?? 'standard_bubble';
-        this.onHit = projectileType?.onHit;
-        this.onExpire = projectileType?.onExpire;
+        this.onHit = projectileType?.onHit ?? [];
+        this.onExpire = projectileType?.onExpire ?? [];
         this.hitsLeft = projectileType?.maxHits ?? 1;
         this.bouncesLeft = projectileType?.bounces ?? 0;
 

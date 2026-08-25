@@ -12,8 +12,8 @@ export class ClientImpactExecutor {
         return this;
     }
 
-    public execute(event: ImpactEvent | null | undefined, ctx: ClientImpactContext): void {
-        if (!event || !event.type) return;
+    public execute(event: ImpactEvent, ctx: ClientImpactContext): void {
+        if (!event.type) return;
 
         const handler = this.registry.tryGet(event.type);
         if (handler) {

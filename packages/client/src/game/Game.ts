@@ -112,7 +112,7 @@ export class Game {
         this.gameTime += dt;
 
         const myId = networkManager.playerId;
-        const myTank = myId ? this.tanks.get(myId) : null;
+        const myTank = myId ? this.tanks.get(myId) ?? null : null;
 
         // 1. Gather & Send Player Input (only when alive, match is active and leave modal is closed)
         const isLeaveModalOpen = !document
@@ -128,12 +128,10 @@ export class Game {
             tank.x += (tank.targetX - tank.x) * CLIENT_CONFIG.INTERPOLATION.TANK;
             tank.y += (tank.targetY - tank.y) * CLIENT_CONFIG.INTERPOLATION.TANK;
 
-            if (tank.bodyAngle !== undefined && tank.targetBodyAngle !== undefined) {
-                let diff = (tank.targetBodyAngle - tank.bodyAngle) % (Math.PI * 2);
-                if (diff > Math.PI) diff -= Math.PI * 2;
-                if (diff < -Math.PI) diff += Math.PI * 2;
-                tank.bodyAngle += diff * Math.min(1, dt * 14);
-            }
+            let diff = (tank.targetBodyAngle - tank.bodyAngle) % (Math.PI * 2);
+            if (diff > Math.PI) diff -= Math.PI * 2;
+            if (diff < -Math.PI) diff += Math.PI * 2;
+            tank.bodyAngle += diff * Math.min(1, dt * 14);
 
             tank.flash = Math.max(0, tank.flash - dt * CLIENT_CONFIG.ANIMATION.FLASH_DECAY_TANK);
             tank.wobbleV +=

@@ -15,7 +15,7 @@ export class StatusEffectImpactHandler extends ImpactHandler<StatusImpactEffect>
             effect.effectId,
             effect.durationMs,
             effect,
-            ctx.sourceTank
+            ctx.sourceTank ?? null
         );
         if (instance) {
             ctx.target.tank.statusEffects.add(instance);

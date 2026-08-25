@@ -10,7 +10,7 @@ export class SplashImpactHandler extends ImpactHandler<SplashImpactEffect> {
         const radius = effect.radius;
         const damage = effect.damage;
         const pushForce = effect.pushForce ?? 0.04;
-        const sourceTank = ctx.sourceTank;
+        const sourceTank = ctx.sourceTank ?? null;
 
         // 1. Broadcast impact event to all clients for rendering
         const impactEvent: SplashImpactEvent = {

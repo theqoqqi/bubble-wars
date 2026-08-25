@@ -197,7 +197,7 @@ export interface TankSnapshot {
     flash: number;
     wobbleS: number;
     wobbleA: number;
-    effects?: StatusSnapshot[];
+    effects: StatusSnapshot[];
 }
 
 export interface ProjectileSnapshot {

@@ -19,7 +19,7 @@ export type ImpactTarget =
 export interface ImpactContext {
     game: GameRoom;
     position: { x: number; y: number };
-    sourceTank?: ServerTank;
+    sourceTank?: ServerTank | null;
     target?: ImpactTarget;
 }
 
@@ -42,8 +42,8 @@ export class ImpactEffectExecutor {
         return this;
     }
 
-    public execute(effects: ImpactEffect[] | null | undefined, ctx: ImpactContext): void {
-        if (!effects || effects.length === 0) return;
+    public execute(effects: ImpactEffect[], ctx: ImpactContext): void {
+        if (effects.length === 0) return;
         for (const effect of effects) {
             const handler = this.registry.tryGet(effect.type);
             if (handler) {

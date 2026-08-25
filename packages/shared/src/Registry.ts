@@ -22,8 +22,8 @@ export class Registry<T extends Identifiable> {
         return item;
     }
 
-    public tryGet(id: string): T | undefined {
-        return this.items.get(id);
+    public tryGet(id: string): T | null {
+        return this.items.get(id) ?? null;
     }
 
     public getAll(): T[] {

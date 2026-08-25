@@ -61,7 +61,7 @@ export class GameRenderer {
         gameTime: number,
         shake: number,
         playerFlash: number,
-        myTank: ClientTankState | null | undefined,
+        myTank: ClientTankState | null,
         tanks: Iterable<ClientTankState>,
         projectiles: Iterable<ClientProjectile>,
         obstacles: Iterable<ClientObstacle>,
