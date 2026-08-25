@@ -106,9 +106,7 @@ export class GameRoom {
         const count = this.botCount;
         for (let i = 0; i < count; i++) {
             const name = this.getRandomBotName();
-            const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
-            const bot = new BotPlayer(`bot_${Date.now()}_${i + 1}`, name, pos.x, pos.y);
-            bot.tank.onDeath = (victim, killer) => this.handleTankDeath(victim, killer);
+            const bot = this.createBot(`bot_${Date.now()}_${i + 1}`, name);
             this.bots.push(bot);
             this.physics.addBody(bot.tank.body);
         }
@@ -518,9 +516,7 @@ export class GameRoom {
         while (this.bots.length < count) {
             const idx = this.bots.length;
             const name = this.getRandomBotName();
-            const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
-            const bot = new BotPlayer(`bot_${Date.now()}_${idx + 1}`, name, pos.x, pos.y);
-            bot.tank.onDeath = (victim, killer) => this.handleTankDeath(victim, killer);
+            const bot = this.createBot(`bot_${Date.now()}_${idx + 1}`, name);
             this.bots.push(bot);
             this.physics.addBody(bot.tank.body);
         }
@@ -542,6 +538,15 @@ export class GameRoom {
         }
 
         return this.bots.length;
+    }
+
+    private createBot(id: string, name: string): BotPlayer {
+        const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
+        const bot = new BotPlayer(id, name, pos.x, pos.y);
+
+        bot.tank.onDeath = (victim, killer) => this.handleTankDeath(victim, killer);
+
+        return bot;
     }
 
     public setFragLimit(limit: number): number {
