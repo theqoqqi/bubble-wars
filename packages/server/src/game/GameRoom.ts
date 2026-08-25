@@ -520,6 +520,7 @@ export class GameRoom {
             const name = this.getRandomBotName();
             const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
             const bot = new BotPlayer(`bot_${Date.now()}_${idx + 1}`, name, pos.x, pos.y);
+            bot.tank.onDeath = (victim, killer) => this.handleTankDeath(victim, killer);
             this.bots.push(bot);
             this.physics.addBody(bot.tank.body);
         }
