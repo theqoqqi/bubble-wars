@@ -140,6 +140,7 @@ export class HudManager {
             </div>
             <span class="tab-col-stat kills">${pl.kills}</span>
             <span class="tab-col-stat deaths">${pl.deaths}</span>
+            <span class="tab-col-stat assists">${pl.assists ?? 0}</span>
             <span class="tab-col-score">${pl.score}</span>
           </div>
         `;
@@ -237,6 +238,7 @@ export class HudManager {
             </div>
             <span class="gameover-col-stat kills">${pl.kills}</span>
             <span class="gameover-col-stat deaths">${pl.deaths}</span>
+            <span class="gameover-col-stat assists">${pl.assists ?? 0}</span>
             <span class="gameover-col-score">${pl.score}</span>
           </div>
         `;

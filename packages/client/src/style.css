@@ -1063,7 +1063,7 @@ body.crosshair-active .color-dot {
 
 .gameover-table-header {
     display: grid;
-    grid-template-columns: 28px 1fr 44px 44px 64px;
+    grid-template-columns: 28px 1fr 40px 40px 40px 64px;
     align-items: center;
     gap: 6px;
     padding: 6px 10px;
@@ -1088,7 +1088,7 @@ body.crosshair-active .color-dot {
 
 .gameover-row {
     display: grid;
-    grid-template-columns: 28px 1fr 44px 44px 64px;
+    grid-template-columns: 28px 1fr 40px 40px 40px 64px;
     align-items: center;
     gap: 6px;
     padding: 6px 10px;
@@ -1193,6 +1193,10 @@ body.crosshair-active .color-dot {
     color: rgba(255, 255, 255, 0.45);
 }
 
+.gameover-col-stat.assists {
+    color: #c084fc;
+}
+
 .gameover-col-score {
     font-family: var(--font-disp);
     font-size: 13px;
@@ -1213,9 +1217,10 @@ body.crosshair-active .color-dot {
     }
     .gameover-table-header,
     .gameover-row {
-        grid-template-columns: 24px 1fr 36px 36px 50px;
-        gap: 4px;
-        padding: 5px 6px;
+        grid-template-columns: 20px 1fr 28px 28px 28px 50px;
+        gap: 3px;
+        padding: 4px 6px;
+        font-size: 9px;
     }
 }
 
@@ -1306,7 +1311,7 @@ body.crosshair-active .color-dot {
 
 .tab-stats-table-header {
     display: grid;
-    grid-template-columns: 20px 1fr 28px 28px 44px;
+    grid-template-columns: 20px 1fr 26px 26px 26px 44px;
     align-items: center;
     gap: 6px;
     padding: 4px 6px;
@@ -1329,7 +1334,7 @@ body.crosshair-active .color-dot {
 
 .tab-stats-row {
     display: grid;
-    grid-template-columns: 20px 1fr 28px 28px 44px;
+    grid-template-columns: 20px 1fr 26px 26px 26px 44px;
     align-items: center;
     gap: 6px;
     padding: 4px 6px;
@@ -1370,6 +1375,10 @@ body.crosshair-active .color-dot {
     color: rgba(255, 255, 255, 0.45);
 }
 
+.tab-col-stat.assists {
+    color: #c084fc;
+}
+
 .tab-col-score {
     font-family: var(--font-disp);
     font-size: 11px;
@@ -1390,7 +1399,7 @@ body.crosshair-active .color-dot {
     }
     .tab-stats-table-header,
     .tab-stats-row {
-        grid-template-columns: 18px 1fr 26px 26px 40px;
+        grid-template-columns: 18px 1fr 22px 22px 22px 38px;
         gap: 3px;
         padding: 3px 4px;
     }

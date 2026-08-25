@@ -27,6 +27,8 @@ export class ServerTank {
     public score: number = 0;
     public kills: number = 0;
     public deaths: number = 0;
+    public assists: number = 0;
+    public damageContributors = new Map<string, { lastTime: number; totalDamage: number }>();
 
     public blueprint: TankBlueprint;
     public guns: ServerGun[];
@@ -237,6 +239,19 @@ export class ServerTank {
         const effectiveDamage = this.statusEffects.modifyDamage(amount);
         if (effectiveDamage <= 0) return false;
 
+        const actualDamage = Math.min(this.hp, effectiveDamage);
+
+        if (sourceTank && sourceTank.id !== this.id) {
+            const existing = this.damageContributors.get(sourceTank.id) || {
+                lastTime: 0,
+                totalDamage: 0,
+            };
+            this.damageContributors.set(sourceTank.id, {
+                lastTime: Date.now(),
+                totalDamage: existing.totalDamage + actualDamage,
+            });
+        }
+
         this.flash = 1.0;
         this.addWobble(Math.random() * Math.PI * 2, 0.25);
         this.hp = Math.max(0, this.hp - effectiveDamage);
@@ -272,6 +287,7 @@ export class ServerTank {
 
     public respawn(x: number, y: number): void {
         this.statusEffects.clear();
+        this.damageContributors.clear();
         this.hp = this.maxHp;
         this.isDead = false;
         this.recoil = 0;

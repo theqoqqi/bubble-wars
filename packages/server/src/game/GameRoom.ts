@@ -78,6 +78,7 @@ export class GameRoom {
                 score: t.score,
                 kills: t.kills,
                 deaths: t.deaths,
+                assists: t.assists,
                 isBot: t.isBot,
                 color: t.color,
                 hue: t.hue,
@@ -87,6 +88,22 @@ export class GameRoom {
     }
 
     public handleTankDeath(victim: ServerTank, killer: ServerTank | null): void {
+        const now = Date.now();
+        const ASSIST_TIMEOUT_MS = 10000;
+
+        // Calculate assists for all attackers who dealt damage within 10s
+        for (const [attackerId, info] of victim.damageContributors) {
+            if (killer && attackerId === killer.id) continue;
+            if (now - info.lastTime <= ASSIST_TIMEOUT_MS) {
+                const assistTank = this.findTankById(attackerId);
+                if (assistTank) {
+                    assistTank.assists += 1;
+                    assistTank.score += 40;
+                }
+            }
+        }
+        victim.damageContributors.clear();
+
         if (killer) {
             killer.score += 100;
             killer.kills += 1;
@@ -584,6 +601,8 @@ export class GameRoom {
             player.tank.score = 0;
             player.tank.kills = 0;
             player.tank.deaths = 0;
+            player.tank.assists = 0;
+            player.tank.damageContributors.clear();
             const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
             player.tank.respawn(pos.x, pos.y);
         }
