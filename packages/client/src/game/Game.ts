@@ -500,6 +500,16 @@ export class Game {
         this.hudManager.showGameOverModal(data, myId);
     }
 
+    public showTabStats(): void {
+        if (!this.isMatchOver && this.isRunning) {
+            this.hudManager.showTabStats();
+        }
+    }
+
+    public hideTabStats(): void {
+        this.hudManager.hideTabStats();
+    }
+
     public leaveGame(): void {
         this.isMatchOver = false;
         this.lastKiller = null;

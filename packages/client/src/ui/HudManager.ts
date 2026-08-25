@@ -25,6 +25,15 @@ export class HudManager {
     private gameoverCrown = document.getElementById('gameover-crown');
     private gameoverLeaderboard = document.getElementById('gameover-leaderboard');
 
+    // In-game Tab Overlay Elements & State
+    private tabStatsOverlay = document.getElementById('tab-stats-overlay');
+    private tabStatsLeaderboard = document.getElementById('tab-stats-leaderboard');
+    private tabFragLimit = document.getElementById('tab-frag-limit');
+    private isTabVisible: boolean = false;
+    private lastLeaderboard: LeaderboardEntry[] = [];
+    private lastMyId: string | null = null;
+    private fragLimit: number = 10;
+
     public updatePlayerHUD(snap: TankSnapshot): void {
         const pct = Math.max(0, Math.round((snap.hp / snap.maxHp) * 100));
 
@@ -45,8 +54,13 @@ export class HudManager {
     }
 
     public updateFragLimit(fragLimit: number): void {
-        if (this.fragLimitEl && fragLimit) {
+        if (!fragLimit) return;
+        this.fragLimit = fragLimit;
+        if (this.fragLimitEl) {
             this.fragLimitEl.textContent = `${fragLimit}`;
+        }
+        if (this.tabFragLimit) {
+            this.tabFragLimit.textContent = `${fragLimit}`;
         }
     }
 
@@ -57,26 +71,80 @@ export class HudManager {
     }
 
     public updateLeaderboard(leaderboard: LeaderboardEntry[], myId: string | null): void {
+        this.lastLeaderboard = leaderboard;
+        this.lastMyId = myId;
+
+        // 1. Update top bar compact badges
         const container = this.leaderboardContainer;
-        if (!container) return;
+        if (container) {
+            container.innerHTML = '';
+            leaderboard.forEach((entry) => {
+                const isPlayer = entry.id === myId;
+                const card = document.createElement('div');
+                card.className = `leaderboard-badge ${isPlayer ? 'active' : ''}`;
 
-        container.innerHTML = '';
+                card.innerHTML = `
+            <span class="leaderboard-dot" style="--dot-color: ${hsla(entry.hue, 90, 62, 1)};"></span>
+            <span class="leaderboard-name ${isPlayer ? 'player' : 'bot'}">
+              ${entry.name}
+            </span>
+            <span class="leaderboard-kills">${entry.kills}</span>
+            <span class="leaderboard-deaths">/${entry.deaths}</span>
+          `;
+                container.appendChild(card);
+            });
+        }
 
-        leaderboard.forEach((entry) => {
-            const isPlayer = entry.id === myId;
-            const card = document.createElement('div');
-            card.className = `leaderboard-badge ${isPlayer ? 'active' : ''}`;
+        // 2. If Tab overlay is active, re-render live stats table
+        if (this.isTabVisible) {
+            this.renderTabStats();
+        }
+    }
 
-            card.innerHTML = `
-        <span class="leaderboard-dot" style="--dot-color: ${hsla(entry.hue, 90, 62, 1)};"></span>
-        <span class="leaderboard-name ${isPlayer ? 'player' : 'bot'}">
-          ${entry.name}
-        </span>
-        <span class="leaderboard-kills">${entry.kills}</span>
-        <span class="leaderboard-deaths">/${entry.deaths}</span>
-      `;
-            container.appendChild(card);
-        });
+    public showTabStats(): void {
+        if (!this.tabStatsOverlay) return;
+        // Don't show if game over modal is active
+        if (this.gameoverModal && !this.gameoverModal.classList.contains('hidden')) return;
+
+        this.isTabVisible = true;
+        this.renderTabStats();
+        this.tabStatsOverlay.classList.remove('hidden');
+    }
+
+    public hideTabStats(): void {
+        if (!this.tabStatsOverlay) return;
+        this.isTabVisible = false;
+        this.tabStatsOverlay.classList.add('hidden');
+    }
+
+    private renderTabStats(): void {
+        if (!this.tabStatsLeaderboard || !this.lastLeaderboard) return;
+
+        this.tabStatsLeaderboard.innerHTML = this.lastLeaderboard
+            .map((pl: LeaderboardEntry, i: number) => {
+                const isPlayer = pl.id === this.lastMyId;
+                const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+                const badge = isPlayer
+                    ? '<span class="gameover-badge-you">ВЫ</span>'
+                    : pl.isBot
+                    ? '<span class="gameover-badge-bot">BOT</span>'
+                    : '';
+
+                return `
+          <div class="tab-stats-row ${isPlayer ? 'active' : ''}">
+            <span class="tab-col-rank ${rankClass}">${i + 1}</span>
+            <div class="gameover-player-cell tab-col-name">
+              <span class="gameover-row-dot" style="--dot-color: ${hsla(pl.hue, 90, 65, 1)};"></span>
+              <span class="gameover-row-name">${pl.name}</span>
+              ${badge}
+            </div>
+            <span class="tab-col-stat kills">${pl.kills}</span>
+            <span class="tab-col-stat deaths">${pl.deaths}</span>
+            <span class="tab-col-score">${pl.score}</span>
+          </div>
+        `;
+            })
+            .join('');
     }
 
     public addKillFeedItem(data: KillEventMessage): void {
@@ -150,17 +218,29 @@ export class HudManager {
 
         if (this.gameoverLeaderboard && data.leaderboard) {
             this.gameoverLeaderboard.innerHTML = data.leaderboard
-                .map(
-                    (pl: any, i: number) => `
-          <div class="gameover-row ${pl.id === myId ? 'active' : ''}">
-            <span class="gameover-row-rank">${i + 1}</span>
-            <span class="gameover-row-dot" style="--dot-color: ${hsla(pl.hue, 90, 65, 1)};"></span>
-            <span class="gameover-row-name">${pl.name}</span>
-            <span class="gameover-row-kills">${pl.kills} фр.</span>
-            <span class="gameover-row-deaths">${pl.deaths} см.</span>
+                .map((pl: LeaderboardEntry, i: number) => {
+                    const isPlayer = pl.id === myId;
+                    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+                    const badge = isPlayer
+                        ? '<span class="gameover-badge-you">ВЫ</span>'
+                        : pl.isBot
+                        ? '<span class="gameover-badge-bot">BOT</span>'
+                        : '';
+
+                    return `
+          <div class="gameover-row ${isPlayer ? 'active' : ''}">
+            <span class="gameover-col-rank ${rankClass}">${i + 1}</span>
+            <div class="gameover-player-cell">
+              <span class="gameover-row-dot" style="--dot-color: ${hsla(pl.hue, 90, 65, 1)};"></span>
+              <span class="gameover-row-name">${pl.name}</span>
+              ${badge}
+            </div>
+            <span class="gameover-col-stat kills">${pl.kills}</span>
+            <span class="gameover-col-stat deaths">${pl.deaths}</span>
+            <span class="gameover-col-score">${pl.score}</span>
           </div>
-        `
-                )
+        `;
+                })
                 .join('');
         }
 
@@ -170,6 +250,7 @@ export class HudManager {
     public reset(): void {
         this.hideDeathModal();
         this.hideGameOverModal();
+        this.hideTabStats();
         if (this.leaderboardContainer) this.leaderboardContainer.innerHTML = '';
     }
 }

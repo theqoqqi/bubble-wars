@@ -339,6 +339,33 @@ window.addEventListener('DOMContentLoaded', () => {
         btnGameOverMenu.addEventListener('click', returnToMenu);
     }
 
+    // In-game Tab match stats overlay (Hold Tab)
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Tab') {
+            const activeEl = document.activeElement;
+            const isInputFocused =
+                activeEl &&
+                (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+            const isJoinHidden = joinModal ? joinModal.classList.contains('hidden') : true;
+
+            if (!isInputFocused && isJoinHidden) {
+                e.preventDefault();
+                game.showTabStats();
+            }
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (e.code === 'Tab') {
+            e.preventDefault();
+            game.hideTabStats();
+        }
+    });
+
+    window.addEventListener('blur', () => {
+        game.hideTabStats();
+    });
+
     // Auto-reconnect if session was active in this specific tab before reload
     const isGameActive = sessionStorage.getItem('bubble_game_active') === 'true';
     const savedSessionToken = sessionStorage.getItem('bubble_session_token');

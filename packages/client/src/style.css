@@ -1020,9 +1020,9 @@ body.crosshair-active .color-dot {
 }
 
 .gameover-card {
-    width: 480px;
-    max-width: 94vw;
-    padding: 32px;
+    width: 640px;
+    max-width: 95vw;
+    padding: 28px 32px;
     text-align: center;
     pointer-events: auto;
 }
@@ -1039,87 +1039,361 @@ body.crosshair-active .color-dot {
 
 .gameover-title {
     font-family: var(--font-disp);
-    font-size: 42px;
+    font-size: 38px;
     font-weight: 700;
     color: #fff;
     text-shadow: 0 0 24px rgba(53, 224, 255, 0.7);
 }
 
 .gameover-subtitle {
-    margin-top: 8px;
+    margin-top: 6px;
     font-size: 14px;
     font-weight: 700;
-    color: rgba(154, 220, 240, 0.8);
+    color: rgba(154, 220, 240, 0.85);
+}
+
+/* Match Leaderboard Table */
+.gameover-table-container {
+    background: rgba(6, 16, 26, 0.45);
+    border: 1px solid rgba(154, 220, 240, 0.15);
+    border-radius: 14px;
+    padding: 8px 10px;
+    margin-bottom: 20px;
+}
+
+.gameover-table-header {
+    display: grid;
+    grid-template-columns: 28px 1fr 44px 44px 64px;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    font-family: var(--font-disp);
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(154, 220, 240, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(154, 220, 240, 0.1);
+    margin-bottom: 4px;
 }
 
 .gameover-leaderboard-list {
-    margin-top: 20px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    max-height: 180px;
+    gap: 4px;
+    max-height: 240px;
     overflow-y: auto;
+    padding-right: 2px;
 }
 
 .gameover-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 28px 1fr 44px 44px 64px;
     align-items: center;
-    gap: 10px;
-    padding: 6px 12px;
-    border-radius: 10px;
-    background: rgba(0, 0, 0, 0.3);
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    transition: all 0.2s ease;
+}
+
+.gameover-row:hover {
+    background: rgba(255, 255, 255, 0.06);
 }
 
 .gameover-row.active {
-    background: rgba(53, 224, 255, 0.15);
-    border: 1px solid rgba(53, 224, 255, 0.4);
+    background: rgba(53, 224, 255, 0.12);
+    border: 1px solid rgba(53, 224, 255, 0.45);
+    box-shadow: 0 0 12px rgba(53, 224, 255, 0.15);
 }
 
-.gameover-row-rank {
+.gameover-col-rank {
     font-family: var(--font-disp);
     font-size: 13px;
     font-weight: 700;
-    width: 18px;
     color: rgba(154, 220, 240, 0.6);
+    text-align: left;
+}
+
+.gameover-col-rank.rank-1 {
+    color: #ffe36e;
+    text-shadow: 0 0 8px rgba(255, 227, 110, 0.7);
+}
+
+.gameover-col-rank.rank-2 {
+    color: #d4e5f7;
+    text-shadow: 0 0 8px rgba(212, 229, 247, 0.6);
+}
+
+.gameover-col-rank.rank-3 {
+    color: #e6a770;
+    text-shadow: 0 0 8px rgba(230, 167, 112, 0.6);
+}
+
+.gameover-player-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    text-align: left;
 }
 
 .gameover-row-dot {
     display: inline-block;
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: var(--dot-color, #fff);
     box-shadow: 0 0 8px var(--dot-color, #fff);
+    flex-shrink: 0;
 }
 
 .gameover-row-name {
-    flex: 1;
-    text-align: left;
     font-size: 13px;
-    font-weight: 800;
+    font-weight: 700;
     color: #fff;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.gameover-row-kills {
-    font-family: var(--font-disp);
-    font-size: 15px;
+.gameover-badge-you {
+    background: rgba(53, 224, 255, 0.2);
+    color: #35e0ff;
+    border: 1px solid rgba(53, 224, 255, 0.5);
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 4px;
     font-weight: 700;
+    flex-shrink: 0;
+}
+
+.gameover-badge-bot {
+    background: rgba(154, 220, 240, 0.1);
+    color: rgba(154, 220, 240, 0.6);
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.gameover-col-stat {
+    font-family: var(--font-disp);
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.gameover-col-stat.kills {
     color: var(--color-soap-gold);
 }
 
-.gameover-row-deaths {
-    font-size: 11px;
+.gameover-col-stat.deaths {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.gameover-col-score {
+    font-family: var(--font-disp);
+    font-size: 13px;
     font-weight: 700;
-    opacity: 0.5;
+    text-align: right;
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .gameover-actions-row {
-    margin-top: 24px;
+    margin-top: 20px;
     display: flex;
     gap: 12px;
+}
+
+@media (max-width: 640px) {
+    .gameover-card {
+        padding: 20px 14px;
+    }
+    .gameover-table-header,
+    .gameover-row {
+        grid-template-columns: 24px 1fr 36px 36px 50px;
+        gap: 4px;
+        padding: 5px 6px;
+    }
+}
+
+/* In-game Tab Stats Overlay (Compact Top-Left Panel, Dota-style) */
+.tab-stats-overlay {
+    position: fixed;
+    top: 74px;
+    left: 14px;
+    right: auto;
+    bottom: auto;
+    transform: translateY(0);
+    width: auto;
+    height: auto;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    pointer-events: none;
+    z-index: 120;
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease,
+        visibility 0.15s ease;
+}
+
+.tab-stats-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    pointer-events: none;
+}
+
+.tab-stats-card {
+    width: 440px;
+    max-width: 94vw;
+    padding: 12px 14px;
+    background: rgba(8, 20, 32, 0.82);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(53, 224, 255, 0.35);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(53, 224, 255, 0.1);
+}
+
+.tab-stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(154, 220, 240, 0.15);
+    padding-bottom: 6px;
+}
+
+.tab-stats-title-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tab-stats-title {
+    font-family: var(--font-disp);
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+
+.tab-stats-badge-tab {
+    font-family: var(--font-disp);
+    font-size: 9px;
+    font-weight: 700;
+    color: #35e0ff;
+    background: rgba(53, 224, 255, 0.15);
+    border: 1px solid rgba(53, 224, 255, 0.4);
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+
+.tab-stats-meta {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(154, 220, 240, 0.8);
+}
+
+.tab-stats-table-container {
+    background: rgba(6, 16, 26, 0.5);
+    border: 1px solid rgba(154, 220, 240, 0.1);
+    border-radius: 8px;
+    padding: 4px 6px;
+}
+
+.tab-stats-table-header {
+    display: grid;
+    grid-template-columns: 20px 1fr 28px 28px 44px;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    font-family: var(--font-disp);
+    font-size: 9px;
+    font-weight: 700;
+    color: rgba(154, 220, 240, 0.6);
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(154, 220, 240, 0.1);
+}
+
+.tab-stats-leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 240px;
+    overflow-y: auto;
+    margin-top: 3px;
+}
+
+.tab-stats-row {
+    display: grid;
+    grid-template-columns: 20px 1fr 28px 28px 44px;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.tab-stats-row.active {
+    background: rgba(53, 224, 255, 0.14);
+    border: 1px solid rgba(53, 224, 255, 0.4);
+    box-shadow: 0 0 8px rgba(53, 224, 255, 0.15);
+}
+
+.tab-col-rank {
+    font-family: var(--font-disp);
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(154, 220, 240, 0.6);
+}
+
+.tab-col-name {
+    text-align: left;
+    font-size: 11px;
+}
+
+.tab-col-stat {
+    font-family: var(--font-disp);
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.tab-col-stat.kills {
+    color: var(--color-soap-gold);
+}
+
+.tab-col-stat.deaths {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.tab-col-score {
+    font-family: var(--font-disp);
+    font-size: 11px;
+    font-weight: 700;
+    text-align: right;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+@media (max-width: 640px) {
+    .tab-stats-overlay {
+        top: 68px;
+        left: 8px;
+        right: auto;
+    }
+    .tab-stats-card {
+        width: 330px;
+        padding: 10px;
+    }
+    .tab-stats-table-header,
+    .tab-stats-row {
+        grid-template-columns: 18px 1fr 26px 26px 40px;
+        gap: 3px;
+        padding: 3px 4px;
+    }
 }
 
 /* Leave Game Modal */

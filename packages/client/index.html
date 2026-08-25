@@ -472,6 +472,34 @@
                 </div>
             </div>
 
+            <!-- In-game Live Match Stats Overlay (Hold TAB) -->
+            <div id="tab-stats-overlay" class="tab-stats-overlay hidden">
+                <div class="panel tab-stats-card">
+                    <div class="tab-stats-header">
+                        <div class="tab-stats-title-group">
+                            <span class="tab-stats-title">ТАБЛИЦА МАТЧА</span>
+                            <span class="tab-stats-badge-tab">TAB</span>
+                        </div>
+                        <div class="tab-stats-meta">
+                            <span>Лимит фрагов: <strong id="tab-frag-limit" style="color: var(--color-soap-gold);">10</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="tab-stats-table-container">
+                        <div class="tab-stats-table-header">
+                            <span class="tab-col-rank">#</span>
+                            <span class="tab-col-name">ИГРОК</span>
+                            <span class="tab-col-stat">K</span>
+                            <span class="tab-col-stat">D</span>
+                            <span class="tab-col-score">ОЧКИ</span>
+                        </div>
+                        <div id="tab-stats-leaderboard" class="tab-stats-leaderboard-list">
+                            <!-- Filled dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Death / Respawn Overlay -->
             <div id="death-modal" class="overlay hidden">
                 <div class="panel rise-in death-card">
@@ -513,8 +541,18 @@
                         Победил игрок. Реванш?
                     </div>
 
-                    <div id="gameover-leaderboard" class="gameover-leaderboard-list">
-                        <!-- Filled dynamically -->
+                    <!-- Match Leaderboard Table -->
+                    <div class="gameover-table-container">
+                        <div class="gameover-table-header">
+                            <span class="gameover-col-rank">#</span>
+                            <span class="gameover-col-name">ИГРОК</span>
+                            <span class="gameover-col-stat">K</span>
+                            <span class="gameover-col-stat">D</span>
+                            <span class="gameover-col-score">ОЧКИ</span>
+                        </div>
+                        <div id="gameover-leaderboard" class="gameover-leaderboard-list">
+                            <!-- Filled dynamically -->
+                        </div>
                     </div>
 
                     <div class="gameover-actions-row">
