@@ -171,7 +171,7 @@ export class ServerTank {
                 );
 
                 for (const barrel of gun.barrels) {
-                    if (barrel.canShoot(now, this.isBot)) {
+                    if (barrel.canShoot(now)) {
                         const spawned = barrel.shoot(
                             this.id,
                             mountPos.x,

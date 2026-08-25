@@ -16,8 +16,6 @@ export class BotPlayer {
     public skill: number;
     private strafeDir: number;
     private strafeT: number;
-    private burstLeft: number = 3;
-    private restT: number = 0;
     private phase: number;
     private aimTarget: number = 0;
 
@@ -58,7 +56,6 @@ export class BotPlayer {
             this.strafeDir *= -1;
             this.strafeT = rand(1.1, 2.6);
         }
-        this.restT = Math.max(0, this.restT - dt);
 
         // 1. Find best target (prefer human players, then closest bot)
         let target: ServerTank | null = null;
@@ -119,15 +116,10 @@ export class BotPlayer {
             this.tank.aimAngle += diff * Math.min(1, 14 * dt);
 
             // Check if aim is on target for shooting
-            const aimOk = Math.abs(diff) < 0.28;
-            if (dist < GAME_CONFIG.BOT.VIEW_DISTANCE && aimOk && this.restT <= 0) {
-                shooting = true;
-                this.burstLeft--;
-                if (this.burstLeft <= 0) {
-                    this.burstLeft = 2 + Math.floor(this.skill * 3);
-                    this.restT = rand(0.45, 1.1);
-                }
-            }
+            const aimThreshold = 0.32 - this.skill * 0.12;
+            const aimOk = Math.abs(diff) < aimThreshold;
+
+            shooting = dist < GAME_CONFIG.BOT.VIEW_DISTANCE && aimOk;
         } else {
             this.aimTarget = Math.atan2(-this.tank.body.position.y, -this.tank.body.position.x);
             this.tank.aimAngle += angDiff(this.tank.aimAngle, this.aimTarget) * Math.min(1, 8 * dt);

@@ -31,11 +31,8 @@ export class ServerGunBarrel {
         }
     }
 
-    public canShoot(now: number, isBot: boolean): boolean {
-        const cd = isBot
-            ? Math.max(this.config.cooldownMs * 1.5, 300)
-            : this.config.cooldownMs;
-        return now - this.lastShootTime >= cd;
+    public canShoot(now: number): boolean {
+        return now - this.lastShootTime >= this.config.cooldownMs;
     }
 
     public shoot(
