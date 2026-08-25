@@ -48,6 +48,9 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
         damage: 75,
         speed: 55,
         lifetime: 2200,
+        maxHits: 3,
+        bounces: 3,
+        bounceFrom: ['map_boundary', 'obstacle'],
         body: {
             bubbles: [
                 { id: 'core', offsetX: 0, offsetY: 0, radius: 6, stretch: 2, color: { hue: 28, tint: 0.9 } },
@@ -86,9 +89,9 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
     {
         id: 'foam_round',
         name: 'Пенная пуля',
-        damage: 8,
-        speed: 29,
-        lifetime: 1600,
+        damage: 5,
+        speed: 15,
+        lifetime: 3000,
         body: {
             bubbles: [
                 { id: 'core', offsetX: 0, offsetY: 0, radius: 7, color: { hue: 28, tint: 0.9 } },
@@ -102,11 +105,15 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
             { type: 'oscillator', wave: 'sine', fromFreq: 80, toFreq: 20, duration: 0.05, volume: 0.0016 },
             { type: 'noise', freq: 100, q: 0.9, duration: 0.8, volume: 0.08 },
         ],
+        onHit: [
+            { type: 'status', effectId: 'slow', durationMs: 2200, intensity: 0.7 },
+        ],
+        onExpire: [],
     },
     {
         id: 'heavy_bubble',
         name: 'Тяжёлый мыльный пузырь',
-        damage: 58,
+        damage: 50,
         speed: 20,
         lifetime: 3500,
         body: {
@@ -122,6 +129,10 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
             { type: 'oscillator', wave: 'sine', fromFreq: 200, toFreq: 40, duration: 0.32, volume: 0.65 },
             { type: 'noise', freq: 800, q: 1.3, duration: 0.18, volume: 0.35 },
         ],
+        onHit: [
+            { type: 'splash', radius: 140, damage: 35, pushForce: 0.035, hue: 28 },
+        ],
+        onExpire: [],
     },
 ];
 
