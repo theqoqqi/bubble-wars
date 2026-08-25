@@ -223,6 +223,14 @@ export class NetworkManager extends EventBus<NetworkEvents> {
         });
     }
 
+    public leave(): void {
+        this.sendMessage({
+            type: 'leave',
+        });
+        this.clearSession();
+        this.disconnect();
+    }
+
     private sendMessage(msg: ClientMessage): void {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             this.ws.send(JSON.stringify(msg));

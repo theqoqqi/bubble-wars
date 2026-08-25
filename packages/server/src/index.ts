@@ -79,6 +79,15 @@ wss.on('connection', (ws: WebSocket) => {
                     break;
                 }
 
+                case 'leave': {
+                    if (playerId) {
+                        console.log(`[Server] Player left match intentionally: ${playerId}`);
+                        gameRoom.removePlayerCompletely(playerId);
+                        playerId = null;
+                    }
+                    break;
+                }
+
                 case 'ping': {
                     if (ws.readyState === WebSocket.OPEN) {
                         ws.send(

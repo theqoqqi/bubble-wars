@@ -37,8 +37,17 @@ export interface RematchMessage {
     type: 'rematch';
 }
 
+export interface LeaveMessage {
+    type: 'leave';
+}
+
 export type ClientMessage =
-    JoinMessage | InputMessage | PingMessage | RespawnMessage | RematchMessage;
+    | JoinMessage
+    | InputMessage
+    | PingMessage
+    | RespawnMessage
+    | RematchMessage
+    | LeaveMessage;
 
 // Server -> Client
 export interface WelcomeMessage {

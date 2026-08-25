@@ -275,8 +275,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const btnLeaveCancel = document.getElementById('btn-leave-cancel');
 
     const returnToMenu = () => {
-        networkManager.clearSession();
-        networkManager.disconnect();
+        networkManager.leave();
         game.leaveGame();
         if (leaveModal) leaveModal.classList.add('hidden');
         if (gameoverModal) gameoverModal.classList.add('hidden');
