@@ -431,7 +431,11 @@ export class Game {
     }
 
     private handleBubblePop(event: BubblePopEvent): void {
-        soundFx.playBubblePop(event.radius, event.isKill);
+        if (event.isKill) {
+            soundFx.playKill();
+        } else {
+            soundFx.playBubblePop(event.radius);
+        }
 
         if (event.isKill) {
             this.shake = Math.min(

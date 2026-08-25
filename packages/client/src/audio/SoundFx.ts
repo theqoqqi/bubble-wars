@@ -155,11 +155,7 @@ export class SoundFx {
     }
 
     /** size 0..1 — чем больше пузырь, тем ниже звук лопания */
-    public playBubblePop(radius: number = 20, isKill: boolean = false): void {
-        if (isKill) {
-            this.playKill();
-            return;
-        }
+    public playBubblePop(radius: number = 20): void {
         const size = Math.min(1, Math.max(0.1, radius / 50));
         this.osc('sine', 440 - 240 * size, 70, 0.11 + 0.1 * size, 0.45);
         this.noise(0.05 + 0.08 * size, 0.4, 2500 - 1500 * size, 1.1);

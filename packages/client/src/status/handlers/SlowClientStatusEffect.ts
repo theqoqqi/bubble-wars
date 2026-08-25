@@ -20,7 +20,7 @@ export class SlowClientStatusEffect extends ClientStatusEffect {
         _snapshot: StatusSnapshot,
         ctx: ClientStatusContext
     ): void {
-        ctx.soundFx.playBubblePop(22, false);
+        ctx.soundFx.playBubblePop(22);
         ctx.particleSystem.emitPop(tank.x, tank.y, 24, 195, false);
     }
 
