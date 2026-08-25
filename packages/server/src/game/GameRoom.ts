@@ -86,32 +86,6 @@ export class GameRoom {
             .slice(0, 10);
     }
 
-    private getRandomBotName(): string {
-        if (this.freeNames.length === 0) {
-            this.freeNames = [...BOT_NAMES];
-        }
-
-        const idx = Math.floor(Math.random() * this.freeNames.length);
-        const [picked] = this.freeNames.splice(idx, 1);
-
-        return picked;
-    }
-
-    private respawnAllBots(): void {
-        for (const bot of this.bots) {
-            this.physics.removeBody(bot.tank.body);
-        }
-        this.bots = [];
-
-        const count = this.botCount;
-        for (let i = 0; i < count; i++) {
-            const name = this.getRandomBotName();
-            const bot = this.createBot(`bot_${Date.now()}_${i + 1}`, name);
-            this.bots.push(bot);
-            this.physics.addBody(bot.tank.body);
-        }
-    }
-
     public handleTankDeath(victim: ServerTank, killer?: ServerTank): void {
         if (killer) {
             killer.score += 100;
@@ -509,35 +483,49 @@ export class GameRoom {
         }
     }
 
+    private respawnAllBots(): void {
+        this.removeBots(this.bots.length, false);
+        this.addBots(this.botCount);
+    }
+
     public setBotCount(targetCount: number): number {
         const count = Math.max(0, Math.min(15, Math.floor(targetCount)));
         this.botCount = count;
 
-        while (this.bots.length < count) {
-            const idx = this.bots.length;
-            const name = this.getRandomBotName();
-            const bot = this.createBot(`bot_${Date.now()}_${idx + 1}`, name);
-            this.bots.push(bot);
-            this.physics.addBody(bot.tank.body);
-        }
-
-        while (this.bots.length > count) {
-            const removed = this.bots.pop();
-            if (removed) {
-                this.physics.removeBody(removed.tank.body);
-                this.pendingPopEvents.push({
-                    id: `bot_remove_${removed.tank.id}_${Date.now()}`,
-                    x: removed.tank.body.position.x,
-                    y: removed.tank.body.position.y,
-                    radius: GAME_CONFIG.TANK.BODY_RADIUS * 2,
-                    hue: removed.tank.hue,
-                    color: removed.tank.color,
-                    isKill: false,
-                });
-            }
+        if (this.bots.length < count) {
+            this.addBots(count - this.bots.length);
+        } else if (this.bots.length > count) {
+            this.removeBots(this.bots.length - count, true);
         }
 
         return this.bots.length;
+    }
+
+    private getRandomBotName(): string {
+        if (this.freeNames.length === 0) {
+            this.freeNames = [...BOT_NAMES];
+        }
+
+        const idx = Math.floor(Math.random() * this.freeNames.length);
+        const [picked] = this.freeNames.splice(idx, 1);
+
+        return picked;
+    }
+
+    private addBots(count: number): void {
+        for (let i = 0; i < count; i++) {
+            this.addBot();
+        }
+    }
+
+    private addBot(): BotPlayer {
+        const name = this.getRandomBotName();
+        const bot = this.createBot(`bot_${Date.now()}_${this.bots.length + 1}`, name);
+
+        this.bots.push(bot);
+        this.physics.addBody(bot.tank.body);
+
+        return bot;
     }
 
     private createBot(id: string, name: string): BotPlayer {
@@ -547,6 +535,36 @@ export class GameRoom {
         bot.tank.onDeath = (victim, killer) => this.handleTankDeath(victim, killer);
 
         return bot;
+    }
+
+    private removeBots(count: number, emitPop: boolean = true): void {
+        const toRemove = Math.min(count, this.bots.length);
+
+        for (let i = 0; i < toRemove; i++) {
+            const removed = this.bots.pop();
+
+            if (removed) {
+                this.removeBot(removed, emitPop);
+            }
+        }
+    }
+
+    private removeBot(bot: BotPlayer, emitPop: boolean = true): void {
+        this.physics.removeBody(bot.tank.body);
+
+        if (!emitPop) {
+            return;
+        }
+
+        this.pendingPopEvents.push({
+            id: `bot_remove_${bot.tank.id}_${Date.now()}`,
+            x: bot.tank.body.position.x,
+            y: bot.tank.body.position.y,
+            radius: GAME_CONFIG.TANK.BODY_RADIUS * 2,
+            hue: bot.tank.hue,
+            color: bot.tank.color,
+            isKill: false,
+        });
     }
 
     public setFragLimit(limit: number): number {
