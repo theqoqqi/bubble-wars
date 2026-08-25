@@ -28,6 +28,8 @@ export class ServerTank {
     public kills: number = 0;
     public deaths: number = 0;
     public assists: number = 0;
+    public damageDealt: number = 0;
+    public damageTaken: number = 0;
     public damageContributors = new Map<string, { lastTime: number; totalDamage: number }>();
 
     public blueprint: TankBlueprint;
@@ -242,6 +244,8 @@ export class ServerTank {
         const actualDamage = Math.min(this.hp, effectiveDamage);
 
         if (sourceTank && sourceTank.id !== this.id) {
+            sourceTank.damageDealt += actualDamage;
+
             const existing = this.damageContributors.get(sourceTank.id) || {
                 lastTime: 0,
                 totalDamage: 0,
@@ -251,6 +255,8 @@ export class ServerTank {
                 totalDamage: existing.totalDamage + actualDamage,
             });
         }
+
+        this.damageTaken += actualDamage;
 
         this.flash = 1.0;
         this.addWobble(Math.random() * Math.PI * 2, 0.25);

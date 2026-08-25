@@ -79,6 +79,8 @@ export class GameRoom {
                 kills: t.kills,
                 deaths: t.deaths,
                 assists: t.assists,
+                damageDealt: Math.round(t.damageDealt),
+                damageTaken: Math.round(t.damageTaken),
                 isBot: t.isBot,
                 color: t.color,
                 hue: t.hue,
@@ -602,6 +604,8 @@ export class GameRoom {
             player.tank.kills = 0;
             player.tank.deaths = 0;
             player.tank.assists = 0;
+            player.tank.damageDealt = 0;
+            player.tank.damageTaken = 0;
             player.tank.damageContributors.clear();
             const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
             player.tank.respawn(pos.x, pos.y);

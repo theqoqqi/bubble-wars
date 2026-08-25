@@ -235,6 +235,8 @@ export interface LeaderboardEntry {
     kills: number;
     deaths: number;
     assists: number;
+    damageDealt: number;
+    damageTaken: number;
     isBot: boolean;
     color: ColorDef;
     hue: number;

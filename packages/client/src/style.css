@@ -1063,7 +1063,7 @@ body.crosshair-active .color-dot {
 
 .gameover-table-header {
     display: grid;
-    grid-template-columns: 28px 1fr 40px 40px 40px 64px;
+    grid-template-columns: 28px 1fr 40px 40px 40px 58px 58px 64px;
     align-items: center;
     gap: 6px;
     padding: 6px 10px;
@@ -1088,7 +1088,7 @@ body.crosshair-active .color-dot {
 
 .gameover-row {
     display: grid;
-    grid-template-columns: 28px 1fr 40px 40px 40px 64px;
+    grid-template-columns: 28px 1fr 40px 40px 40px 58px 58px 64px;
     align-items: center;
     gap: 6px;
     padding: 6px 10px;
@@ -1197,6 +1197,14 @@ body.crosshair-active .color-dot {
     color: #c084fc;
 }
 
+.gameover-col-stat.damage-dealt {
+    color: #f87171;
+}
+
+.gameover-col-stat.damage-taken {
+    color: #60a5fa;
+}
+
 .gameover-col-score {
     font-family: var(--font-disp);
     font-size: 13px;
@@ -1217,7 +1225,7 @@ body.crosshair-active .color-dot {
     }
     .gameover-table-header,
     .gameover-row {
-        grid-template-columns: 20px 1fr 28px 28px 28px 50px;
+        grid-template-columns: 20px 1fr 28px 28px 28px 42px 42px 50px;
         gap: 3px;
         padding: 4px 6px;
         font-size: 9px;
