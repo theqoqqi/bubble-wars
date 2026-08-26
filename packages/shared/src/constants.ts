@@ -71,6 +71,9 @@ export function getRandomBotDef(excludeNames?: Set<string>): BotDef {
 export const GAME_CONFIG = {
     TICK_RATE: 40, // 40 FPS server tick
     TICK_INTERVAL_MS: 1000 / 40, // 25ms
+    PHYSICS: {
+        SUB_STEPS: 3,
+    },
 
     ARENA: {
         radius: 1800,

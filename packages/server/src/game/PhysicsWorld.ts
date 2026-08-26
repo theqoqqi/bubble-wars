@@ -22,6 +22,13 @@ export interface DynamicObstacle {
     time: number;
 }
 
+export interface ActiveBodyForce {
+    body: Matter.Body;
+    fx: number;
+    fy: number;
+    torque: number;
+}
+
 export class PhysicsWorld {
     public engine: Matter.Engine;
     public world: Matter.World;
@@ -211,7 +218,51 @@ export class PhysicsWorld {
             }
         }
 
-        Matter.Engine.update(this.engine, deltaMs);
+        const subSteps = Math.max(1, GAME_CONFIG.PHYSICS.SUB_STEPS);
+        const subDelta = deltaMs / subSteps;
+
+        // Считываем все активные силы, приложенные к телам перед началом шага
+        const activeForces = this.collectActiveForces();
+
+        for (let s = 0; s < subSteps; s++) {
+            // Начиная со 2-го сабстепа, повторно применяем силы, сброшенные Matter.js
+            if (s > 0) {
+                this.reapplyForces(activeForces);
+            }
+
+            Matter.Engine.update(this.engine, subDelta);
+        }
+    }
+
+    /**
+     * Считывает и сохраняет все непустые силы и вращающие моменты,
+     * приложенные к телам в мире перед началом физического шага.
+     */
+    private collectActiveForces(): ActiveBodyForce[] {
+        const forces: ActiveBodyForce[] = [];
+        for (const body of Matter.Composite.allBodies(this.world)) {
+            if (body.force.x !== 0 || body.force.y !== 0 || body.torque !== 0) {
+                forces.push({
+                    body,
+                    fx: body.force.x,
+                    fy: body.force.y,
+                    torque: body.torque,
+                });
+            }
+        }
+        return forces;
+    }
+
+    /**
+     * Повторно прикладывает исходные силы к телам на последующих сабстепах,
+     * компенсируя автоматический сброс body.force движком Matter.js.
+     */
+    private reapplyForces(forces: ActiveBodyForce[]): void {
+        for (const entry of forces) {
+            entry.body.force.x += entry.fx;
+            entry.body.force.y += entry.fy;
+            entry.body.torque += entry.torque;
+        }
     }
 
     public addBody(body: Matter.Body): void {
