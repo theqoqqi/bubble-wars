@@ -685,6 +685,10 @@ export class GameRoom {
             player.tank.damageContributors.clear();
             const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
             player.tank.respawn(pos.x, pos.y);
+            this.broadcast({
+                type: 'tank_spawn',
+                tank: player.tank.toSpawnData(),
+            });
         }
 
         // Spawn a brand new random set of bots for the new match

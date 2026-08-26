@@ -44,7 +44,7 @@ export class Game {
 
     private unsubscribers: Array<() => void> = [];
 
-    private isPlayerAlive: boolean = true;
+    private isPlayerAlive: boolean = false;
     private isMatchOver: boolean = false;
     private shake: number = 0;
     private playerFlash: number = 0;
@@ -95,6 +95,17 @@ export class Game {
 
                 for (const s of data.tanks ?? []) {
                     this.handleTankSpawn({ type: 'tank_spawn', tank: s });
+                }
+
+                const myId = data.playerId;
+                const isMyTankAlive = (data.tanks ?? []).some(
+                    (s) => s.id === myId || s.playerId === myId
+                );
+
+                if (!isMyTankAlive) {
+                    this.isPlayerAlive = false;
+                    this.hudManager.updatePlayerHUD(0, 100);
+                    this.hudManager.showDeathModal(0, null);
                 }
             }),
             networkManager.on('world_state', (data) => this.handleWorldState(data)),
@@ -424,6 +435,13 @@ export class Game {
                     tank.deaths = entry.deaths;
                 }
             }
+
+            if (!this.isPlayerAlive && myId) {
+                const myEntry = data.leaderboard.find((e) => e.id === myId);
+                if (myEntry) {
+                    this.hudManager.updateDeathModalScore(myEntry.score);
+                }
+            }
         }
 
         // Update HUD frag limit, leaderboard and ping
@@ -671,6 +689,7 @@ export class Game {
     }
 
     public leaveGame(): void {
+        this.isPlayerAlive = false;
         this.isMatchOver = false;
         this.lastKiller = null;
         this.killAlerts = [];

@@ -261,6 +261,12 @@ export class HudManager {
         if (this.deathModal) this.deathModal.classList.add('hidden');
     }
 
+    public updateDeathModalScore(score: number): void {
+        if (this.deathFinalScore && this.deathFinalScore.textContent !== `${score}`) {
+            this.deathFinalScore.textContent = `${score}`;
+        }
+    }
+
     public hideGameOverModal(): void {
         if (this.gameoverModal) this.gameoverModal.classList.add('hidden');
     }
