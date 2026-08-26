@@ -1179,10 +1179,11 @@ body.crosshair-active .color-dot {
 }
 
 .gameover-col-stat {
-    font-family: var(--font-disp);
-    font-size: 13px;
-    font-weight: 700;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
     text-align: center;
+    opacity: 0.75;
 }
 
 .gameover-col-stat.kills {
@@ -1190,7 +1191,7 @@ body.crosshair-active .color-dot {
 }
 
 .gameover-col-stat.deaths {
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.55);
 }
 
 .gameover-col-stat.assists {
@@ -1206,11 +1207,20 @@ body.crosshair-active .color-dot {
 }
 
 .gameover-col-score {
-    font-family: var(--font-disp);
-    font-size: 13px;
-    font-weight: 700;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
     text-align: right;
     color: rgba(255, 255, 255, 0.85);
+    opacity: 0.75;
+}
+
+.gameover-col-stat.stat-best,
+.gameover-col-score.stat-best,
+.tab-col-stat.stat-best,
+.tab-col-score.stat-best {
+    font-weight: 900;
+    opacity: 1;
 }
 
 .gameover-actions-row {
@@ -1369,10 +1379,11 @@ body.crosshair-active .color-dot {
 }
 
 .tab-col-stat {
-    font-family: var(--font-disp);
-    font-size: 11px;
-    font-weight: 700;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
     text-align: center;
+    opacity: 0.75;
 }
 
 .tab-col-stat.kills {
@@ -1380,7 +1391,7 @@ body.crosshair-active .color-dot {
 }
 
 .tab-col-stat.deaths {
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.55);
 }
 
 .tab-col-stat.assists {
@@ -1388,11 +1399,12 @@ body.crosshair-active .color-dot {
 }
 
 .tab-col-score {
-    font-family: var(--font-disp);
-    font-size: 11px;
-    font-weight: 700;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
     text-align: right;
     color: rgba(255, 255, 255, 0.85);
+    opacity: 0.75;
 }
 
 @media (max-width: 640px) {

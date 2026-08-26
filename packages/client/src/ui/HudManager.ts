@@ -7,6 +7,10 @@ import {
 import { hsla } from '../graphics/render.js';
 import { CLIENT_CONFIG } from '../config.js';
 
+type NumericKeys<T> = {
+    [K in keyof T]: NonNullable<T[K]> extends number ? K : never;
+}[keyof T];
+
 export class HudManager {
     private hpFill = document.getElementById('hud-health-fill');
     private hpText = document.getElementById('hud-health-text');
@@ -117,10 +121,25 @@ export class HudManager {
         this.tabStatsOverlay.classList.add('hidden');
     }
 
+    private isBestStat(
+        list: LeaderboardEntry[],
+        player: LeaderboardEntry,
+        key: NumericKeys<LeaderboardEntry>,
+        direction: 'max' | 'min' = 'max'
+    ): boolean {
+        if (!list || list.length === 0) return false;
+        const myValue = Number(player[key] ?? 0);
+        const bestValue = Math[direction](0, ...list.map((p) => Number(p[key] ?? 0)));
+
+        return myValue === bestValue;
+    }
+
     private renderTabStats(): void {
         if (!this.tabStatsLeaderboard || !this.lastLeaderboard) return;
 
-        this.tabStatsLeaderboard.innerHTML = this.lastLeaderboard
+        const list = this.lastLeaderboard;
+
+        this.tabStatsLeaderboard.innerHTML = list
             .map((pl: LeaderboardEntry, i: number) => {
                 const isPlayer = pl.id === this.lastMyId;
                 const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
@@ -138,10 +157,10 @@ export class HudManager {
               <span class="gameover-row-name">${pl.name}</span>
               ${badge}
             </div>
-            <span class="tab-col-stat kills">${pl.kills}</span>
-            <span class="tab-col-stat deaths">${pl.deaths}</span>
-            <span class="tab-col-stat assists">${pl.assists ?? 0}</span>
-            <span class="tab-col-score">${pl.score}</span>
+            <span class="tab-col-stat kills ${this.isBestStat(list, pl, 'kills') ? 'stat-best' : ''}">${pl.kills}</span>
+            <span class="tab-col-stat deaths ${this.isBestStat(list, pl, 'deaths', 'min') ? 'stat-best' : ''}">${pl.deaths}</span>
+            <span class="tab-col-stat assists ${this.isBestStat(list, pl, 'assists') ? 'stat-best' : ''}">${pl.assists ?? 0}</span>
+            <span class="tab-col-score ${this.isBestStat(list, pl, 'score') ? 'stat-best' : ''}">${pl.score}</span>
           </div>
         `;
             })
@@ -218,7 +237,9 @@ export class HudManager {
         }
 
         if (this.gameoverLeaderboard && data.leaderboard) {
-            this.gameoverLeaderboard.innerHTML = data.leaderboard
+            const list = data.leaderboard;
+
+            this.gameoverLeaderboard.innerHTML = list
                 .map((pl: LeaderboardEntry, i: number) => {
                     const isPlayer = pl.id === myId;
                     const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
@@ -236,12 +257,12 @@ export class HudManager {
               <span class="gameover-row-name">${pl.name}</span>
               ${badge}
             </div>
-            <span class="gameover-col-stat kills">${pl.kills}</span>
-            <span class="gameover-col-stat deaths">${pl.deaths}</span>
-            <span class="gameover-col-stat assists">${pl.assists ?? 0}</span>
-            <span class="gameover-col-stat damage-dealt">${pl.damageDealt ?? 0}</span>
-            <span class="gameover-col-stat damage-taken">${pl.damageTaken ?? 0}</span>
-            <span class="gameover-col-score">${pl.score}</span>
+            <span class="gameover-col-stat kills ${this.isBestStat(list, pl, 'kills') ? 'stat-best' : ''}">${pl.kills}</span>
+            <span class="gameover-col-stat deaths ${this.isBestStat(list, pl, 'deaths', 'min') ? 'stat-best' : ''}">${pl.deaths}</span>
+            <span class="gameover-col-stat assists ${this.isBestStat(list, pl, 'assists') ? 'stat-best' : ''}">${pl.assists ?? 0}</span>
+            <span class="gameover-col-stat damage-dealt ${this.isBestStat(list, pl, 'damageDealt') ? 'stat-best' : ''}">${pl.damageDealt ?? 0}</span>
+            <span class="gameover-col-stat damage-taken ${this.isBestStat(list, pl, 'damageTaken') ? 'stat-best' : ''}">${pl.damageTaken ?? 0}</span>
+            <span class="gameover-col-score ${this.isBestStat(list, pl, 'score') ? 'stat-best' : ''}">${pl.score}</span>
           </div>
         `;
                 })
