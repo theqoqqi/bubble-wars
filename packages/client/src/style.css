@@ -920,39 +920,58 @@ body.crosshair-active .color-dot {
 .leaderboard-badge {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
+    gap: 8px;
+    padding: 5px 12px;
     border-radius: 12px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    background: rgba(8, 26, 46, 0.75);
-    border: 1px solid rgba(101, 216, 255, 0.2);
-    backdrop-filter: blur(4px);
+    background: rgba(8, 26, 46, 0.8);
+    border: 1px solid rgba(101, 216, 255, 0.22);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    transition: all 0.2s ease;
 }
 
 .leaderboard-badge.active {
-    background: rgba(16, 52, 88, 0.9);
-    border-color: rgba(53, 224, 255, 0.6);
-    box-shadow: 0 0 14px rgba(53, 224, 255, 0.25);
+    background: rgba(16, 52, 88, 0.95);
+    border-color: rgba(53, 224, 255, 0.7);
+    box-shadow: 0 0 16px rgba(53, 224, 255, 0.35);
 }
 
 .leaderboard-rank {
     font-family: var(--font-disp);
-    font-size: 10px;
-    color: rgba(154, 220, 240, 0.6);
+    font-size: 11px;
+    font-weight: 800;
+    color: rgba(154, 220, 240, 0.65);
+}
+
+.leaderboard-rank.rank-1 {
+    color: #ffe36e;
+    text-shadow: 0 0 8px rgba(255, 227, 110, 0.6);
+}
+
+.leaderboard-rank.rank-2 {
+    color: #d4e5f7;
+    text-shadow: 0 0 8px rgba(212, 229, 247, 0.5);
+}
+
+.leaderboard-rank.rank-3 {
+    color: #e6a770;
+    text-shadow: 0 0 8px rgba(230, 167, 112, 0.5);
 }
 
 .leaderboard-dot {
     display: inline-block;
-    width: 8px;
-    height: 8px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
     background: var(--dot-color, #fff);
-    box-shadow: 0 0 6px var(--dot-color, #fff);
+    box-shadow: 0 0 8px var(--dot-color, #fff);
+    flex-shrink: 0;
 }
 
 .leaderboard-name {
-    max-width: 110px;
+    max-width: 200px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -972,7 +991,24 @@ body.crosshair-active .color-dot {
     font-family: var(--font-disp);
     font-size: 14px;
     font-weight: 700;
-    color: #fff;
+    color: var(--color-soap-gold);
+}
+
+.leaderboard-more-badge {
+    background: rgba(8, 26, 46, 0.6);
+    border: 1px dashed rgba(101, 216, 255, 0.35);
+    color: rgba(154, 220, 240, 0.85);
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 10px;
+    letter-spacing: 0.3px;
+}
+
+.leaderboard-more-text {
+    font-family: var(--font-disp);
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(154, 220, 240, 0.8);
 }
 
 /* Modals */

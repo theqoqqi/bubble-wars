@@ -78,16 +78,34 @@ export class HudManager {
         this.lastLeaderboard = leaderboard;
         this.lastMyId = myId;
 
-        // 1. Update top bar compact badges
+        // 1. Update top bar compact badges (Top-3 + local player if outside top-3)
         const container = this.leaderboardContainer;
         if (container) {
             container.innerHTML = '';
-            leaderboard.forEach((entry) => {
+
+            const topCount = 3;
+            const topEntries = leaderboard.slice(0, topCount).map((entry, index) => ({
+                entry,
+                rank: index + 1,
+            }));
+
+            const myIndex = myId ? leaderboard.findIndex((e) => e.id === myId) : -1;
+            const myEntryOutsideTop =
+                myIndex >= topCount && leaderboard[myIndex]
+                    ? { entry: leaderboard[myIndex], rank: myIndex + 1 }
+                    : null;
+
+            const displayList = myEntryOutsideTop ? [...topEntries, myEntryOutsideTop] : topEntries;
+
+            displayList.forEach(({ entry, rank }) => {
                 const isPlayer = entry.id === myId;
                 const card = document.createElement('div');
                 card.className = `leaderboard-badge ${isPlayer ? 'active' : ''}`;
 
+                const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
+
                 card.innerHTML = `
+            <span class="leaderboard-rank ${rankClass}">#${rank}</span>
             <span class="leaderboard-dot" style="--dot-color: ${hsla(entry.hue, 90, 62, 1)};"></span>
             <span class="leaderboard-name ${isPlayer ? 'player' : 'bot'}">
               ${entry.name}
@@ -96,6 +114,14 @@ export class HudManager {
           `;
                 container.appendChild(card);
             });
+
+            const hiddenCount = leaderboard.length - displayList.length;
+            if (hiddenCount > 0) {
+                const moreCard = document.createElement('div');
+                moreCard.className = 'leaderboard-badge leaderboard-more-badge';
+                moreCard.innerHTML = `<span class="leaderboard-more-text">+${this.formatPlayersCount(hiddenCount)}</span>`;
+                container.appendChild(moreCard);
+            }
         }
 
         // 2. If Tab overlay is active, re-render live stats table
@@ -276,5 +302,14 @@ export class HudManager {
         this.hideGameOverModal();
         this.hideTabStats();
         if (this.leaderboardContainer) this.leaderboardContainer.innerHTML = '';
+    }
+
+    private formatPlayersCount(count: number): string {
+        const abs = Math.abs(count) % 100;
+        const rem = abs % 10;
+        if (abs > 10 && abs < 20) return `${count} игроков`;
+        if (rem > 1 && rem < 5) return `${count} игрока`;
+        if (rem === 1) return `${count} игрок`;
+        return `${count} игроков`;
     }
 }
