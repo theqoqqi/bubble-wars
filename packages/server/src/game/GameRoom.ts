@@ -414,7 +414,12 @@ export class GameRoom {
                 bot.tank.update(deltaMs);
             }
 
-            // 3. Step physics simulation
+            // 3. Apply physics thrust
+            for (const tank of allTanks) {
+                tank.applyPhysicsThrust();
+            }
+
+            // 4. Step physics simulation
             this.physics.step(deltaMs);
 
             // 4. Projectiles lifetime & cleanup

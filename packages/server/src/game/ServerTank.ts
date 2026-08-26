@@ -111,6 +111,8 @@ export class ServerTank {
         }
     }
 
+    public thrustVector: { x: number; y: number } = { x: 0, y: 0 };
+
     public applyInput(input: PlayerInput, now: number): ServerProjectile[] {
         if (this.isDead) return [];
 
@@ -135,24 +137,12 @@ export class ServerTank {
             const len = Math.hypot(fx, fy);
             const baseThrust = this.blueprint.thrustForce;
             const forceMag = this.statusEffects.modifyThrust(baseThrust);
-            const normalizedFx = (fx / len) * forceMag;
-            const normalizedFy = (fy / len) * forceMag;
-
-            Matter.Body.applyForce(this.body, this.body.position, {
-                x: normalizedFx,
-                y: normalizedFy,
-            });
-        }
-
-        // Clamp max velocity
-        const maxSpeed = GAME_CONFIG.TANK.MAX_SPEED;
-        const speed = Math.hypot(this.body.velocity.x, this.body.velocity.y);
-        if (speed > maxSpeed) {
-            const scale = maxSpeed / speed;
-            Matter.Body.setVelocity(this.body, {
-                x: this.body.velocity.x * scale,
-                y: this.body.velocity.y * scale,
-            });
+            this.thrustVector = {
+                x: (fx / len) * forceMag,
+                y: (fy / len) * forceMag,
+            };
+        } else {
+            this.thrustVector = { x: 0, y: 0 };
         }
 
         // Modular multi-gun shooting
@@ -203,6 +193,25 @@ export class ServerTank {
         }
 
         return projectiles;
+    }
+
+    public applyPhysicsThrust(): void {
+        if (this.isDead) return;
+
+        if (this.thrustVector.x !== 0 || this.thrustVector.y !== 0) {
+            Matter.Body.applyForce(this.body, this.body.position, this.thrustVector);
+        }
+
+        // Clamp max velocity
+        const maxSpeed = GAME_CONFIG.TANK.MAX_SPEED;
+        const speed = Math.hypot(this.body.velocity.x, this.body.velocity.y);
+        if (speed > maxSpeed) {
+            const scale = maxSpeed / speed;
+            Matter.Body.setVelocity(this.body, {
+                x: this.body.velocity.x * scale,
+                y: this.body.velocity.y * scale,
+            });
+        }
     }
 
     public update(deltaMs: number): void {
@@ -299,6 +308,7 @@ export class ServerTank {
         this.recoil = 0;
         this.flash = 0;
         this.wobbleS = 0;
+        this.thrustVector = { x: 0, y: 0 };
         this.invulnerableUntil = Date.now() + GAME_CONFIG.TANK.INVULN_TIME_MS;
         Matter.Body.setPosition(this.body, { x, y });
         Matter.Body.setVelocity(this.body, { x: 0, y: 0 });
