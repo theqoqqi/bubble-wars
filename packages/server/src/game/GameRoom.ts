@@ -87,8 +87,7 @@ export class GameRoom {
                 color: t.color,
                 hue: t.hue,
             }))
-            .sort((a, b) => b.kills - a.kills || b.score - a.score)
-            .slice(0, 10);
+            .sort((a, b) => b.kills - a.kills || b.score - a.score);
     }
 
     public handleTankDeath(victim: ServerTank, killer: ServerTank | null): void {
