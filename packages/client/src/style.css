@@ -975,12 +975,6 @@ body.crosshair-active .color-dot {
     color: #fff;
 }
 
-.leaderboard-deaths {
-    font-size: 10px;
-    font-weight: 700;
-    color: rgba(154, 220, 240, 0.5);
-}
-
 /* Modals */
 .death-card {
     width: 400px;

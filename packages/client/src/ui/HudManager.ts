@@ -93,7 +93,6 @@ export class HudManager {
               ${entry.name}
             </span>
             <span class="leaderboard-kills">${entry.kills}</span>
-            <span class="leaderboard-deaths">/${entry.deaths}</span>
           `;
                 container.appendChild(card);
             });
