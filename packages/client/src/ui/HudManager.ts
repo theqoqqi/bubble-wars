@@ -106,8 +106,7 @@ export class HudManager {
 
                 card.innerHTML = `
             <span class="leaderboard-rank ${rankClass}">#${rank}</span>
-            <span class="leaderboard-dot" style="--dot-color: ${hsla(entry.hue, 90, 62, 1)};"></span>
-            <span class="leaderboard-name ${isPlayer ? 'player' : 'bot'}">
+            <span class="leaderboard-name" style="color: ${hsla(entry.hue, 90, 72, 1)}; text-shadow: 0 0 10px ${hsla(entry.hue, 90, 60, 0.45)};">
               ${entry.name}
             </span>
             <span class="leaderboard-kills">${entry.kills}</span>

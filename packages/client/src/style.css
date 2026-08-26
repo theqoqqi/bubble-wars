@@ -960,16 +960,6 @@ body.crosshair-active .color-dot {
     text-shadow: 0 0 8px rgba(230, 167, 112, 0.5);
 }
 
-.leaderboard-dot {
-    display: inline-block;
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--dot-color, #fff);
-    box-shadow: 0 0 8px var(--dot-color, #fff);
-    flex-shrink: 0;
-}
-
 .leaderboard-name {
     max-width: 200px;
     overflow: hidden;
@@ -977,14 +967,7 @@ body.crosshair-active .color-dot {
     white-space: nowrap;
     font-size: 12px;
     font-weight: 800;
-}
-
-.leaderboard-name.player {
-    color: #fff;
-}
-
-.leaderboard-name.bot {
-    color: var(--color-foam);
+    letter-spacing: 0.2px;
 }
 
 .leaderboard-kills {
