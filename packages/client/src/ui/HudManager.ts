@@ -2,7 +2,6 @@ import {
     GameOverMessage,
     KillEventMessage,
     LeaderboardEntry,
-    TankSnapshot,
 } from '@bubble-wars/shared';
 import { hsla } from '../graphics/render.js';
 import { CLIENT_CONFIG } from '../config.js';
@@ -38,8 +37,8 @@ export class HudManager {
     private lastMyId: string | null = null;
     private fragLimit: number = 10;
 
-    public updatePlayerHUD(snap: TankSnapshot): void {
-        const pct = Math.max(0, Math.round((snap.hp / snap.maxHp) * 100));
+    public updatePlayerHUD(hp: number, maxHp: number): void {
+        const pct = maxHp > 0 ? Math.max(0, Math.round((hp / maxHp) * 100)) : 0;
 
         if (this.hpFill) {
             this.hpFill.style.width = `${pct}%`;
@@ -51,10 +50,8 @@ export class HudManager {
         }
 
         if (this.hpText) {
-            this.hpText.innerHTML = `${Math.round(snap.hp)}<span style="color: rgba(154, 220, 240, 0.5);">/${snap.maxHp}</span>`;
+            this.hpText.innerHTML = `${Math.round(hp)}<span style="color: rgba(154, 220, 240, 0.5);">/${maxHp}</span>`;
         }
-        if (this.scoreText) this.scoreText.textContent = `${snap.score}`;
-        if (this.killsText) this.killsText.textContent = `${snap.kills}`;
     }
 
     public updateFragLimit(fragLimit: number): void {
@@ -77,6 +74,15 @@ export class HudManager {
     public updateLeaderboard(leaderboard: LeaderboardEntry[], myId: string | null): void {
         this.lastLeaderboard = leaderboard;
         this.lastMyId = myId;
+
+        // 0. Update local player score and kills from leaderboard
+        if (myId) {
+            const myEntry = leaderboard.find((e) => e.id === myId);
+            if (myEntry) {
+                if (this.scoreText) this.scoreText.textContent = `${myEntry.score}`;
+                if (this.killsText) this.killsText.textContent = `${myEntry.kills}`;
+            }
+        }
 
         // 1. Update top bar compact badges (Top-3 + local player if outside top-3)
         const container = this.leaderboardContainer;

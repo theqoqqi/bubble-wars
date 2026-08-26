@@ -5,6 +5,7 @@ import {
     ImpactEvent,
     KillEventMessage,
     WorldStateMessage,
+    tankBlueprintRegistry,
 } from '@bubble-wars/shared';
 import {networkManager} from '../net/NetworkManager.js';
 import {soundFx} from '../audio/SoundFx.js';
@@ -285,6 +286,8 @@ export class Game {
         for (const snap of data.tanks) {
             receivedTankIds.add(snap.id);
             let t = this.tanks.get(snap.id);
+            const bp = tankBlueprintRegistry.get(snap.blueprintId);
+            const maxHp = bp ? bp.maxHp : 100;
 
             if (!t) {
                 t = {
@@ -305,12 +308,12 @@ export class Game {
                     aimAngle: snap.aimAngle,
                     guns: snap.guns,
                     hp: snap.hp,
-                    maxHp: snap.maxHp,
+                    maxHp: maxHp,
                     isDead: snap.isDead,
-                    score: snap.score,
-                    kills: snap.kills,
-                    deaths: snap.deaths,
-                    recoil: snap.recoil,
+                    score: 0,
+                    kills: 0,
+                    deaths: 0,
+                    recoil: 0,
                     invulnT: snap.invulnT,
                     flash: snap.flash,
                     wobbleS: snap.wobbleS,
@@ -330,11 +333,7 @@ export class Game {
             t.vy = snap.vy;
             t.aimAngle = snap.aimAngle;
             t.hp = snap.hp;
-            t.maxHp = snap.maxHp;
-            t.score = snap.score;
-            t.kills = snap.kills;
-            t.deaths = snap.deaths;
-            t.recoil = snap.recoil;
+            t.maxHp = maxHp;
             t.invulnT = snap.invulnT;
             t.flash = snap.flash;
             t.wobbleS = snap.wobbleS;
@@ -347,7 +346,7 @@ export class Game {
 
             // Update Local Player UI
             if (snap.id === myId) {
-                this.hudManager.updatePlayerHUD(snap);
+                this.hudManager.updatePlayerHUD(snap.hp, maxHp);
 
                 if (snap.isDead && this.isPlayerAlive) {
                     this.isPlayerAlive = false;
@@ -356,7 +355,7 @@ export class Game {
                         CLIENT_CONFIG.SHAKE.MAX,
                         this.shake + CLIENT_CONFIG.SHAKE.HIT
                     );
-                    this.hudManager.showDeathModal(snap.score, this.lastKiller);
+                    this.hudManager.showDeathModal(t.score, this.lastKiller);
                 } else if (!snap.isDead && !this.isPlayerAlive) {
                     this.isPlayerAlive = true;
                     this.lastKiller = null;
@@ -411,6 +410,18 @@ export class Game {
         for (const id of this.projectiles.keys()) {
             if (!receivedProjIds.has(id)) {
                 this.projectiles.delete(id);
+            }
+        }
+
+        // Update stats on ClientTankState from leaderboard
+        if (data.leaderboard) {
+            for (const entry of data.leaderboard) {
+                const tank = this.tanks.get(entry.id);
+                if (tank) {
+                    tank.score = entry.score;
+                    tank.kills = entry.kills;
+                    tank.deaths = entry.deaths;
+                }
             }
         }
 

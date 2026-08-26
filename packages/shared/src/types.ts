@@ -183,15 +183,10 @@ export interface TankSnapshot {
     vy: number;
     aimAngle: number;
     hp: number;
-    maxHp: number;
     color: ColorDef;
     hue: number;
-    score: number;
-    kills: number;
-    deaths: number;
     isBot: boolean;
     isDead: boolean;
-    recoil: number;
     guns: GunSnapshot[];
     invulnT: number;
     flash: number;
