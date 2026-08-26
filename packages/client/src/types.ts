@@ -1,4 +1,4 @@
-import { ColorDef, GunSnapshot, StatusSnapshot } from '@bubble-wars/shared';
+import { ColorDef, StatusSnapshot } from '@bubble-wars/shared';
 
 export interface ClientTankState {
     id: string;
@@ -16,7 +16,6 @@ export interface ClientTankState {
     vx: number;
     vy: number;
     aimAngle: number;
-    guns: GunSnapshot[];
     hp: number;
     maxHp: number;
     isDead: boolean;
@@ -24,6 +23,7 @@ export interface ClientTankState {
     kills: number;
     deaths: number;
     recoil: number;
+    barrelRecoils?: Map<string, number>;
     invulnT: number;
     flash: number;
     wobbleS: number;

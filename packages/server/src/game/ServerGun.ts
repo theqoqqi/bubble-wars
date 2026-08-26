@@ -1,8 +1,6 @@
 import {
     ColorDef,
     GunBarrelDef,
-    GunBarrelSnapshot,
-    GunSnapshot,
     GunType,
     ProjectileType,
     TankGunDef,
@@ -15,20 +13,10 @@ export class ServerGunBarrel {
     public config: GunBarrelDef;
     public projectileType: ProjectileType;
     public lastShootTime: number = 0;
-    public recoil: number = 0;
 
     constructor(config: GunBarrelDef) {
         this.config = config;
         this.projectileType = projectileTypeRegistry.get(config.projectileTypeId);
-    }
-
-    public update(dt: number): void {
-        if (this.recoil > 0) {
-            this.recoil = Math.max(
-                0,
-                this.recoil - dt * (this.config.recoilRecoverySpeed * 40)
-            );
-        }
     }
 
     public canShoot(now: number): boolean {
@@ -42,10 +30,10 @@ export class ServerGunBarrel {
         gunAngle: number,
         color: ColorDef,
         hue: number,
-        now: number
+        now: number,
+        gunId?: string
     ): ServerProjectile[] {
         this.lastShootTime = now;
-        this.recoil = 1.0;
 
         const count = this.config.bulletsPerShot ?? 1;
         const spread = this.config.spreadAngle ?? 0;
@@ -77,19 +65,14 @@ export class ServerGunBarrel {
                     angle,
                     color,
                     hue,
-                    this.projectileType
+                    this.projectileType,
+                    gunId,
+                    this.config.id
                 )
             );
         }
 
         return projectiles;
-    }
-
-    public toSnapshot(): GunBarrelSnapshot {
-        return {
-            id: this.config.id,
-            recoil: this.recoil,
-        };
     }
 }
 
@@ -102,18 +85,5 @@ export class ServerGun {
         this.mount = mount;
         this.spec = spec;
         this.barrels = spec.barrels.map((b) => new ServerGunBarrel(b));
-    }
-
-    public update(dt: number): void {
-        for (const barrel of this.barrels) {
-            barrel.update(dt);
-        }
-    }
-
-    public toSnapshot(): GunSnapshot {
-        return {
-            id: this.mount.id,
-            barrels: this.barrels.map((b) => b.toSnapshot()),
-        };
     }
 }

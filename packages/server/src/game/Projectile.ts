@@ -32,6 +32,8 @@ export class ServerProjectile {
     public hitTankIds: Set<string> = new Set();
     public bouncesLeft: number = 0;
     public bounceFrom: Set<TargetType> = new Set();
+    public gunId?: string;
+    public barrelId?: string;
 
     constructor(
         ownerId: string,
@@ -40,10 +42,14 @@ export class ServerProjectile {
         angle: number,
         color: ColorDef,
         hue?: number,
-        projectileType?: ProjectileType
+        projectileType?: ProjectileType,
+        gunId?: string,
+        barrelId?: string
     ) {
         this.id = projectileIdCounter++;
         this.ownerId = ownerId;
+        this.gunId = gunId;
+        this.barrelId = barrelId;
         this.projectileTypeId = projectileType?.id ?? 'standard_bubble';
         this.onHit = projectileType?.onHit ?? [];
         this.onExpire = projectileType?.onExpire ?? [];
@@ -116,6 +122,8 @@ export class ServerProjectile {
         return {
             id: this.id,
             ownerId: this.ownerId,
+            gunId: this.gunId,
+            barrelId: this.barrelId,
             x: round1(this.body.position.x),
             y: round1(this.body.position.y),
             vx: round1(this.body.velocity.x),

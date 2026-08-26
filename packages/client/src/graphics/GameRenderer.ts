@@ -164,30 +164,26 @@ export class GameRenderer {
 
                 const gunSpec = gunTypeRegistry.get(gunDef.gunTypeId);
                 const gunAngle = t.aimAngle + gunDef.offsetAngle;
-                const gunSnapshot = t.guns.find((g) => g.id === gunDef.id);
-
                 const barrels = gunSpec.barrels;
-                const barrelSnapshots = gunSnapshot?.barrels;
 
                 // Adjust individual bubbles according to barrel recoil
                 const recoiledBubbles = gunSpec.body.bubbles.map((b) => {
                     let recoilVal = 0;
-                    if (barrelSnapshots && barrelSnapshots.length > 0) {
+                    if (barrels && barrels.length > 0) {
                         const matchedBarrelDef = barrels.find(
                             (bar) => Math.abs(bar.offsetY - b.offsetY) < 2
                         );
                         if (matchedBarrelDef) {
-                            const matchedSnap = barrelSnapshots.find(
-                                (s) => s.id === matchedBarrelDef.id
-                            );
-                            recoilVal = matchedSnap?.recoil ?? 0;
-                        } else {
+                            const barrelKey = `${gunDef.id}:${matchedBarrelDef.id}`;
                             recoilVal =
-                                (barrelSnapshots.reduce((max, s) => Math.max(max, s.recoil), 0) ??
-                                    0) * 0.4;
+                                t.barrelRecoils?.get(barrelKey) ??
+                                t.barrelRecoils?.get(gunDef.id) ??
+                                0;
+                        } else {
+                            recoilVal = (t.barrelRecoils?.get(gunDef.id) ?? 0) * 0.4;
                         }
                     } else {
-                        recoilVal = t.recoil;
+                        recoilVal = t.barrelRecoils?.get(gunDef.id) ?? t.recoil;
                     }
                     return {
                         ...b,
@@ -211,31 +207,33 @@ export class GameRenderer {
                 );
 
                 // Muzzle flash on specific barrel tips during fire
-                if (barrelSnapshots && barrelSnapshots.length > 0) {
-                    for (const barrelDef of gunSpec.barrels) {
-                        const bSnap = barrelSnapshots.find((s) => s.id === barrelDef.id);
-                        const bRecoil = bSnap?.recoil ?? 0;
-                        if (bRecoil > 0.35) {
-                            const tipPos = transformLocalPoint(
-                                mountPos.x,
-                                mountPos.y,
-                                gunAngle,
-                                barrelDef.length + 2,
-                                barrelDef.offsetY
-                            );
-                            ctx.save();
-                            ctx.fillStyle = `rgba(255, 255, 255, ${bRecoil * 0.85})`;
-                            ctx.beginPath();
-                            ctx.arc(
-                                tipPos.x,
-                                tipPos.y,
-                                (barrelDef.width ?? 6) * bRecoil * 1.1,
-                                0,
-                                PI2
-                            );
-                            ctx.fill();
-                            ctx.restore();
-                        }
+                for (const barrelDef of gunSpec.barrels) {
+                    const barrelKey = `${gunDef.id}:${barrelDef.id}`;
+                    const bRecoil =
+                        t.barrelRecoils?.get(barrelKey) ??
+                        t.barrelRecoils?.get(gunDef.id) ??
+                        0;
+
+                    if (bRecoil > 0.35) {
+                        const tipPos = transformLocalPoint(
+                            mountPos.x,
+                            mountPos.y,
+                            gunAngle,
+                            barrelDef.length + 2,
+                            barrelDef.offsetY
+                        );
+                        ctx.save();
+                        ctx.fillStyle = `rgba(255, 255, 255, ${bRecoil * 0.85})`;
+                        ctx.beginPath();
+                        ctx.arc(
+                            tipPos.x,
+                            tipPos.y,
+                            (barrelDef.width ?? 6) * bRecoil * 1.1,
+                            0,
+                            PI2
+                        );
+                        ctx.fill();
+                        ctx.restore();
                     }
                 }
             }

@@ -42,7 +42,6 @@ export class ServerTank {
     public hp: number;
     public maxHp: number;
     public aimAngle: number = 0;
-    public recoil: number = 0;
     public lastInputSeq: number = 0;
     public deathTime: number = 0;
     public invulnerableUntil: number = 0;
@@ -175,7 +174,8 @@ export class ServerTank {
                             gunAngle,
                             this.color,
                             this.hue,
-                            now
+                            now,
+                            gun.mount.id
                         );
 
                         if (spawned.length > 0) {
@@ -187,7 +187,6 @@ export class ServerTank {
                                 x: -Math.cos(gunAngle) * impulseMag,
                                 y: -Math.sin(gunAngle) * impulseMag,
                             });
-                            this.recoil = 1.0;
                         }
                     }
                 }
@@ -228,16 +227,6 @@ export class ServerTank {
         // Spring wobble simulation
         this.wobbleV += (-this.wobbleS * 170 - this.wobbleV * 9) * dt;
         this.wobbleS = Math.max(-0.45, Math.min(0.45, this.wobbleS + this.wobbleV * dt));
-
-        // Recoil recovery
-        if (this.recoil > 0) {
-            this.recoil = Math.max(0, this.recoil - GAME_CONFIG.TANK.RECOIL_RECOVERY_SPEED);
-        }
-
-        // Update gun barrels
-        for (const gun of this.guns) {
-            gun.update(dt);
-        }
     }
 
     public addWobble(angle: number, strength: number): void {
@@ -307,7 +296,6 @@ export class ServerTank {
         this.damageContributors.clear();
         this.hp = this.maxHp;
         this.isDead = false;
-        this.recoil = 0;
         this.flash = 0;
         this.wobbleS = 0;
         this.thrustVector = { x: 0, y: 0 };
@@ -353,7 +341,6 @@ export class ServerTank {
             vy: round1(this.body.velocity.y),
             aimAngle: round2(this.aimAngle),
             hp: this.hp,
-            guns: this.guns.map((g) => g.toSnapshot()),
             invulnT: round1(invulnLeftMs / 1000),
             flash: round2(this.flash),
             wobbleS: round2(this.wobbleS),

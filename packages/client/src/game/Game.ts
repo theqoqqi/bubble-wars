@@ -2,6 +2,7 @@ import {
     BubblePopEvent,
     GAME_CONFIG,
     GameOverMessage,
+    GunBarrelDef,
     ImpactEvent,
     KillEventMessage,
     PlayerInfo,
@@ -11,6 +12,7 @@ import {
     TankDespawnMessage,
     TankSpawnMessage,
     WorldStateMessage,
+    gunTypeRegistry,
     projectileTypeRegistry,
     tankBlueprintRegistry,
 } from '@bubble-wars/shared';
@@ -169,8 +171,33 @@ export class Game {
                 -CLIENT_CONFIG.ANIMATION.WOBBLE_MAX,
                 CLIENT_CONFIG.ANIMATION.WOBBLE_MAX
             );
+            const bp = tankBlueprintRegistry.get(tank.blueprintId);
             if (tank.recoil > 0) {
-                tank.recoil = Math.max(0, tank.recoil - GAME_CONFIG.TANK.RECOIL_RECOVERY_SPEED);
+                tank.recoil = Math.max(
+                    0,
+                    tank.recoil - dt * (GAME_CONFIG.TANK.RECOIL_RECOVERY_SPEED * 40)
+                );
+            }
+            if (tank.barrelRecoils && tank.barrelRecoils.size > 0 && bp) {
+                for (const [key, val] of tank.barrelRecoils) {
+                    const [gunId, barrelId] = key.split(':');
+                    const gunDef = bp.guns.find((g) => g.id === gunId);
+                    const gunSpec = gunDef ? gunTypeRegistry.get(gunDef.gunTypeId) : null;
+                    const barrelDef = gunSpec?.barrels.find(
+                        (b: GunBarrelDef) => b.id === (barrelId ?? gunSpec.barrels[0]?.id)
+                    );
+                    const speed =
+                        barrelDef?.recoilRecoverySpeed ??
+                        GAME_CONFIG.TANK.RECOIL_RECOVERY_SPEED;
+                    const recoveryRate = speed * 40;
+
+                    const nextVal = Math.max(0, val - dt * recoveryRate);
+                    if (nextVal <= 0) {
+                        tank.barrelRecoils.delete(key);
+                    } else {
+                        tank.barrelRecoils.set(key, nextVal);
+                    }
+                }
             }
         });
 
@@ -314,7 +341,6 @@ export class Game {
             if (!t) continue;
 
             t.targetBodyAngle = snap.bodyAngle;
-            t.guns = snap.guns;
             t.targetX = snap.x;
             t.targetY = snap.y;
             t.vx = snap.vx;
@@ -441,6 +467,20 @@ export class Game {
             };
             this.projectiles.set(s.id, p);
 
+            if (s.ownerId) {
+                const shooter = this.tanks.get(s.ownerId);
+                if (shooter) {
+                    shooter.recoil = 1.0;
+                    shooter.wobbleV += 0.12;
+                    if (s.gunId) {
+                        if (!shooter.barrelRecoils) shooter.barrelRecoils = new Map();
+                        const barrelKey = s.barrelId ? `${s.gunId}:${s.barrelId}` : s.gunId;
+                        shooter.barrelRecoils.set(barrelKey, 1.0);
+                        shooter.barrelRecoils.set(s.gunId, 1.0);
+                    }
+                }
+            }
+
             if (s.ownerId === myId) {
                 soundFx.playShoot(typeId);
             }
@@ -488,7 +528,6 @@ export class Game {
                 vx: 0,
                 vy: 0,
                 aimAngle: s.bodyAngle,
-                guns: [],
                 hp: s.hp,
                 maxHp: maxHp,
                 isDead: false,
@@ -496,6 +535,7 @@ export class Game {
                 kills: 0,
                 deaths: 0,
                 recoil: 0,
+                barrelRecoils: new Map(),
                 invulnT: s.invulnT ?? 0,
                 flash: 0,
                 wobbleS: 1.0,
@@ -506,6 +546,7 @@ export class Game {
             this.tanks.set(s.id, t);
         } else {
             t.blueprintId = s.blueprintId;
+            t.barrelRecoils?.clear();
             t.x = s.x;
             t.y = s.y;
             t.targetX = s.x;

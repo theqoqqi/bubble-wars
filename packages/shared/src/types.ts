@@ -162,16 +162,6 @@ export interface TankBlueprint {
     guns: TankGunDef[];
 }
 
-export interface GunBarrelSnapshot {
-    id: string;
-    recoil: number;
-}
-
-export interface GunSnapshot {
-    id: string;
-    barrels: GunBarrelSnapshot[];
-}
-
 export interface ObstacleSnapshot {
     id: number;
     x: number;
@@ -200,7 +190,6 @@ export interface TankSnapshot {
     vy: number;
     aimAngle: number;
     hp: number;
-    guns: GunSnapshot[];
     invulnT: number;
     flash: number;
     wobbleS: number;
@@ -220,6 +209,8 @@ export type ProjectileSnapshot = [
 export interface ProjectileSpawnData {
     id: number;
     ownerId: string;
+    gunId?: string;
+    barrelId?: string;
     x: number;
     y: number;
     vx: number;
