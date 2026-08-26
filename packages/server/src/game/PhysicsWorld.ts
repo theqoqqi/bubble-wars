@@ -170,10 +170,31 @@ export class PhysicsWorld {
 
     public step(deltaMs: number): void {
         const dt = deltaMs / 1000;
+        const subSteps = Math.max(1, GAME_CONFIG.PHYSICS.SUB_STEPS);
+        const subDelta = deltaMs / subSteps;
+
+        this.updateObstacleDrift(dt);
+
+        // Считываем все активные силы, приложенные к телам перед началом шага
+        const activeForces = this.collectActiveForces();
+
+        for (let s = 0; s < subSteps; s++) {
+            // Начиная со 2-го сабстепа, повторно применяем силы, сброшенные Matter.js
+            if (s > 0) {
+                this.reapplyForces(activeForces);
+            }
+
+            Matter.Engine.update(this.engine, subDelta);
+        }
+    }
+
+    /**
+     * Рассчитывает и прикладывает естественный дрейф и отталкивание от стен для препятствий.
+     */
+    private updateObstacleDrift(dt: number): void {
         const { radius } = GAME_CONFIG.ARENA;
         const margin = 280;
 
-        // Apply gentle wandering drift & arena repelling forces to migrating obstacles
         for (const o of this.obstacles) {
             o.time += dt;
 
@@ -216,21 +237,6 @@ export class PhysicsWorld {
                     y: o.body.velocity.y * scale,
                 });
             }
-        }
-
-        const subSteps = Math.max(1, GAME_CONFIG.PHYSICS.SUB_STEPS);
-        const subDelta = deltaMs / subSteps;
-
-        // Считываем все активные силы, приложенные к телам перед началом шага
-        const activeForces = this.collectActiveForces();
-
-        for (let s = 0; s < subSteps; s++) {
-            // Начиная со 2-го сабстепа, повторно применяем силы, сброшенные Matter.js
-            if (s > 0) {
-                this.reapplyForces(activeForces);
-            }
-
-            Matter.Engine.update(this.engine, subDelta);
         }
     }
 
