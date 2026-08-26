@@ -2,6 +2,7 @@ import Matter from 'matter-js';
 import {
     ColorDef,
     GAME_CONFIG,
+    KillerInfo,
     PlayerInfo,
     PlayerInput,
     TankBlueprint,
@@ -50,6 +51,8 @@ export class ServerTank {
     public wobbleS: number = 0;
     public wobbleA: number = 0;
     public wobbleV: number = 0;
+
+    public lastKillerInfo: KillerInfo | null = null;
 
     public onDeath?: (victim: ServerTank, killer: ServerTank | null) => void;
 
@@ -294,6 +297,7 @@ export class ServerTank {
     public respawn(x: number, y: number): void {
         this.statusEffects.clear();
         this.damageContributors.clear();
+        this.lastKillerInfo = null;
         this.hp = this.maxHp;
         this.isDead = false;
         this.flash = 0;
@@ -309,6 +313,7 @@ export class ServerTank {
         return {
             id: this.id,
             name: this.name,
+            blueprintId: this.blueprint.id,
             color: this.color,
             hue: this.hue,
             isBot: this.isBot,

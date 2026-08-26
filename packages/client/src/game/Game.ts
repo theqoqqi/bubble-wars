@@ -102,10 +102,14 @@ export class Game {
                     (s) => s.id === myId || s.playerId === myId
                 );
 
-                if (!isMyTankAlive) {
+                if (data.isDead || !isMyTankAlive) {
                     this.isPlayerAlive = false;
-                    this.hudManager.updatePlayerHUD(0, 100);
-                    this.hudManager.showDeathModal(0, null);
+                    const myInfo = this.playersInfo.get(myId);
+                    const bp = myInfo ? tankBlueprintRegistry.get(myInfo.blueprintId) : null;
+                    const maxHp = bp ? bp.maxHp : GAME_CONFIG.TANK.MAX_HP;
+                    this.lastKiller = data.killer ?? null;
+                    this.hudManager.updatePlayerHUD(0, maxHp);
+                    this.hudManager.showDeathModal(data.score ?? 0, this.lastKiller);
                 }
             }),
             networkManager.on('world_state', (data) => this.handleWorldState(data)),

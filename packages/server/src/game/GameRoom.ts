@@ -112,6 +112,11 @@ export class GameRoom {
             killer.kills += 1;
 
             const verb = KILL_VERBS[Math.floor(Math.random() * KILL_VERBS.length)];
+            victim.lastKillerInfo = {
+                name: killer.name,
+                hue: killer.hue,
+                verb,
+            };
             this.broadcast({
                 type: 'kill',
                 killerId: killer.id,
@@ -128,6 +133,8 @@ export class GameRoom {
             if (!this.isMatchOver && killer.kills >= this.fragLimit) {
                 this.triggerGameOver(killer);
             }
+        } else {
+            victim.lastKillerInfo = null;
         }
 
         // Pop explosion on tank death
@@ -230,6 +237,9 @@ export class GameRoom {
                 fragLimit: this.fragLimit,
                 players: this.getAllTanks().map((t) => t.toPlayerInfo()),
                 tanks: this.getAliveTanks().map((t) => t.toSpawnData()),
+                isDead: player.tank.isDead,
+                score: player.tank.score,
+                killer: player.tank.lastKillerInfo,
             });
 
             console.log(
@@ -285,6 +295,9 @@ export class GameRoom {
             fragLimit: this.fragLimit,
             players: this.getAllTanks().map((t) => t.toPlayerInfo()),
             tanks: this.getAliveTanks().map((t) => t.toSpawnData()),
+            isDead: false,
+            score: 0,
+            killer: null,
         });
 
         // Broadcast player joined and tank spawn to all other clients

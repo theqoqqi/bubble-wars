@@ -20,6 +20,7 @@ export interface ColorDef {
 export interface PlayerInfo {
     id: string;
     name: string;
+    blueprintId: string;
     color: ColorDef;
     hue: number;
     isBot: boolean;

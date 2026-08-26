@@ -52,6 +52,12 @@ export type ClientMessage =
     | RematchMessage
     | LeaveMessage;
 
+export interface KillerInfo {
+    name: string;
+    hue: number;
+    verb?: string;
+}
+
 // Server -> Client
 export interface WelcomeMessage {
     type: 'welcome';
@@ -63,6 +69,9 @@ export interface WelcomeMessage {
     fragLimit: number;
     players: PlayerInfo[];
     tanks: TankSpawnData[];
+    isDead?: boolean;
+    score?: number;
+    killer?: KillerInfo | null;
 }
 
 export interface WorldStateMessage {
