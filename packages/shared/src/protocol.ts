@@ -4,6 +4,7 @@ import {
     ColorDef,
     LeaderboardEntry,
     ObstacleSnapshot,
+    PlayerInfo,
     PlayerInput,
     ProjectileSnapshot,
     ProjectileSpawnData,
@@ -59,6 +60,7 @@ export interface WelcomeMessage {
     arena: ArenaBounds;
     obstacles: ObstacleSnapshot[];
     fragLimit: number;
+    players: PlayerInfo[];
 }
 
 export interface WorldStateMessage {
@@ -118,6 +120,16 @@ export interface ProjectilesSpawnMessage {
     projectiles: ProjectileSpawnData[];
 }
 
+export interface PlayerJoinedMessage {
+    type: 'player_joined';
+    player: PlayerInfo;
+}
+
+export interface PlayerLeftMessage {
+    type: 'player_left';
+    playerId: string;
+}
+
 export type ServerMessage =
     | WelcomeMessage
     | WorldStateMessage
@@ -126,4 +138,6 @@ export type ServerMessage =
     | KillEventMessage
     | GameOverMessage
     | ImpactMessage
-    | ProjectilesSpawnMessage;
+    | ProjectilesSpawnMessage
+    | PlayerJoinedMessage
+    | PlayerLeftMessage;

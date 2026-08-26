@@ -2,6 +2,7 @@ import Matter from 'matter-js';
 import {
     ColorDef,
     GAME_CONFIG,
+    PlayerInfo,
     PlayerInput,
     TankBlueprint,
     TankSnapshot,
@@ -315,12 +316,21 @@ export class ServerTank {
         Matter.Body.setAngularVelocity(this.body, 0);
     }
 
+    public toPlayerInfo(): PlayerInfo {
+        return {
+            id: this.id,
+            name: this.name,
+            color: this.color,
+            hue: this.hue,
+            isBot: this.isBot,
+        };
+    }
+
     public toSnapshot(): TankSnapshot {
         const invulnLeftMs = Math.max(0, this.invulnerableUntil - Date.now());
 
         return {
             id: this.id,
-            name: this.name,
             blueprintId: this.blueprint.id,
             bodyAngle: round2(this.bodyAngle),
             x: round1(this.body.position.x),
@@ -329,9 +339,6 @@ export class ServerTank {
             vy: round1(this.body.velocity.y),
             aimAngle: round2(this.aimAngle),
             hp: this.hp,
-            color: this.color,
-            hue: this.hue,
-            isBot: this.isBot,
             isDead: this.isDead,
             guns: this.guns.map((g) => g.toSnapshot()),
             invulnT: round1(invulnLeftMs / 1000),

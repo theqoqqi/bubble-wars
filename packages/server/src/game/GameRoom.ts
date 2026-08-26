@@ -222,6 +222,7 @@ export class GameRoom {
                 arena: GAME_CONFIG.ARENA,
                 obstacles: this.physics.getObstacleSnapshots(),
                 fragLimit: this.fragLimit,
+                players: this.getAllTanks().map((t) => t.toPlayerInfo()),
             });
 
             console.log(
@@ -275,6 +276,13 @@ export class GameRoom {
             arena: GAME_CONFIG.ARENA,
             obstacles: this.physics.getObstacleSnapshots(),
             fragLimit: this.fragLimit,
+            players: this.getAllTanks().map((t) => t.toPlayerInfo()),
+        });
+
+        // Broadcast player joined to all other clients
+        this.broadcast({
+            type: 'player_joined',
+            player: tank.toPlayerInfo(),
         });
 
         return player;
@@ -345,6 +353,11 @@ export class GameRoom {
             this.physics.removeBody(player.tank.body);
             this.players.delete(playerId);
             this.playersByToken.delete(player.sessionToken);
+
+            this.broadcast({
+                type: 'player_left',
+                playerId,
+            });
         }
     }
 
@@ -561,6 +574,11 @@ export class GameRoom {
         this.bots.push(bot);
         this.physics.addBody(bot.tank.body);
 
+        this.broadcast({
+            type: 'player_joined',
+            player: bot.tank.toPlayerInfo(),
+        });
+
         return bot;
     }
 
@@ -587,6 +605,11 @@ export class GameRoom {
 
     private removeBot(bot: BotPlayer, emitPop: boolean = true): void {
         this.physics.removeBody(bot.tank.body);
+
+        this.broadcast({
+            type: 'player_left',
+            playerId: bot.tank.id,
+        });
 
         if (!emitPop) {
             return;

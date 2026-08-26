@@ -17,6 +17,14 @@ export interface ColorDef {
     tint?: number;
 }
 
+export interface PlayerInfo {
+    id: string;
+    name: string;
+    color: ColorDef;
+    hue: number;
+    isBot: boolean;
+}
+
 /**
  * Universal bubble definition for tank hulls, turrets, etc
  */
@@ -174,7 +182,6 @@ export interface ObstacleSnapshot {
 
 export interface TankSnapshot {
     id: string;
-    name: string;
     blueprintId: string;
     bodyAngle: number;
     x: number;
@@ -183,9 +190,6 @@ export interface TankSnapshot {
     vy: number;
     aimAngle: number;
     hp: number;
-    color: ColorDef;
-    hue: number;
-    isBot: boolean;
     isDead: boolean;
     guns: GunSnapshot[];
     invulnT: number;

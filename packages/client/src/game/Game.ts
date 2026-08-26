@@ -4,6 +4,9 @@ import {
     GameOverMessage,
     ImpactEvent,
     KillEventMessage,
+    PlayerInfo,
+    PlayerJoinedMessage,
+    PlayerLeftMessage,
     ProjectilesSpawnMessage,
     WorldStateMessage,
     projectileTypeRegistry,
@@ -26,6 +29,7 @@ export class Game {
     private tanks: Map<string, ClientTankState> = new Map();
     private projectiles: Map<number, ClientProjectile> = new Map();
     private clientObstacles: Map<number, ClientObstacle> = new Map();
+    private playersInfo: Map<string, PlayerInfo> = new Map();
     private impactExecutor = new ClientImpactExecutor();
     private statusManager = new ClientStatusManager();
 
@@ -76,9 +80,17 @@ export class Game {
                         });
                     }
                 }
+
+                this.playersInfo.clear();
+
+                for (const p of data.players ?? []) {
+                    this.playersInfo.set(p.id, p);
+                }
             }),
             networkManager.on('world_state', (data) => this.handleWorldState(data)),
             networkManager.on('projectiles_spawn', (data) => this.handleProjectilesSpawn(data)),
+            networkManager.on('player_joined', (data) => this.handlePlayerJoined(data)),
+            networkManager.on('player_left', (data) => this.handlePlayerLeft(data)),
             networkManager.on('bubble_pop', (event) => this.handleBubblePop(event)),
             networkManager.on('kill', (data) => this.handleKillEvent(data)),
             networkManager.on('game_over', (data) => this.handleGameOver(data)),
@@ -293,15 +305,16 @@ export class Game {
             const maxHp = bp ? bp.maxHp : 100;
 
             if (!t) {
+                const info = this.playersInfo.get(snap.id);
                 t = {
                     id: snap.id,
-                    name: snap.name,
+                    name: info?.name ?? 'Player',
                     blueprintId: snap.blueprintId,
                     bodyAngle: snap.bodyAngle,
                     targetBodyAngle: snap.bodyAngle,
-                    color: snap.color,
-                    hue: snap.hue,
-                    isBot: snap.isBot,
+                    color: info?.color ?? { hue: 192 },
+                    hue: info?.hue ?? 192,
+                    isBot: info?.isBot ?? false,
                     x: snap.x,
                     y: snap.y,
                     targetX: snap.x,
@@ -420,6 +433,10 @@ export class Game {
             for (const entry of data.leaderboard) {
                 const tank = this.tanks.get(entry.id);
                 if (tank) {
+                    tank.name = entry.name;
+                    tank.isBot = entry.isBot;
+                    tank.color = entry.color;
+                    tank.hue = entry.hue;
                     tank.score = entry.score;
                     tank.kills = entry.kills;
                     tank.deaths = entry.deaths;
@@ -472,6 +489,22 @@ export class Game {
                 soundFx.playShoot(typeId);
             }
         }
+    }
+
+    private handlePlayerJoined(data: PlayerJoinedMessage): void {
+        this.playersInfo.set(data.player.id, data.player);
+        const tank = this.tanks.get(data.player.id);
+        if (tank) {
+            tank.name = data.player.name;
+            tank.color = data.player.color;
+            tank.hue = data.player.hue;
+            tank.isBot = data.player.isBot;
+        }
+    }
+
+    private handlePlayerLeft(data: PlayerLeftMessage): void {
+        this.playersInfo.delete(data.playerId);
+        this.tanks.delete(data.playerId);
     }
 
     private handleBubblePop(event: BubblePopEvent): void {
