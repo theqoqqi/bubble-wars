@@ -1184,6 +1184,21 @@ body.crosshair-active .color-dot {
     text-align: left;
 }
 
+.gameover-player-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    justify-content: center;
+    gap: 1px;
+}
+
+.gameover-name-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+}
+
 .gameover-row-dot {
     display: inline-block;
     width: 10px;
@@ -1195,12 +1210,33 @@ body.crosshair-active .color-dot {
 }
 
 .gameover-row-name {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     color: #fff;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.gameover-row-tank {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(154, 220, 240, 0.75);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.tab-col-name .gameover-row-name {
+    font-size: 12px;
+}
+
+.tab-col-name .gameover-row-tank {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(154, 220, 240, 0.7);
+    line-height: 1.2;
 }
 
 .gameover-badge-you {

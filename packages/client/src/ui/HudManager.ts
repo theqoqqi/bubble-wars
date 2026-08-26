@@ -2,6 +2,8 @@ import {
     GameOverMessage,
     KillEventMessage,
     LeaderboardEntry,
+    PlayerInfo,
+    tankBlueprintRegistry,
 } from '@bubble-wars/shared';
 import { hsla } from '../graphics/render.js';
 import { CLIENT_CONFIG } from '../config.js';
@@ -36,6 +38,7 @@ export class HudManager {
     private tabFragLimit = document.getElementById('tab-frag-limit');
     private isTabVisible: boolean = false;
     private lastLeaderboard: LeaderboardEntry[] = [];
+    private lastPlayersInfo: Map<string, PlayerInfo> = new Map();
     private lastMyId: string | null = null;
     private fragLimit: number = 10;
 
@@ -93,9 +96,14 @@ export class HudManager {
         }
     }
 
-    public updateLeaderboard(leaderboard: LeaderboardEntry[], myId: string | null): void {
+    public updateLeaderboard(
+        leaderboard: LeaderboardEntry[],
+        myId: string | null,
+        playersInfo: Map<string, PlayerInfo>
+    ): void {
         this.lastLeaderboard = leaderboard;
         this.lastMyId = myId;
+        this.lastPlayersInfo = playersInfo;
 
         // 0. Update local player score and kills from leaderboard
         if (myId) {
@@ -200,14 +208,22 @@ export class HudManager {
                     : pl.isBot
                     ? '<span class="gameover-badge-bot">BOT</span>'
                     : '';
+                const bpId = this.lastPlayersInfo.get(pl.id)?.blueprintId;
+                const bp = bpId ? tankBlueprintRegistry.get(bpId) : null;
+                const tankName = bp ? bp.name : 'Танк';
 
                 return `
           <div class="tab-stats-row ${isPlayer ? 'active' : ''}">
             <span class="tab-col-rank ${rankClass}">${i + 1}</span>
             <div class="gameover-player-cell tab-col-name">
               <span class="gameover-row-dot" style="--dot-color: ${hsla(pl.hue, 90, 65, 1)};"></span>
-              <span class="gameover-row-name">${pl.name}</span>
-              ${badge}
+              <div class="gameover-player-info">
+                <div class="gameover-name-row">
+                  <span class="gameover-row-name">${pl.name}</span>
+                  ${badge}
+                </div>
+                <span class="gameover-row-tank">${tankName}</span>
+              </div>
             </div>
             <span class="tab-col-stat kills ${this.isBestStat(list, pl, 'kills') ? 'stat-best' : ''}">${pl.kills}</span>
             <span class="tab-col-stat deaths ${this.isBestStat(list, pl, 'deaths', 'min') ? 'stat-best' : ''}">${pl.deaths}</span>
@@ -271,8 +287,13 @@ export class HudManager {
         if (this.gameoverModal) this.gameoverModal.classList.add('hidden');
     }
 
-    public showGameOverModal(data: GameOverMessage, myId: string | null): void {
+    public showGameOverModal(
+        data: GameOverMessage,
+        myId: string | null,
+        playersInfo: Map<string, PlayerInfo>
+    ): void {
         this.hideDeathModal();
+        this.lastPlayersInfo = playersInfo;
         const isWinner = data.winnerId === myId;
 
         if (this.gameoverTitle) {
@@ -306,14 +327,22 @@ export class HudManager {
                         : pl.isBot
                         ? '<span class="gameover-badge-bot">BOT</span>'
                         : '';
+                    const bpId = this.lastPlayersInfo.get(pl.id)?.blueprintId;
+                    const bp = bpId ? tankBlueprintRegistry.get(bpId) : null;
+                    const tankName = bp ? bp.name : 'Танк';
 
                     return `
           <div class="gameover-row ${isPlayer ? 'active' : ''}">
             <span class="gameover-col-rank ${rankClass}">${i + 1}</span>
             <div class="gameover-player-cell">
               <span class="gameover-row-dot" style="--dot-color: ${hsla(pl.hue, 90, 65, 1)};"></span>
-              <span class="gameover-row-name">${pl.name}</span>
-              ${badge}
+              <div class="gameover-player-info">
+                <div class="gameover-name-row">
+                  <span class="gameover-row-name">${pl.name}</span>
+                  ${badge}
+                </div>
+                <span class="gameover-row-tank">${tankName}</span>
+              </div>
             </div>
             <span class="gameover-col-stat kills ${this.isBestStat(list, pl, 'kills') ? 'stat-best' : ''}">${pl.kills}</span>
             <span class="gameover-col-stat deaths ${this.isBestStat(list, pl, 'deaths', 'min') ? 'stat-best' : ''}">${pl.deaths}</span>

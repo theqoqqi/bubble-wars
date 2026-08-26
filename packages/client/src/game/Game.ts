@@ -452,7 +452,7 @@ export class Game {
         if (data.fragLimit) {
             this.hudManager.updateFragLimit(data.fragLimit);
         }
-        this.hudManager.updateLeaderboard(data.leaderboard, myId);
+        this.hudManager.updateLeaderboard(data.leaderboard, myId, this.playersInfo);
         this.hudManager.updateNetworkStats(
             networkManager.latency,
             networkManager.inboundKbps,
@@ -679,7 +679,7 @@ export class Game {
         const myId = networkManager.playerId;
         this.isMatchOver = true;
         this.hudManager.hideDeathModal();
-        this.hudManager.showGameOverModal(data, myId);
+        this.hudManager.showGameOverModal(data, myId, this.playersInfo);
     }
 
     public showTabStats(): void {
