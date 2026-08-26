@@ -1029,7 +1029,7 @@ body.crosshair-active .color-dot {
 
 /* Modals */
 .death-card {
-    width: 400px;
+    width: 600px;
     padding: 32px;
     text-align: center;
     pointer-events: auto;
@@ -1049,7 +1049,7 @@ body.crosshair-active .color-dot {
     margin-top: 8px;
     margin-bottom: 4px;
     font-family: var(--font-disp);
-    font-size: 36px;
+    font-size: 32px;
     font-weight: 800;
     letter-spacing: 0.02em;
     color: #fff;
@@ -1066,7 +1066,7 @@ body.crosshair-active .color-dot {
 }
 
 .gameover-card {
-    width: 640px;
+    width: 740px;
     max-width: 95vw;
     padding: 28px 32px;
     text-align: center;
