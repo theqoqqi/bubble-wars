@@ -140,6 +140,12 @@ export class GameRoom {
             color: victim.color,
             isKill: true,
         });
+
+        // Broadcast tank despawn on death
+        this.broadcast({
+            type: 'tank_despawn',
+            tankId: victim.id,
+        });
     }
 
     public triggerGameOver(winner: ServerTank): void {
@@ -223,6 +229,7 @@ export class GameRoom {
                 obstacles: this.physics.getObstacleSnapshots(),
                 fragLimit: this.fragLimit,
                 players: this.getAllTanks().map((t) => t.toPlayerInfo()),
+                tanks: this.getAliveTanks().map((t) => t.toSpawnData()),
             });
 
             console.log(
@@ -277,12 +284,17 @@ export class GameRoom {
             obstacles: this.physics.getObstacleSnapshots(),
             fragLimit: this.fragLimit,
             players: this.getAllTanks().map((t) => t.toPlayerInfo()),
+            tanks: this.getAliveTanks().map((t) => t.toSpawnData()),
         });
 
-        // Broadcast player joined to all other clients
+        // Broadcast player joined and tank spawn to all other clients
         this.broadcast({
             type: 'player_joined',
             player: tank.toPlayerInfo(),
+        });
+        this.broadcast({
+            type: 'tank_spawn',
+            tank: tank.toSpawnData(),
         });
 
         return player;
@@ -309,6 +321,10 @@ export class GameRoom {
         if (player && player.tank.isDead) {
             const pos = this.physics.getRandomSpawnPosition(GAME_CONFIG.ARENA.SPAWN_MARGIN);
             player.tank.respawn(pos.x, pos.y);
+            this.broadcast({
+                type: 'tank_spawn',
+                tank: player.tank.toSpawnData(),
+            });
         }
     }
 
@@ -355,6 +371,10 @@ export class GameRoom {
             this.playersByToken.delete(player.sessionToken);
 
             this.broadcast({
+                type: 'tank_despawn',
+                tankId: playerId,
+            });
+            this.broadcast({
                 type: 'player_left',
                 playerId,
             });
@@ -370,6 +390,10 @@ export class GameRoom {
         if (player) return player.tank;
         const bot = this.bots.find((b) => b.tank.id === id);
         return bot ? bot.tank : null;
+    }
+
+    public getAliveTanks(): ServerTank[] {
+        return this.getAllTanks().filter((t) => !t.isDead);
     }
 
     public getAllTanks(): ServerTank[] {
@@ -417,6 +441,10 @@ export class GameRoom {
                             GAME_CONFIG.ARENA.SPAWN_MARGIN
                         );
                         bot.tank.respawn(pos.x, pos.y);
+                        this.broadcast({
+                            type: 'tank_spawn',
+                            tank: bot.tank.toSpawnData(),
+                        });
                     }
                 } else {
                     const botInput = bot.updateAI(allTanks, this.physics, dt);
@@ -497,13 +525,13 @@ export class GameRoom {
         // 7. Construct leaderboard
         const leaderboard = this.buildLeaderboard(allTanks);
 
-        // 7. Broadcast world snapshot
+        // 7. Broadcast world snapshot (only active living tanks)
         const worldStateMsg: ServerMessage = {
             type: 'world_state',
             tick: this.tickCount,
             fragLimit: this.fragLimit,
             isMatchOver: this.isMatchOver,
-            tanks: allTanks.map((t) => t.toSnapshot()),
+            tanks: this.getAliveTanks().map((t) => t.toSnapshot()),
             projectiles: this.projectiles.map((p) => p.toSnapshot()),
             obstacles: this.physics.getObstacleSnapshots(),
             leaderboard,
@@ -578,6 +606,10 @@ export class GameRoom {
             type: 'player_joined',
             player: bot.tank.toPlayerInfo(),
         });
+        this.broadcast({
+            type: 'tank_spawn',
+            tank: bot.tank.toSpawnData(),
+        });
 
         return bot;
     }
@@ -606,6 +638,10 @@ export class GameRoom {
     private removeBot(bot: BotPlayer, emitPop: boolean = true): void {
         this.physics.removeBody(bot.tank.body);
 
+        this.broadcast({
+            type: 'tank_despawn',
+            tankId: bot.tank.id,
+        });
         this.broadcast({
             type: 'player_left',
             playerId: bot.tank.id,

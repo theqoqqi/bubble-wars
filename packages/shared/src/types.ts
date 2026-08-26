@@ -180,9 +180,19 @@ export interface ObstacleSnapshot {
     hue: number;
 }
 
+export interface TankSpawnData {
+    id: string;
+    playerId: string;
+    blueprintId: string;
+    x: number;
+    y: number;
+    bodyAngle: number;
+    hp: number;
+    invulnT?: number;
+}
+
 export interface TankSnapshot {
     id: string;
-    blueprintId: string;
     bodyAngle: number;
     x: number;
     y: number;
@@ -190,7 +200,6 @@ export interface TankSnapshot {
     vy: number;
     aimAngle: number;
     hp: number;
-    isDead: boolean;
     guns: GunSnapshot[];
     invulnT: number;
     flash: number;

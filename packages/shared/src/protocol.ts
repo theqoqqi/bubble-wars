@@ -9,6 +9,7 @@ import {
     ProjectileSnapshot,
     ProjectileSpawnData,
     TankSnapshot,
+    TankSpawnData,
 } from './types.js';
 import { ImpactEvent } from './effects/index.js';
 
@@ -61,6 +62,7 @@ export interface WelcomeMessage {
     obstacles: ObstacleSnapshot[];
     fragLimit: number;
     players: PlayerInfo[];
+    tanks: TankSpawnData[];
 }
 
 export interface WorldStateMessage {
@@ -130,6 +132,16 @@ export interface PlayerLeftMessage {
     playerId: string;
 }
 
+export interface TankSpawnMessage {
+    type: 'tank_spawn';
+    tank: TankSpawnData;
+}
+
+export interface TankDespawnMessage {
+    type: 'tank_despawn';
+    tankId: string;
+}
+
 export type ServerMessage =
     | WelcomeMessage
     | WorldStateMessage
@@ -140,4 +152,6 @@ export type ServerMessage =
     | ImpactMessage
     | ProjectilesSpawnMessage
     | PlayerJoinedMessage
-    | PlayerLeftMessage;
+    | PlayerLeftMessage
+    | TankSpawnMessage
+    | TankDespawnMessage;

@@ -6,6 +6,7 @@ import {
     PlayerInput,
     TankBlueprint,
     TankSnapshot,
+    TankSpawnData,
     gunTypeRegistry,
     round1,
     round2,
@@ -326,12 +327,25 @@ export class ServerTank {
         };
     }
 
+    public toSpawnData(): TankSpawnData {
+        const invulnLeftMs = Math.max(0, this.invulnerableUntil - Date.now());
+        return {
+            id: this.id,
+            playerId: this.id,
+            blueprintId: this.blueprint.id,
+            x: round1(this.body.position.x),
+            y: round1(this.body.position.y),
+            bodyAngle: round2(this.bodyAngle),
+            hp: this.hp,
+            invulnT: round1(invulnLeftMs / 1000),
+        };
+    }
+
     public toSnapshot(): TankSnapshot {
         const invulnLeftMs = Math.max(0, this.invulnerableUntil - Date.now());
 
         return {
             id: this.id,
-            blueprintId: this.blueprint.id,
             bodyAngle: round2(this.bodyAngle),
             x: round1(this.body.position.x),
             y: round1(this.body.position.y),
@@ -339,7 +353,6 @@ export class ServerTank {
             vy: round1(this.body.velocity.y),
             aimAngle: round2(this.aimAngle),
             hp: this.hp,
-            isDead: this.isDead,
             guns: this.guns.map((g) => g.toSnapshot()),
             invulnT: round1(invulnLeftMs / 1000),
             flash: round2(this.flash),

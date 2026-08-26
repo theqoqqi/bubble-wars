@@ -12,6 +12,8 @@ import {
     PlayerInput,
     ProjectilesSpawnMessage,
     ServerMessage,
+    TankDespawnMessage,
+    TankSpawnMessage,
     WelcomeMessage,
     WorldStateMessage,
 } from '@bubble-wars/shared';
@@ -22,6 +24,8 @@ export interface NetworkEvents {
     projectiles_spawn: ProjectilesSpawnMessage;
     player_joined: PlayerJoinedMessage;
     player_left: PlayerLeftMessage;
+    tank_spawn: TankSpawnMessage;
+    tank_despawn: TankDespawnMessage;
     bubble_pop: BubblePopEvent;
     kill: KillEventMessage;
     game_over: GameOverMessage;
@@ -204,6 +208,16 @@ export class NetworkManager extends EventBus<NetworkEvents> {
 
                 case 'player_left': {
                     this.emit('player_left', msg);
+                    break;
+                }
+
+                case 'tank_spawn': {
+                    this.emit('tank_spawn', msg);
+                    break;
+                }
+
+                case 'tank_despawn': {
+                    this.emit('tank_despawn', msg);
                     break;
                 }
 

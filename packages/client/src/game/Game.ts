@@ -8,6 +8,8 @@ import {
     PlayerJoinedMessage,
     PlayerLeftMessage,
     ProjectilesSpawnMessage,
+    TankDespawnMessage,
+    TankSpawnMessage,
     WorldStateMessage,
     projectileTypeRegistry,
     tankBlueprintRegistry,
@@ -86,11 +88,19 @@ export class Game {
                 for (const p of data.players ?? []) {
                     this.playersInfo.set(p.id, p);
                 }
+
+                this.tanks.clear();
+
+                for (const s of data.tanks ?? []) {
+                    this.handleTankSpawn({ type: 'tank_spawn', tank: s });
+                }
             }),
             networkManager.on('world_state', (data) => this.handleWorldState(data)),
             networkManager.on('projectiles_spawn', (data) => this.handleProjectilesSpawn(data)),
             networkManager.on('player_joined', (data) => this.handlePlayerJoined(data)),
             networkManager.on('player_left', (data) => this.handlePlayerLeft(data)),
+            networkManager.on('tank_spawn', (data) => this.handleTankSpawn(data)),
+            networkManager.on('tank_despawn', (data) => this.handleTankDespawn(data)),
             networkManager.on('bubble_pop', (event) => this.handleBubblePop(event)),
             networkManager.on('kill', (data) => this.handleKillEvent(data)),
             networkManager.on('game_over', (data) => this.handleGameOver(data)),
@@ -300,47 +310,9 @@ export class Game {
         // Process Tanks
         for (const snap of data.tanks) {
             receivedTankIds.add(snap.id);
-            let t = this.tanks.get(snap.id);
-            const bp = tankBlueprintRegistry.get(snap.blueprintId);
-            const maxHp = bp ? bp.maxHp : 100;
+            const t = this.tanks.get(snap.id);
+            if (!t) continue;
 
-            if (!t) {
-                const info = this.playersInfo.get(snap.id);
-                t = {
-                    id: snap.id,
-                    name: info?.name ?? 'Player',
-                    blueprintId: snap.blueprintId,
-                    bodyAngle: snap.bodyAngle,
-                    targetBodyAngle: snap.bodyAngle,
-                    color: info?.color ?? { hue: 192 },
-                    hue: info?.hue ?? 192,
-                    isBot: info?.isBot ?? false,
-                    x: snap.x,
-                    y: snap.y,
-                    targetX: snap.x,
-                    targetY: snap.y,
-                    vx: snap.vx,
-                    vy: snap.vy,
-                    aimAngle: snap.aimAngle,
-                    guns: snap.guns,
-                    hp: snap.hp,
-                    maxHp: maxHp,
-                    isDead: snap.isDead,
-                    score: 0,
-                    kills: 0,
-                    deaths: 0,
-                    recoil: 0,
-                    invulnT: snap.invulnT,
-                    flash: snap.flash,
-                    wobbleS: snap.wobbleS,
-                    wobbleA: snap.wobbleA,
-                    wobbleV: 0,
-                    effects: snap.effects,
-                };
-                this.tanks.set(snap.id, t);
-            }
-
-            t.blueprintId = snap.blueprintId;
             t.targetBodyAngle = snap.bodyAngle;
             t.guns = snap.guns;
             t.targetX = snap.x;
@@ -349,34 +321,18 @@ export class Game {
             t.vy = snap.vy;
             t.aimAngle = snap.aimAngle;
             t.hp = snap.hp;
-            t.maxHp = maxHp;
             t.invulnT = snap.invulnT;
             t.flash = snap.flash;
             t.wobbleS = snap.wobbleS;
             t.wobbleA = snap.wobbleA;
             t.effects = snap.effects;
-            t.isDead = snap.isDead;
 
             // Synchronize status effects lifecycle
             this.statusManager.syncTankStatuses(t, snap.effects, statusCtx);
 
             // Update Local Player UI
             if (snap.id === myId) {
-                this.hudManager.updatePlayerHUD(snap.hp, maxHp);
-
-                if (snap.isDead && this.isPlayerAlive) {
-                    this.isPlayerAlive = false;
-                    this.playerFlash = 1.0;
-                    this.shake = Math.min(
-                        CLIENT_CONFIG.SHAKE.MAX,
-                        this.shake + CLIENT_CONFIG.SHAKE.HIT
-                    );
-                    this.hudManager.showDeathModal(t.score, this.lastKiller);
-                } else if (!snap.isDead && !this.isPlayerAlive) {
-                    this.isPlayerAlive = true;
-                    this.lastKiller = null;
-                    this.hudManager.hideDeathModal();
-                }
+                this.hudManager.updatePlayerHUD(snap.hp, t.maxHp);
             }
         }
 
@@ -505,6 +461,90 @@ export class Game {
     private handlePlayerLeft(data: PlayerLeftMessage): void {
         this.playersInfo.delete(data.playerId);
         this.tanks.delete(data.playerId);
+    }
+
+    private handleTankSpawn(data: TankSpawnMessage): void {
+        const s = data.tank;
+        const info = this.playersInfo.get(s.playerId);
+        const bp = tankBlueprintRegistry.get(s.blueprintId);
+        const maxHp = bp ? bp.maxHp : 100;
+        const myId = networkManager.playerId;
+
+        let t = this.tanks.get(s.id);
+        if (!t) {
+            t = {
+                id: s.id,
+                name: info?.name ?? 'Player',
+                blueprintId: s.blueprintId,
+                bodyAngle: s.bodyAngle,
+                targetBodyAngle: s.bodyAngle,
+                color: info?.color ?? { hue: 192 },
+                hue: info?.hue ?? 192,
+                isBot: info?.isBot ?? false,
+                x: s.x,
+                y: s.y,
+                targetX: s.x,
+                targetY: s.y,
+                vx: 0,
+                vy: 0,
+                aimAngle: s.bodyAngle,
+                guns: [],
+                hp: s.hp,
+                maxHp: maxHp,
+                isDead: false,
+                score: 0,
+                kills: 0,
+                deaths: 0,
+                recoil: 0,
+                invulnT: s.invulnT ?? 0,
+                flash: 0,
+                wobbleS: 1.0,
+                wobbleA: 0,
+                wobbleV: 0,
+                effects: [],
+            };
+            this.tanks.set(s.id, t);
+        } else {
+            t.blueprintId = s.blueprintId;
+            t.x = s.x;
+            t.y = s.y;
+            t.targetX = s.x;
+            t.targetY = s.y;
+            t.bodyAngle = s.bodyAngle;
+            t.targetBodyAngle = s.bodyAngle;
+            t.hp = s.hp;
+            t.maxHp = maxHp;
+            t.isDead = false;
+            t.invulnT = s.invulnT ?? 0;
+            if (info) {
+                t.name = info.name;
+                t.color = info.color;
+                t.hue = info.hue;
+                t.isBot = info.isBot;
+            }
+        }
+
+        if ((s.id === myId || s.playerId === myId) && !this.isPlayerAlive) {
+            this.isPlayerAlive = true;
+            this.lastKiller = null;
+            this.hudManager.hideDeathModal();
+            this.hudManager.updatePlayerHUD(s.hp, maxHp);
+        }
+    }
+
+    private handleTankDespawn(data: TankDespawnMessage): void {
+        const myId = networkManager.playerId;
+        if (data.tankId === myId && this.isPlayerAlive) {
+            this.isPlayerAlive = false;
+            this.playerFlash = 1.0;
+            this.shake = Math.min(
+                CLIENT_CONFIG.SHAKE.MAX,
+                this.shake + CLIENT_CONFIG.SHAKE.HIT
+            );
+            const myScore = this.tanks.get(myId)?.score ?? 0;
+            this.hudManager.showDeathModal(myScore, this.lastKiller);
+        }
+        this.tanks.delete(data.tankId);
     }
 
     private handleBubblePop(event: BubblePopEvent): void {
