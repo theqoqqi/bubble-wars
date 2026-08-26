@@ -9,6 +9,7 @@ import {
     KILL_VERBS,
     LeaderboardEntry,
     PlayerInput,
+    ProjectileSpawnData,
     ServerMessage,
 } from '@bubble-wars/shared';
 import { PhysicsWorld } from './PhysicsWorld.js';
@@ -45,6 +46,7 @@ export class GameRoom {
     private intervalId: NodeJS.Timeout | null = null;
     private pendingPopEvents: BubblePopEvent[] = [];
     private pendingImpactEvents: ImpactEvent[] = [];
+    private pendingProjectileSpawns: ProjectileSpawnData[] = [];
     private colorIndex: number = 0;
     private availableColors: ColorDef[] = [
         { hue: 192 },
@@ -390,6 +392,7 @@ export class GameRoom {
                 for (const proj of spawned) {
                     this.projectiles.push(proj);
                     this.physics.addBody(proj.body);
+                    this.pendingProjectileSpawns.push(proj.toSpawnData());
                 }
                 player.tank.update(deltaMs);
             }
@@ -409,6 +412,7 @@ export class GameRoom {
                     for (const proj of spawned) {
                         this.projectiles.push(proj);
                         this.physics.addBody(proj.body);
+                        this.pendingProjectileSpawns.push(proj.toSpawnData());
                     }
                 }
                 bot.tank.update(deltaMs);
@@ -445,6 +449,15 @@ export class GameRoom {
                 tank.update(deltaMs);
             }
             this.physics.step(deltaMs);
+        }
+
+        // 4.5. Send pending projectile spawn events
+        if (this.pendingProjectileSpawns.length > 0) {
+            this.broadcast({
+                type: 'projectiles_spawn',
+                projectiles: this.pendingProjectileSpawns,
+            });
+            this.pendingProjectileSpawns = [];
         }
 
         // 5. Send pending pop events

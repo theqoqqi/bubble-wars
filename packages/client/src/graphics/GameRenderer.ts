@@ -311,7 +311,7 @@ export class GameRenderer {
             }
 
             const projType = p.projectileTypeId ? projectileTypeRegistry.get(p.projectileTypeId) : null;
-            const angle = Math.atan2(p.vy, p.vx);
+            const angle = p.angle;
             if (projType && projType.body && projType.body.bubbles.length > 0) {
                 drawBubbleGraph(ctx, projType.body.bubbles, p.x, p.y, angle, p.hue, {
                     glow: 1,

@@ -8,6 +8,7 @@ import {
     JoinMessage,
     KillEventMessage,
     PlayerInput,
+    ProjectilesSpawnMessage,
     ServerMessage,
     WelcomeMessage,
     WorldStateMessage,
@@ -16,6 +17,7 @@ import {
 export interface NetworkEvents {
     welcome: WelcomeMessage;
     world_state: WorldStateMessage;
+    projectiles_spawn: ProjectilesSpawnMessage;
     bubble_pop: BubblePopEvent;
     kill: KillEventMessage;
     game_over: GameOverMessage;
@@ -183,6 +185,11 @@ export class NetworkManager extends EventBus<NetworkEvents> {
 
                 case 'world_state': {
                     this.emit('world_state', msg);
+                    break;
+                }
+
+                case 'projectiles_spawn': {
+                    this.emit('projectiles_spawn', msg);
                     break;
                 }
 

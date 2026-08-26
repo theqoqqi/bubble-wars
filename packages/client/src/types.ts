@@ -34,17 +34,15 @@ export interface ClientTankState {
 
 export interface ClientProjectile {
     id: number;
-    ownerId: string;
+    ownerId?: string;
     projectileTypeId: string;
     x: number;
     y: number;
     targetX: number;
     targetY: number;
-    vx: number;
-    vy: number;
+    angle: number;
     r: number;
     hue: number;
-    color: ColorDef;
     trail: Array<{ x: number; y: number }>;
 }
 

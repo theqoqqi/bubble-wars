@@ -4,6 +4,7 @@ import {
     GAME_CONFIG,
     ImpactEffect,
     ProjectileSnapshot,
+    ProjectileSpawnData,
     ProjectileType,
     TargetType,
     round1,
@@ -111,7 +112,7 @@ export class ServerProjectile {
         return now - this.spawnTime >= this.lifetimeMs;
     }
 
-    public toSnapshot(): ProjectileSnapshot {
+    public toSpawnData(): ProjectileSpawnData {
         return {
             id: this.id,
             ownerId: this.ownerId,
@@ -119,10 +120,16 @@ export class ServerProjectile {
             y: round1(this.body.position.y),
             vx: round1(this.body.velocity.x),
             vy: round1(this.body.velocity.y),
-            r: this.radius,
             hue: this.hue,
-            color: this.color,
             projectileTypeId: this.projectileTypeId,
         };
+    }
+
+    public toSnapshot(): ProjectileSnapshot {
+        return [
+            this.id,
+            round1(this.body.position.x),
+            round1(this.body.position.y),
+        ];
     }
 }

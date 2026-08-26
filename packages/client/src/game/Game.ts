@@ -4,7 +4,9 @@ import {
     GameOverMessage,
     ImpactEvent,
     KillEventMessage,
+    ProjectilesSpawnMessage,
     WorldStateMessage,
+    projectileTypeRegistry,
     tankBlueprintRegistry,
 } from '@bubble-wars/shared';
 import {networkManager} from '../net/NetworkManager.js';
@@ -76,6 +78,7 @@ export class Game {
                 }
             }),
             networkManager.on('world_state', (data) => this.handleWorldState(data)),
+            networkManager.on('projectiles_spawn', (data) => this.handleProjectilesSpawn(data)),
             networkManager.on('bubble_pop', (event) => this.handleBubblePop(event)),
             networkManager.on('kill', (data) => this.handleKillEvent(data)),
             networkManager.on('game_over', (data) => this.handleGameOver(data)),
@@ -372,38 +375,37 @@ export class Game {
             }
         }
 
-        // Process Projectiles
-        for (const pSnap of data.projectiles) {
-            receivedProjIds.add(pSnap.id);
-            let p = this.projectiles.get(pSnap.id);
+        // Process Projectiles (tuples: [id, x, y])
+        for (const [id, x, y] of data.projectiles) {
+            receivedProjIds.add(id);
+            const p = this.projectiles.get(id);
 
-            if (!p) {
-                p = {
-                    id: pSnap.id,
-                    ownerId: pSnap.ownerId,
-                    projectileTypeId: pSnap.projectileTypeId,
-                    x: pSnap.x,
-                    y: pSnap.y,
-                    targetX: pSnap.x,
-                    targetY: pSnap.y,
-                    vx: pSnap.vx,
-                    vy: pSnap.vy,
-                    r: pSnap.r,
-                    hue: pSnap.hue,
-                    color: pSnap.color,
-                    trail: [],
-                };
-                this.projectiles.set(pSnap.id, p);
-
-                if (pSnap.ownerId === myId) {
-                    soundFx.playShoot(p.projectileTypeId);
+            if (p) {
+                const dx = x - p.targetX;
+                const dy = y - p.targetY;
+                if (dx !== 0 || dy !== 0) {
+                    p.angle = Math.atan2(dy, dx);
                 }
+                p.targetX = x;
+                p.targetY = y;
+            } else {
+                // Fallback for late join / missing spawn event
+                const typeId = 'standard_bubble';
+                const projType = projectileTypeRegistry.get(typeId);
+                const r = projType?.body?.bubbles?.[0]?.radius ?? GAME_CONFIG.PROJECTILE.RADIUS;
+                this.projectiles.set(id, {
+                    id,
+                    projectileTypeId: typeId,
+                    x,
+                    y,
+                    targetX: x,
+                    targetY: y,
+                    angle: 0,
+                    r,
+                    hue: 200,
+                    trail: [],
+                });
             }
-
-            p.targetX = pSnap.x;
-            p.targetY = pSnap.y;
-            p.vx = pSnap.vx;
-            p.vy = pSnap.vy;
         }
 
         // Clean up deleted projectiles
@@ -440,6 +442,35 @@ export class Game {
         if (this.isMatchOver && data.isMatchOver === false) {
             this.isMatchOver = false;
             this.hudManager.hideGameOverModal();
+        }
+    }
+
+    private handleProjectilesSpawn(data: ProjectilesSpawnMessage): void {
+        const myId = networkManager.playerId;
+        for (const s of data.projectiles) {
+            const typeId = s.projectileTypeId ?? 'standard_bubble';
+            const projType = projectileTypeRegistry.get(typeId);
+            const r = projType?.body?.bubbles?.[0]?.radius ?? GAME_CONFIG.PROJECTILE.RADIUS;
+            const angle = Math.atan2(s.vy, s.vx);
+
+            const p: ClientProjectile = {
+                id: s.id,
+                ownerId: s.ownerId,
+                projectileTypeId: typeId,
+                x: s.x,
+                y: s.y,
+                targetX: s.x,
+                targetY: s.y,
+                angle,
+                r,
+                hue: s.hue,
+                trail: [],
+            };
+            this.projectiles.set(s.id, p);
+
+            if (s.ownerId === myId) {
+                soundFx.playShoot(typeId);
+            }
         }
     }
 

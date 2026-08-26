@@ -195,16 +195,23 @@ export interface TankSnapshot {
     effects: StatusSnapshot[];
 }
 
-export interface ProjectileSnapshot {
+/**
+ * Compact tuple representing dynamic projectile state: [id, x, y]
+ */
+export type ProjectileSnapshot = [
+    id: number,
+    x: number,
+    y: number
+];
+
+export interface ProjectileSpawnData {
     id: number;
     ownerId: string;
     x: number;
     y: number;
     vx: number;
     vy: number;
-    r: number;
     hue: number;
-    color: ColorDef;
     projectileTypeId: string;
 }
 

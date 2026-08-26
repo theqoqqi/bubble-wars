@@ -6,6 +6,7 @@ import {
     ObstacleSnapshot,
     PlayerInput,
     ProjectileSnapshot,
+    ProjectileSpawnData,
     TankSnapshot,
 } from './types.js';
 import { ImpactEvent } from './effects/index.js';
@@ -112,6 +113,11 @@ export interface ImpactMessage {
     event: ImpactEvent;
 }
 
+export interface ProjectilesSpawnMessage {
+    type: 'projectiles_spawn';
+    projectiles: ProjectileSpawnData[];
+}
+
 export type ServerMessage =
     | WelcomeMessage
     | WorldStateMessage
@@ -119,4 +125,5 @@ export type ServerMessage =
     | PongMessage
     | KillEventMessage
     | GameOverMessage
-    | ImpactMessage;
+    | ImpactMessage
+    | ProjectilesSpawnMessage;
