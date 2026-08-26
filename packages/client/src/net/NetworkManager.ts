@@ -29,6 +29,14 @@ export class NetworkManager extends EventBus<NetworkEvents> {
     public playerId: string | null = null;
     public sessionToken: string | null = null;
     public latency: number = 0;
+    public inboundKbps: number = 0;
+    public avgPacketBytes: number = 0;
+    public packetsPerSec: number = 0;
+    public lastPacketBytes: number = 0;
+
+    private bytesInWindow: number = 0;
+    private packetsInWindow: number = 0;
+    private lastStatsCalcTime: number = performance.now();
     private pingInterval: number | null = null;
 
     constructor() {
@@ -143,6 +151,22 @@ export class NetworkManager extends EventBus<NetworkEvents> {
     }
 
     private handleMessage(dataStr: string): void {
+        const rawBytes = typeof dataStr === 'string' ? dataStr.length : (dataStr as any).byteLength ?? 0;
+        this.lastPacketBytes = rawBytes;
+        this.bytesInWindow += rawBytes;
+        this.packetsInWindow++;
+
+        const now = performance.now();
+        const elapsed = now - this.lastStatsCalcTime;
+        if (elapsed >= 500) {
+            this.inboundKbps = (this.bytesInWindow / 1024) / (elapsed / 1000);
+            this.avgPacketBytes = this.packetsInWindow > 0 ? Math.round(this.bytesInWindow / this.packetsInWindow) : 0;
+            this.packetsPerSec = Math.round(this.packetsInWindow / (elapsed / 1000));
+            this.bytesInWindow = 0;
+            this.packetsInWindow = 0;
+            this.lastStatsCalcTime = now;
+        }
+
         try {
             const msg: ServerMessage = JSON.parse(dataStr);
 

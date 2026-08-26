@@ -17,6 +17,8 @@ export class HudManager {
     private killsText = document.getElementById('hud-kills');
     private fragLimitEl = document.getElementById('hud-frag-limit');
     private pingEl = document.getElementById('hud-ping');
+    private netInEl = document.getElementById('hud-net-in');
+    private netPacketEl = document.getElementById('hud-net-packet');
     private leaderboardContainer = document.getElementById('leaderboard-container');
     private killFeed = document.getElementById('kill-feed');
     private deathModal = document.getElementById('death-modal');
@@ -62,6 +64,26 @@ export class HudManager {
         }
         if (this.tabFragLimit) {
             this.tabFragLimit.textContent = `${fragLimit}`;
+        }
+    }
+
+    public updateNetworkStats(
+        latency: number,
+        inboundKbps: number = 0,
+        avgPacketBytes: number = 0
+    ): void {
+        if (this.pingEl) {
+            this.pingEl.textContent = `${latency} ms`;
+        }
+        if (this.netInEl) {
+            this.netInEl.textContent = `${inboundKbps.toFixed(1)} KB/s`;
+        }
+        if (this.netPacketEl) {
+            if (avgPacketBytes >= 1024) {
+                this.netPacketEl.textContent = `(${(avgPacketBytes / 1024).toFixed(1)} KB/пкт)`;
+            } else {
+                this.netPacketEl.textContent = `(${avgPacketBytes} B/пкт)`;
+            }
         }
     }
 

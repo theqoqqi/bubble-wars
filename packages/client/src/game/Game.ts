@@ -430,7 +430,11 @@ export class Game {
             this.hudManager.updateFragLimit(data.fragLimit);
         }
         this.hudManager.updateLeaderboard(data.leaderboard, myId);
-        this.hudManager.updatePing(networkManager.latency);
+        this.hudManager.updateNetworkStats(
+            networkManager.latency,
+            networkManager.inboundKbps,
+            networkManager.avgPacketBytes
+        );
 
         // If new match has begun, automatically dismiss game over modal
         if (this.isMatchOver && data.isMatchOver === false) {
