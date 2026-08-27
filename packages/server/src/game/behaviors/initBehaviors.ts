@@ -3,6 +3,7 @@ import { PierceServerBehavior } from './handlers/PierceServerBehavior.js';
 import { BounceServerBehavior } from './handlers/BounceServerBehavior.js';
 import { DecelerationServerBehavior } from './handlers/DecelerationServerBehavior.js';
 import { MineServerBehavior } from './handlers/MineServerBehavior.js';
+import { IndestructibleServerBehavior } from './handlers/IndestructibleServerBehavior.js';
 
 /**
  * Централизованная точка регистрации серверных поведений снарядов
@@ -12,4 +13,5 @@ export function initBehaviors(): void {
     ProjectileBehaviorFactory.register('bounce', (cfg) => new BounceServerBehavior(cfg));
     ProjectileBehaviorFactory.register('deceleration', (cfg) => new DecelerationServerBehavior(cfg));
     ProjectileBehaviorFactory.register('mine', (cfg) => new MineServerBehavior(cfg));
+    ProjectileBehaviorFactory.register('indestructible', (cfg) => new IndestructibleServerBehavior(cfg));
 }
