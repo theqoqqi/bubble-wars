@@ -3,6 +3,7 @@ export * from './constants.js';
 export * from './protocol.js';
 export * from './EventBus.js';
 export * from './Registry.js';
+export * from './behaviors/index.js';
 export * from './effects/index.js';
 export * from './blueprints/index.js';
 export * from './utils.js';

@@ -1,4 +1,5 @@
 import {BaseImpactEffect, ImpactEffect} from './effects/index.js';
+import {BaseProjectileBehavior, ProjectileBehavior} from './behaviors/index.js';
 
 import { Identifiable } from './Registry.js';
 
@@ -104,6 +105,7 @@ export interface ProjectileType {
     speed: number;
     lifetime?: number;
     body: BubbleBodyDef;
+    behaviors?: ProjectileBehavior[];
     maxHits?: number;
     bounces?: number;
     bounceFrom?: TargetType[];

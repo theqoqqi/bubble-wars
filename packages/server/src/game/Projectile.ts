@@ -10,6 +10,7 @@ import {
     round1,
 } from '@bubble-wars/shared';
 import { COLLISION_CATEGORIES } from './PhysicsWorld.js';
+import { ProjectileBehaviorManager } from './behaviors/index.js';
 import './matterTypes.js';
 
 let projectileIdCounter = 1;
@@ -25,6 +26,7 @@ export class ServerProjectile {
     public damage: number;
     public lifetimeMs: number;
     public projectileTypeId: string;
+    public behaviors: ProjectileBehaviorManager;
     public onHit: ImpactEffect[];
     public onExpire: ImpactEffect[];
     public isDestroyed: boolean = false;
@@ -51,6 +53,7 @@ export class ServerProjectile {
         this.gunId = gunId;
         this.barrelId = barrelId;
         this.projectileTypeId = projectileType?.id ?? 'standard_bubble';
+        this.behaviors = new ProjectileBehaviorManager(this, projectileType?.behaviors);
         this.onHit = projectileType?.onHit ?? [];
         this.onExpire = projectileType?.onExpire ?? [];
         this.hitsLeft = projectileType?.maxHits ?? 1;

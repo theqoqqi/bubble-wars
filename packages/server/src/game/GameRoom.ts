@@ -18,6 +18,7 @@ import { ServerProjectile } from './Projectile.js';
 import { BotPlayer } from './BotPlayer.js';
 import { CollisionHandler } from './CollisionHandler.js';
 import { ImpactContext, ImpactEffectExecutor, initEffects } from './effects/index.js';
+import { initBehaviors } from './behaviors/index.js';
 
 interface ConnectedPlayer {
     id: string;
@@ -59,6 +60,7 @@ export class GameRoom {
     constructor() {
         this.physics = new PhysicsWorld();
         initEffects(this.impactExecutor);
+        initBehaviors();
         this.collisionHandler = new CollisionHandler({
             game: this,
             impactExecutor: this.impactExecutor,
@@ -441,6 +443,7 @@ export class GameRoom {
                 for (const proj of spawned) {
                     this.projectiles.push(proj);
                     this.physics.addBody(proj.body);
+                    proj.behaviors.onSpawn(proj);
                     this.pendingProjectileSpawns.push(proj.toSpawnData());
                 }
                 player.tank.update(deltaMs);
@@ -465,6 +468,7 @@ export class GameRoom {
                     for (const proj of spawned) {
                         this.projectiles.push(proj);
                         this.physics.addBody(proj.body);
+                        proj.behaviors.onSpawn(proj);
                         this.pendingProjectileSpawns.push(proj.toSpawnData());
                     }
                 }
@@ -479,7 +483,14 @@ export class GameRoom {
             // 4. Step physics simulation
             this.physics.step(deltaMs);
 
-            // 4. Projectiles lifetime & cleanup
+            // 4.1. Update projectile behaviors
+            for (const proj of this.projectiles) {
+                if (!proj.isDestroyed) {
+                    proj.behaviors.onUpdate(proj, { game: this, dt, now, allTanks });
+                }
+            }
+
+            // 4.2. Projectiles lifetime & cleanup
             for (let i = this.projectiles.length - 1; i >= 0; i--) {
                 const proj = this.projectiles[i];
                 if (proj.isDestroyed || proj.isExpired(now)) {
@@ -491,6 +502,7 @@ export class GameRoom {
                         };
                         this.impactExecutor.execute(proj.onExpire, ctx);
                     }
+                    proj.behaviors.onDestroy(proj);
                     this.physics.removeBody(proj.body);
                     this.projectiles.splice(i, 1);
                 }
@@ -709,6 +721,7 @@ export class GameRoom {
 
         // Clear projectiles
         for (const proj of this.projectiles) {
+            proj.behaviors.onDestroy(proj);
             this.physics.removeBody(proj.body);
         }
         this.projectiles = [];
