@@ -1,5 +1,5 @@
 import Matter from 'matter-js';
-import { BubblePopEvent, TargetType, subPoints } from '@bubble-wars/shared';
+import { BubblePopEvent, subPoints } from '@bubble-wars/shared';
 import { ServerProjectile } from './Projectile.js';
 import { ServerTank } from './ServerTank.js';
 import { GameRoom } from './GameRoom.js';
@@ -83,33 +83,21 @@ export class CollisionHandler {
             const normalA = subPoints(bodyA.position, bodyB.position);
             const normalB = subPoints(bodyB.position, bodyA.position);
 
-            if (projA.behaviors.hasBehaviors) {
-                const resA = projA.behaviors.handleCollision(projA, {
-                    targetType: 'projectile',
-                    target: { type: 'projectile', projectile: projB },
-                    normal: normalA,
-                });
-                if (resA.reflect) projA.reflectVelocity(normalA);
-                if (!resA.preventDestroy) {
-                    this.tryBounceOrDestroy(projA, 'projectile', normalA);
-                }
-            } else {
-                this.tryBounceOrDestroy(projA, 'projectile', normalA);
-            }
+            const resA = projA.behaviors.handleCollision(projA, {
+                targetType: 'projectile',
+                target: { type: 'projectile', projectile: projB },
+                normal: normalA,
+            });
+            if (resA.reflect) projA.reflectVelocity(normalA);
+            if (!resA.preventDestroy) projA.isDestroyed = true;
 
-            if (projB.behaviors.hasBehaviors) {
-                const resB = projB.behaviors.handleCollision(projB, {
-                    targetType: 'projectile',
-                    target: { type: 'projectile', projectile: projA },
-                    normal: normalB,
-                });
-                if (resB.reflect) projB.reflectVelocity(normalB);
-                if (!resB.preventDestroy) {
-                    this.tryBounceOrDestroy(projB, 'projectile', normalB);
-                }
-            } else {
-                this.tryBounceOrDestroy(projB, 'projectile', normalB);
-            }
+            const resB = projB.behaviors.handleCollision(projB, {
+                targetType: 'projectile',
+                target: { type: 'projectile', projectile: projA },
+                normal: normalB,
+            });
+            if (resB.reflect) projB.reflectVelocity(normalB);
+            if (!resB.preventDestroy) projB.isDestroyed = true;
 
             const midX = (bodyA.position.x + bodyB.position.x) / 2;
             const midY = (bodyA.position.y + bodyB.position.y) / 2;
@@ -163,21 +151,15 @@ export class CollisionHandler {
 
         const normal = subPoints(projectileBody.position, tank.body.position);
 
-        if (projectile.behaviors.hasBehaviors) {
-            const collisionCtx = {
-                targetType: 'tank' as const,
-                target: { type: 'tank' as const, tank },
-                normal,
-            };
-            const result = projectile.behaviors.handleCollision(projectile, collisionCtx);
-            if (result.skip) return;
-            if (result.reflect) projectile.reflectVelocity(normal);
-            if (!result.preventDestroy) {
-                this.tryBounceOrDestroy(projectile, 'tank', normal);
-            }
-        } else {
-            this.tryBounceOrDestroy(projectile, 'tank', normal);
-        }
+        const collisionCtx = {
+            targetType: 'tank' as const,
+            target: { type: 'tank' as const, tank },
+            normal,
+        };
+        const result = projectile.behaviors.handleCollision(projectile, collisionCtx);
+        if (result.skip) return;
+        if (result.reflect) projectile.reflectVelocity(normal);
+        if (!result.preventDestroy) projectile.isDestroyed = true;
 
         const killer = this.context.findTankById(projectile.ownerId);
 
@@ -221,21 +203,15 @@ export class CollisionHandler {
 
         const normal = subPoints(projectileBody.position, obstacleBody.position);
 
-        if (projectile.behaviors.hasBehaviors) {
-            const collisionCtx = {
-                targetType: 'obstacle' as const,
-                target: { type: 'obstacle' as const, body: obstacleBody, obstacleId: obstacleBody.id },
-                normal,
-            };
-            const result = projectile.behaviors.handleCollision(projectile, collisionCtx);
-            if (result.skip) return;
-            if (result.reflect) projectile.reflectVelocity(normal);
-            if (!result.preventDestroy) {
-                this.tryBounceOrDestroy(projectile, 'obstacle', normal);
-            }
-        } else {
-            this.tryBounceOrDestroy(projectile, 'obstacle', normal);
-        }
+        const collisionCtx = {
+            targetType: 'obstacle' as const,
+            target: { type: 'obstacle' as const, body: obstacleBody, obstacleId: obstacleBody.id },
+            normal,
+        };
+        const result = projectile.behaviors.handleCollision(projectile, collisionCtx);
+        if (result.skip) return;
+        if (result.reflect) projectile.reflectVelocity(normal);
+        if (!result.preventDestroy) projectile.isDestroyed = true;
 
         const ctx: ImpactContext = {
             game: this.context.game,
@@ -266,21 +242,15 @@ export class CollisionHandler {
             y: -projectileBody.position.y,
         };
 
-        if (projectile.behaviors.hasBehaviors) {
-            const collisionCtx = {
-                targetType: 'map_boundary' as const,
-                target: { type: 'map_boundary' as const },
-                normal,
-            };
-            const result = projectile.behaviors.handleCollision(projectile, collisionCtx);
-            if (result.skip) return;
-            if (result.reflect) projectile.reflectVelocity(normal);
-            if (!result.preventDestroy) {
-                this.tryBounceOrDestroy(projectile, 'map_boundary', normal);
-            }
-        } else {
-            this.tryBounceOrDestroy(projectile, 'map_boundary', normal);
-        }
+        const collisionCtx = {
+            targetType: 'map_boundary' as const,
+            target: { type: 'map_boundary' as const },
+            normal,
+        };
+        const result = projectile.behaviors.handleCollision(projectile, collisionCtx);
+        if (result.skip) return;
+        if (result.reflect) projectile.reflectVelocity(normal);
+        if (!result.preventDestroy) projectile.isDestroyed = true;
 
         const ctx: ImpactContext = {
             game: this.context.game,
@@ -300,37 +270,6 @@ export class CollisionHandler {
             isKill: false,
             projectileTypeId: projectile.projectileTypeId,
         });
-    }
-
-    /**
-     * Выполняет отскок снаряда, если рикошет разрешён для данного типа цели.
-     * Возвращает true, если произошёл успешный отскок.
-     */
-    private tryBounce(
-        projectile: ServerProjectile,
-        targetType: TargetType,
-        normal: { x: number; y: number }
-    ): boolean {
-        if (!projectile.canBounceFrom(targetType)) {
-            return false;
-        }
-
-        projectile.bouncesLeft--;
-        projectile.reflectVelocity(normal);
-        return true;
-    }
-
-    /**
-     * Выполняет отскок снаряда либо помечает его как уничтоженный при отсутствии отскока.
-     */
-    private tryBounceOrDestroy(
-        projectile: ServerProjectile,
-        targetType: TargetType,
-        normal: { x: number; y: number }
-    ): void {
-        if (!this.tryBounce(projectile, targetType, normal)) {
-            projectile.isDestroyed = true;
-        }
     }
 
     private handleTankObstacle(tank?: ServerTank): void {

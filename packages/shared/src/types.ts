@@ -106,8 +106,6 @@ export interface ProjectileType {
     lifetime?: number;
     body: BubbleBodyDef;
     behaviors?: ProjectileBehavior[];
-    bounces?: number;
-    bounceFrom?: TargetType[];
     onHit?: ImpactEffect[];
     onExpire?: ImpactEffect[];
     shootSound?: ProceduralSoundSpec;

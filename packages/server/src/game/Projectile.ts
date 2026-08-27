@@ -6,7 +6,6 @@ import {
     ProjectileSnapshot,
     ProjectileSpawnData,
     ProjectileType,
-    TargetType,
     round1,
 } from '@bubble-wars/shared';
 import { COLLISION_CATEGORIES } from './PhysicsWorld.js';
@@ -30,8 +29,6 @@ export class ServerProjectile {
     public onHit: ImpactEffect[];
     public onExpire: ImpactEffect[];
     public isDestroyed: boolean = false;
-    public bouncesLeft: number = 0;
-    public bounceFrom: Set<TargetType> = new Set();
     public gunId?: string;
     public barrelId?: string;
 
@@ -54,13 +51,6 @@ export class ServerProjectile {
         this.behaviors = new ProjectileBehaviorManager(this, projectileType?.behaviors);
         this.onHit = projectileType?.onHit ?? [];
         this.onExpire = projectileType?.onExpire ?? [];
-        this.bouncesLeft = projectileType?.bounces ?? 0;
-
-        if (projectileType?.bounceFrom) {
-            this.bounceFrom = new Set(projectileType.bounceFrom);
-        } else if (this.bouncesLeft > 0) {
-            this.bounceFrom = new Set(['map_boundary', 'obstacle']);
-        }
 
         const primaryBubble = projectileType?.body?.bubbles?.[0];
         this.color = primaryBubble?.color ?? color;
@@ -91,10 +81,6 @@ export class ServerProjectile {
         this.body.projectileInstance = this;
 
         Matter.Body.setVelocity(this.body, { x: vx, y: vy });
-    }
-
-    public canBounceFrom(target: TargetType): boolean {
-        return this.bouncesLeft > 0 && this.bounceFrom.has(target);
     }
 
     public reflectVelocity(normal: { x: number; y: number }): void {
