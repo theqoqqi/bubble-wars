@@ -60,6 +60,13 @@ export const TANK_META: Record<string, TankMetaInfo> = {
         damageRating: 5,
         difficulty: 'Средне',
     },
+    popocalypse: {
+        role: 'СУДНЫЙ ДЕНЬ',
+        description: 'Запускает разрушительные мыльные заряды судного дня. Снаряд плавно замедляется и взрывается колоссальной ударной волной.',
+        speedRating: 2,
+        damageRating: 5,
+        difficulty: 'Сложно',
+    },
 };
 
 export class TankSelectionManager {

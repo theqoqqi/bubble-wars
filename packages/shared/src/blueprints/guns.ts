@@ -189,6 +189,37 @@ export const DEFAULT_GUN_TYPES: GunType[] = [
             },
         ],
     },
+    {
+        id: 'popocalypse_launcher',
+        name: 'Чпококалиптическая мортира',
+        body: {
+            bubbles: [
+                { id: 'turret_base', offsetX: 0, offsetY: 0, radius: 25, color: { hue: 355, tint: 0.85 } },
+                { id: 'breech_back', offsetX: -16, offsetY: 0, zIndex: 1, radius: 18, attachedTo: 'turret_base', color: { hue: 355, tint: 0.85 } },
+                { id: 'pylon_l1', offsetX: -6, offsetY: -20, zIndex: 1, radius: 13, attachedTo: 'turret_base', color: { hue: 355, tint: 0.85 } },
+                { id: 'pylon_l2', offsetX: 8, offsetY: -20, zIndex: 2, radius: 10, attachedTo: 'pylon_l1', color: { hue: 355, tint: 0.85 } },
+                { id: 'pylon_r1', offsetX: -6, offsetY: 20, zIndex: 1, radius: 13, attachedTo: 'turret_base', color: { hue: 355, tint: 0.85 } },
+                { id: 'pylon_r2', offsetX: 8, offsetY: 20, zIndex: 2, radius: 10, attachedTo: 'pylon_r1', color: { hue: 355, tint: 0.85 } },
+                { id: 'barrel_core1', offsetX: 16, offsetY: 0, zIndex: 1, radius: 16, attachedTo: 'turret_base', color: { hue: 355, tint: 0.85 } },
+                { id: 'barrel_core2', offsetX: 30, offsetY: 0, zIndex: 2, radius: 18, attachedTo: 'barrel_core1', color: { hue: 355, tint: 0.85 } },
+                { id: 'barrel_muzzle', offsetX: 44, offsetY: 0, zIndex: 3, radius: 21, attachedTo: 'barrel_core2', color: { hue: 355, tint: 0.85 } },
+                { id: 'barrel_crown_top', offsetX: 48, offsetY: -14, zIndex: 4, radius: 9, attachedTo: 'barrel_muzzle', color: { hue: 355, tint: 0.85 } },
+                { id: 'barrel_crown_bot', offsetX: 48, offsetY: 14, zIndex: 4, radius: 9, attachedTo: 'barrel_muzzle', color: { hue: 355, tint: 0.85 } },
+            ],
+        },
+        barrels: [
+            {
+                id: 'barrel_0',
+                offsetX: 0,
+                offsetY: 0,
+                length: 52,
+                width: 24,
+                projectileTypeId: 'popocalypse_charge',
+                cooldownMs: 950,
+                recoilRecoverySpeed: 0.08,
+            },
+        ],
+    },
 ];
 
 export const gunTypeRegistry = new Registry<GunType>('GunTypeRegistry');

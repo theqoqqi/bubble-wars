@@ -128,6 +128,33 @@ export const HEAVY_TANK_BLUEPRINT: TankBlueprint = {
     ],
 };
 
+export const POPOCALYPSE_TANK_BLUEPRINT: TankBlueprint = {
+    id: 'popocalypse',
+    name: 'Чпококалипсис',
+    maxHp: 135,
+    thrustForce: 0.012,
+    linearDamping: 0.046,
+    body: {
+        bubbles: [
+            { id: 'b_center', radius: 38, offsetX: 0, offsetY: 0, color: { hue: 195, tint: 0.5 } },
+            { id: 'b_front_nose', radius: 18, offsetX: 26, offsetY: 0, attachedTo: 'b_center', color: { hue: 195, tint: 0.5 } },
+            { id: 'b_front_l', radius: 21, offsetX: 18, offsetY: -26, attachedTo: 'b_center', color: { hue: 195, tint: 0.5 } },
+            { id: 'b_front_r', radius: 21, offsetX: 18, offsetY: 26, attachedTo: 'b_center', color: { hue: 195, tint: 0.5 } },
+            { id: 'b_rear_l', radius: 25, offsetX: -20, offsetY: -30, attachedTo: 'b_center', color: { hue: 195, tint: 0.5 } },
+            { id: 'b_rear_r', radius: 25, offsetX: -20, offsetY: 30, attachedTo: 'b_center', color: { hue: 195, tint: 0.5 } },
+            { id: 'b_rear_core', radius: 20, offsetX: -28, offsetY: 0, attachedTo: 'b_center', color: { hue: 195, tint: 0.5 } },
+        ],
+    },
+    guns: [
+        {
+            id: 'g_main',
+            attachedTo: 'b_center',
+            gunTypeId: 'popocalypse_launcher',
+            offsetAngle: 0,
+        },
+    ],
+};
+
 export const DEFAULT_TANK_BLUEPRINTS: TankBlueprint[] = [
     CLASSIC_TANK_BLUEPRINT,
     TWIN_TANK_BLUEPRINT,
@@ -135,6 +162,7 @@ export const DEFAULT_TANK_BLUEPRINTS: TankBlueprint[] = [
     SHOTGUN_TANK_BLUEPRINT,
     MACHINEGUN_TANK_BLUEPRINT,
     HEAVY_TANK_BLUEPRINT,
+    POPOCALYPSE_TANK_BLUEPRINT,
 ];
 
 export const tankBlueprintRegistry = new Registry<TankBlueprint>('TankBlueprintRegistry');

@@ -135,6 +135,45 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
         ],
         onExpire: [],
     },
+    {
+        id: 'popocalypse_charge',
+        name: 'Чпококалиптический заряд',
+        damage: 25,
+        speed: 20,
+        lifetime: 1000,
+        body: {
+            bubbles: [
+                { id: 'core', offsetX: 0, offsetY: 0, radius: 26, color: { hue: 28, tint: 0.95 } },
+                { id: 'front_bulb', offsetX: 16, offsetY: 0, radius: 16, color: { hue: 28, tint: 0.9 } },
+                { id: 'rear_bulb', offsetX: -16, offsetY: 0, radius: 16, color: { hue: 28, tint: 0.9 } },
+                { id: 'top_bulb', offsetX: 0, offsetY: -16, radius: 16, color: { hue: 28, tint: 0.9 } },
+                { id: 'bot_bulb', offsetX: 0, offsetY: 16, radius: 16, color: { hue: 28, tint: 0.9 } },
+                { id: 'diag_fl', offsetX: 14, offsetY: -14, radius: 12, color: { hue: 15, tint: 0.85 } },
+                { id: 'diag_fr', offsetX: 14, offsetY: 14, radius: 12, color: { hue: 15, tint: 0.85 } },
+                { id: 'diag_bl', offsetX: -14, offsetY: -14, radius: 12, color: { hue: 15, tint: 0.85 } },
+                { id: 'diag_br', offsetX: -14, offsetY: 14, radius: 12, color: { hue: 15, tint: 0.85 } },
+            ],
+        },
+        shootSound: [
+            { type: 'oscillator', wave: 'sine', fromFreq: 260, toFreq: 35, duration: 0.35, volume: 1.0 },
+            { type: 'oscillator', wave: 'triangle', fromFreq: 150, toFreq: 30, duration: 0.45, volume: 0.85 },
+            { type: 'noise', freq: 500, q: 0.8, duration: 0.3, volume: 0.9 },
+        ],
+        hitSound: [
+            { type: 'oscillator', wave: 'sine', fromFreq: 240, toFreq: 24, duration: 0.6, volume: 1.0 },
+            { type: 'oscillator', wave: 'sawtooth', fromFreq: 125, toFreq: 20, duration: 0.45, volume: 0.8 },
+            { type: 'noise', freq: 400, q: 0.7, duration: 0.55, volume: 0.95 },
+        ],
+        behaviors: [
+            { type: 'deceleration', rate: 0.92 },
+        ],
+        onHit: [
+            { type: 'splash', radius: 250, damage: 85, pushForce: 0.05, hue: 15 },
+        ],
+        onExpire: [
+            { type: 'splash', radius: 250, damage: 85, pushForce: 0.05, hue: 15 },
+        ],
+    },
 ];
 
 export const projectileTypeRegistry = new Registry<ProjectileType>('ProjectileTypeRegistry');
