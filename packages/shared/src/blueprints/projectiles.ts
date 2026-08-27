@@ -48,7 +48,6 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
         damage: 75,
         speed: 55,
         lifetime: 2200,
-        maxHits: 3,
         bounces: 3,
         bounceFrom: ['map_boundary', 'obstacle'],
         body: {
@@ -64,6 +63,9 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
             { type: 'oscillator', wave: 'sine', fromFreq: 420, toFreq: 110, duration: 0.16, volume: 0.32 },
             { type: 'noise', freq: 10600, q: 4.8, duration: 0.44, volume: 0.28 },
             { type: 'oscillator', wave: 'triangle', fromFreq: 340, toFreq: 50, duration: 0.06, volume: 0.24 },
+        ],
+        behaviors: [
+            { type: 'pierce', maxHits: 3 },
         ],
     },
     {
