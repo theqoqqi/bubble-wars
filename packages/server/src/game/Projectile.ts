@@ -30,8 +30,6 @@ export class ServerProjectile {
     public onHit: ImpactEffect[];
     public onExpire: ImpactEffect[];
     public isDestroyed: boolean = false;
-    public hitsLeft: number = 1;
-    public hitTankIds: Set<string> = new Set();
     public bouncesLeft: number = 0;
     public bounceFrom: Set<TargetType> = new Set();
     public gunId?: string;
@@ -56,7 +54,6 @@ export class ServerProjectile {
         this.behaviors = new ProjectileBehaviorManager(this, projectileType?.behaviors);
         this.onHit = projectileType?.onHit ?? [];
         this.onExpire = projectileType?.onExpire ?? [];
-        this.hitsLeft = projectileType?.maxHits ?? 1;
         this.bouncesLeft = projectileType?.bounces ?? 0;
 
         if (projectileType?.bounceFrom) {

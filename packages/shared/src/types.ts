@@ -106,7 +106,6 @@ export interface ProjectileType {
     lifetime?: number;
     body: BubbleBodyDef;
     behaviors?: ProjectileBehavior[];
-    maxHits?: number;
     bounces?: number;
     bounceFrom?: TargetType[];
     onHit?: ImpactEffect[];

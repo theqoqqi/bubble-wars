@@ -176,14 +176,7 @@ export class CollisionHandler {
                 this.tryBounceOrDestroy(projectile, 'tank', normal);
             }
         } else {
-            if (projectile.hitTankIds.has(tank.id)) return;
-            projectile.hitTankIds.add(tank.id);
-            projectile.hitsLeft--;
-
-            const bounced = this.tryBounce(projectile, 'tank', normal);
-            if (projectile.hitsLeft <= 0 && !bounced) {
-                projectile.isDestroyed = true;
-            }
+            this.tryBounceOrDestroy(projectile, 'tank', normal);
         }
 
         const killer = this.context.findTankById(projectile.ownerId);
