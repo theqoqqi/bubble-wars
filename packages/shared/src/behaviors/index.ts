@@ -2,10 +2,12 @@ export * from './types.js';
 export * from './PierceBehavior.js';
 export * from './BounceBehavior.js';
 export * from './DecelerationBehavior.js';
+export * from './MineBehavior.js';
 
 import { PierceBehavior } from './PierceBehavior.js';
 import { BounceBehavior } from './BounceBehavior.js';
 import { DecelerationBehavior } from './DecelerationBehavior.js';
+import { MineBehavior } from './MineBehavior.js';
 
 /**
  * Дискриминированное объединение всех поддерживаемых поведений снарядов
@@ -13,4 +15,5 @@ import { DecelerationBehavior } from './DecelerationBehavior.js';
 export type ProjectileBehavior =
     | PierceBehavior
     | BounceBehavior
-    | DecelerationBehavior;
+    | DecelerationBehavior
+    | MineBehavior;
