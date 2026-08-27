@@ -130,6 +130,9 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
             { type: 'oscillator', wave: 'sine', fromFreq: 200, toFreq: 40, duration: 0.32, volume: 0.65 },
             { type: 'noise', freq: 800, q: 1.3, duration: 0.18, volume: 0.35 },
         ],
+        behaviors: [
+            { type: 'indestructible', from: ['projectile'] },
+        ],
         onHit: [
             { type: 'splash', radius: 140, damage: 35, pushForce: 0.035, hue: 28 },
         ],
@@ -166,6 +169,7 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
         ],
         behaviors: [
             { type: 'deceleration', rate: 0.92 },
+            { type: 'indestructible', from: ['projectile'] },
         ],
         onHit: [
             { type: 'splash', radius: 250, damage: 85, pushForce: 0.05, hue: 15 },
