@@ -203,6 +203,15 @@ export class SoundFx {
         }
     }
 
+    public playExplosion(radius: number = 100): void {
+        const scale = Math.min(2.5, Math.max(0.7, radius / 120));
+
+        this.osc('sine', 120, 24, 0.65 * scale, 0.4);
+        this.osc('sawtooth', 80, 20, 0.5 * scale, 0.3, 0.01);
+        this.noise(0.6 * scale, 0.4, 200, 0.7);
+        this.noise(0.9 * scale, 0.3, 120, 0.6, 0.05);
+    }
+
     public playKill(): void {
         const size = 1.0;
         this.osc('sine', 440 - 240 * size, 70, 0.11 + 0.1 * size, 0.45);

@@ -8,5 +8,6 @@ export class SplashClientImpactHandler extends ClientImpactHandler<SplashImpactE
         const hue = event.hue ?? 25; // Огненно-оранжевый по умолчанию
 
         ctx.particleSystem.emitPop(event.x, event.y, event.radius, hue, true);
+        ctx.soundFx.playExplosion(event.radius);
     }
 }
