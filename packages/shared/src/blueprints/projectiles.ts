@@ -48,8 +48,6 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
         damage: 75,
         speed: 55,
         lifetime: 2200,
-        bounces: 3,
-        bounceFrom: ['map_boundary', 'obstacle'],
         body: {
             bubbles: [
                 { id: 'core', offsetX: 0, offsetY: 0, radius: 6, stretch: 2, color: { hue: 28, tint: 0.9 } },
@@ -66,6 +64,7 @@ export const DEFAULT_PROJECTILE_TYPES: ProjectileType[] = [
         ],
         behaviors: [
             { type: 'pierce', maxHits: 3 },
+            { type: 'bounce', bounces: 3, bounceFrom: ['map_boundary', 'obstacle'] },
         ],
     },
     {
