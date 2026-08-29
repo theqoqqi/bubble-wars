@@ -573,12 +573,14 @@ window.addEventListener('DOMContentLoaded', () => {
             editRoomFragLimit.value = currentRoomConfig.fragLimit.toString();
             if (editRoomFragLimitVal) editRoomFragLimitVal.textContent = currentRoomConfig.fragLimit.toString();
         }
+        networkManager.setConfigEditing(true);
         editRoomModal?.classList.remove('hidden');
         editRoomNameInput?.focus();
         editRoomNameInput?.select();
     };
 
     const closeEditModal = () => {
+        networkManager.setConfigEditing(false);
         editRoomModal?.classList.add('hidden');
     };
 
@@ -601,7 +603,7 @@ window.addEventListener('DOMContentLoaded', () => {
             botCount,
             fragLimit,
         });
-        closeEditModal();
+        editRoomModal?.classList.add('hidden');
     };
 
     if (btnEditRoomSave) {
@@ -686,6 +688,23 @@ window.addEventListener('DOMContentLoaded', () => {
         currentRoomName = msg.name;
     });
 
+    networkManager.on('room_config_editing_state', (msg) => {
+        if (btnRematch) {
+            const btn = btnRematch as HTMLButtonElement;
+            if (msg.isEditing) {
+                btn.disabled = true;
+                btn.innerHTML = '⚙️ ХОСТ НАСТРАИВАЕТ АРЕНУ...';
+                btn.style.opacity = '0.6';
+                btn.style.cursor = 'not-allowed';
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = 'РЕВАНШ 🔄';
+                btn.style.opacity = '';
+                btn.style.cursor = '';
+            }
+        }
+    });
+
     networkManager.on('error', (msg) => {
         networkManager.clearSession();
         currentSelectedRoomId = null;
@@ -748,6 +767,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (btnRematch) {
         btnRematch.addEventListener('click', () => {
+            if ((btnRematch as HTMLButtonElement).disabled) return;
             networkManager.rematch();
             gameoverModal?.classList.add('hidden');
         });

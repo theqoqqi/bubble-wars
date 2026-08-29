@@ -43,6 +43,7 @@ export class GameRoom {
     public fragLimit: number = GAME_CONFIG.MATCH.DEFAULT_FRAG_LIMIT;
     public isMatchOver: boolean = false;
     public matchOverTime: number = 0;
+    public isConfigEditing: boolean = false;
     public impactExecutor: ImpactEffectExecutor = new ImpactEffectExecutor();
     private collisionHandler: CollisionHandler;
     private players: Map<string, ConnectedPlayer> = new Map();
@@ -432,6 +433,12 @@ export class GameRoom {
             `⚙️ [Room ${this.roomId}] Host updated config: Name="${this.roomName}", MaxPlayers=${this.maxPlayers}, BotCount=${this.botCount}, FragLimit=${this.fragLimit}`
         );
 
+        this.isConfigEditing = false;
+        this.broadcast({
+            type: 'room_config_editing_state',
+            isEditing: false,
+        });
+
         this.broadcast({
             type: 'room_config_updated',
             name: this.roomName,
@@ -443,8 +450,23 @@ export class GameRoom {
         return true;
     }
 
+    public setConfigEditing(playerId: string, isEditing: boolean): void {
+        if (playerId !== this.hostId) return;
+        this.isConfigEditing = isEditing;
+        this.broadcast({
+            type: 'room_config_editing_state',
+            isEditing: this.isConfigEditing,
+        });
+    }
+
     public handlePlayerRematch(playerId: string): void {
         if (this.isMatchOver) {
+            if (this.isConfigEditing) {
+                console.log(
+                    `⏳ [Rematch] Player ${playerId} requested rematch, but host is editing room config. Waiting.`
+                );
+                return;
+            }
             console.log(`🔄 [Rematch] Player ${playerId} requested rematch. Resetting arena!`);
             this.resetArena();
         }
@@ -545,6 +567,12 @@ export class GameRoom {
                 } else {
                     this.hostId = null;
                 }
+
+                this.isConfigEditing = false;
+                this.broadcast({
+                    type: 'room_config_editing_state',
+                    isEditing: false,
+                });
             }
 
             this.adjustBots();

@@ -65,11 +65,17 @@ export interface RoomConfigUpdateMessage {
     fragLimit?: number;
 }
 
+export interface RoomConfigEditingMessage {
+    type: 'room_config_editing';
+    isEditing: boolean;
+}
+
 export type ClientMessage =
     | RoomJoinMessage
     | RoomCreateMessage
     | RoomListRequestMessage
     | RoomConfigUpdateMessage
+    | RoomConfigEditingMessage
     | InputMessage
     | PingMessage
     | RespawnMessage
@@ -138,6 +144,11 @@ export interface RoomConfigUpdatedMessage {
     maxPlayers: number;
     botCount: number;
     fragLimit: number;
+}
+
+export interface RoomConfigEditingStateMessage {
+    type: 'room_config_editing_state';
+    isEditing: boolean;
 }
 
 export interface RoomListMessage {
@@ -233,6 +244,7 @@ export type ServerMessage =
     | RoomCreatedMessage
     | RoomListMessage
     | RoomConfigUpdatedMessage
+    | RoomConfigEditingStateMessage
     | HostChangedMessage
     | ErrorMessage
     | WorldStateMessage

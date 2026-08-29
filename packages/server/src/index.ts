@@ -166,6 +166,14 @@ wss.on('connection', (ws: WebSocket) => {
                     break;
                 }
 
+                case 'room_config_editing': {
+                    const session = wsSessions.get(ws);
+                    if (session) {
+                        session.room.setConfigEditing(session.playerId, !!msg.isEditing);
+                    }
+                    break;
+                }
+
                 case 'leave': {
                     const session = wsSessions.get(ws);
                     if (session) {

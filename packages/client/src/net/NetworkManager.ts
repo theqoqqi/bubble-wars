@@ -14,6 +14,8 @@ import {
     ProjectilesSpawnMessage,
     RoomConfigUpdateMessage,
     RoomConfigUpdatedMessage,
+    RoomConfigEditingMessage,
+    RoomConfigEditingStateMessage,
     RoomCreateMessage,
     RoomCreatedMessage,
     RoomJoinedMessage,
@@ -31,6 +33,7 @@ export interface NetworkEvents {
     room_created: RoomCreatedMessage;
     room_list: RoomListMessage;
     room_config_updated: RoomConfigUpdatedMessage;
+    room_config_editing_state: RoomConfigEditingStateMessage;
     host_changed: HostChangedMessage;
     error: ErrorMessage;
     world_state: WorldStateMessage;
@@ -241,6 +244,11 @@ export class NetworkManager extends EventBus<NetworkEvents> {
                     break;
                 }
 
+                case 'room_config_editing_state': {
+                    this.emit('room_config_editing_state', msg);
+                    break;
+                }
+
                 case 'host_changed': {
                     this.hostId = msg.hostId;
                     this.emit('host_changed', msg);
@@ -335,6 +343,14 @@ export class NetworkManager extends EventBus<NetworkEvents> {
         const msg: RoomConfigUpdateMessage = {
             type: 'room_config_update',
             ...config,
+        };
+        this.sendMessage(msg);
+    }
+
+    public setConfigEditing(isEditing: boolean): void {
+        const msg: RoomConfigEditingMessage = {
+            type: 'room_config_editing',
+            isEditing,
         };
         this.sendMessage(msg);
     }
