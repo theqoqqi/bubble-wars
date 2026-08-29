@@ -10,6 +10,8 @@ import {
     LeaderboardEntry,
     PlayerInput,
     ProjectileSpawnData,
+    RoomConfig,
+    RoomInfo,
     ServerMessage,
 } from '@bubble-wars/shared';
 import { PhysicsWorld } from './PhysicsWorld.js';
@@ -31,6 +33,10 @@ interface ConnectedPlayer {
 }
 
 export class GameRoom {
+    public readonly roomId: string;
+    public roomName: string;
+    public maxPlayers: number;
+    public readonly createdAt: number;
     public physics: PhysicsWorld;
     public botCount: number = GAME_CONFIG.BOT.SPAWN_COUNT;
     public fragLimit: number = GAME_CONFIG.MATCH.DEFAULT_FRAG_LIMIT;
@@ -57,7 +63,14 @@ export class GameRoom {
         { hue: 42 },
     ];
 
-    constructor() {
+    constructor(roomId: string = 'default', config?: Partial<RoomConfig>) {
+        this.roomId = roomId;
+        this.roomName = config?.name || 'Основная арена';
+        this.maxPlayers = config?.maxPlayers ?? 16;
+        this.botCount = config?.botCount ?? GAME_CONFIG.BOT.SPAWN_COUNT;
+        this.fragLimit = config?.fragLimit ?? GAME_CONFIG.MATCH.DEFAULT_FRAG_LIMIT;
+        this.createdAt = Date.now();
+
         this.physics = new PhysicsWorld();
         initEffects(this.impactExecutor);
         initBehaviors();
@@ -233,6 +246,7 @@ export class GameRoom {
                 type: 'room_joined',
                 playerId: player.id,
                 sessionToken: player.sessionToken,
+                roomId: this.roomId,
                 reconnected: true,
                 arena: GAME_CONFIG.ARENA,
                 obstacles: this.physics.getObstacleSnapshots(),
@@ -291,6 +305,7 @@ export class GameRoom {
             type: 'room_joined',
             playerId: id,
             sessionToken: newSessionToken,
+            roomId: this.roomId,
             reconnected: false,
             arena: GAME_CONFIG.ARENA,
             obstacles: this.physics.getObstacleSnapshots(),
@@ -313,6 +328,32 @@ export class GameRoom {
         });
 
         return player;
+    }
+
+    public getActivePlayerCount(): number {
+        let count = 0;
+        for (const player of this.players.values()) {
+            if (player.ws !== null) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public isEmpty(): boolean {
+        return this.getActivePlayerCount() === 0;
+    }
+
+    public getRoomInfo(): RoomInfo {
+        return {
+            roomId: this.roomId,
+            name: this.roomName,
+            playerCount: this.getActivePlayerCount(),
+            maxPlayers: this.maxPlayers,
+            botCount: this.bots.length,
+            fragLimit: this.fragLimit,
+            isMatchOver: this.isMatchOver,
+        };
     }
 
     public handlePlayerRematch(playerId: string): void {

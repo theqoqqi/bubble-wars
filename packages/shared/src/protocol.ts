@@ -14,8 +14,8 @@ import {
 import { ImpactEvent } from './effects/index.js';
 
 // Client -> Server
-export interface JoinMessage {
-    type: 'join';
+export interface RoomJoinMessage {
+    type: 'room_join';
     name: string;
     color?: ColorDef;
     blueprintId: string;
@@ -45,7 +45,7 @@ export interface LeaveMessage {
 }
 
 export type ClientMessage =
-    | JoinMessage
+    | RoomJoinMessage
     | InputMessage
     | PingMessage
     | RespawnMessage
@@ -59,10 +59,28 @@ export interface KillerInfo {
 }
 
 // Server -> Client
+export interface RoomConfig {
+    name?: string;
+    maxPlayers?: number;
+    botCount?: number;
+    fragLimit?: number;
+}
+
+export interface RoomInfo {
+    roomId: string;
+    name: string;
+    playerCount: number;
+    maxPlayers: number;
+    botCount: number;
+    fragLimit: number;
+    isMatchOver: boolean;
+}
+
 export interface RoomJoinedMessage {
     type: 'room_joined';
     playerId: string;
     sessionToken: string;
+    roomId: string;
     reconnected?: boolean;
     arena: ArenaBounds;
     obstacles: ObstacleSnapshot[];

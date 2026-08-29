@@ -5,16 +5,16 @@ import {
     EventBus,
     GameOverMessage,
     ImpactEvent,
-    JoinMessage,
     KillEventMessage,
     PlayerJoinedMessage,
     PlayerLeftMessage,
     PlayerInput,
     ProjectilesSpawnMessage,
+    RoomJoinedMessage,
+    RoomJoinMessage,
     ServerMessage,
     TankDespawnMessage,
     TankSpawnMessage,
-    RoomJoinedMessage,
     WorldStateMessage,
 } from '@bubble-wars/shared';
 
@@ -253,8 +253,8 @@ export class NetworkManager extends EventBus<NetworkEvents> {
 
     public join(name: string, color: ColorDef, blueprintId: string, sessionToken?: string | null): void {
         const token = sessionToken || this.sessionToken;
-        const msg: JoinMessage = {
-            type: 'join',
+        const msg: RoomJoinMessage = {
+            type: 'room_join',
             name,
             color,
             blueprintId,

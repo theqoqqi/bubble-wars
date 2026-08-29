@@ -1,7 +1,7 @@
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
-import { GameRoom } from '../game/GameRoom.js';
+import { RoomManager } from '../game/RoomManager.js';
 import { parseJsonBody, sendHtml, sendJson } from '../utils/httpUtils.js';
 
 function getAdminHtmlPath(): string {
@@ -33,9 +33,11 @@ function getAdminHtml(): string {
 export async function handleAdminRoutes(
     req: http.IncomingMessage,
     res: http.ServerResponse,
-    gameRoom: GameRoom,
+    roomManager: RoomManager,
     url: string
 ): Promise<boolean> {
+    const gameRoom = roomManager.getDefaultRoom();
+
     // 1. Admin Panel HTML page
     if (url === '/admin' || url === '/admin.html') {
         sendHtml(res, 200, getAdminHtml());

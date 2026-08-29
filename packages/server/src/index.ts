@@ -1,6 +1,7 @@
 import http from 'http';
 import { WebSocket, WebSocketServer } from 'ws';
 import { ClientMessage } from '@bubble-wars/shared';
+import { RoomManager } from './game/RoomManager.js';
 import { GameRoom } from './game/GameRoom.js';
 import { handleAdminRoutes } from './routes/adminRoutes.js';
 import { serveStatic } from './routes/staticServer.js';
@@ -9,7 +10,7 @@ import { sendJson } from './utils/httpUtils.js';
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = process.env.HOST || '0.0.0.0';
 
-const gameRoom = new GameRoom();
+const roomManager = new RoomManager();
 
 // HTTP Server
 const server = http.createServer(async (req, res) => {
@@ -22,7 +23,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     // 2. Admin routes & API
-    if (await handleAdminRoutes(req, res, gameRoom, url)) {
+    if (await handleAdminRoutes(req, res, roomManager, url)) {
         return;
     }
 
@@ -38,52 +39,66 @@ const server = http.createServer(async (req, res) => {
 // WebSocket Server
 const wss = new WebSocketServer({ server });
 
-wss.on('connection', (ws: WebSocket) => {
-    let playerId: string | null = null;
+interface WsSession {
+    room: GameRoom;
+    playerId: string;
+}
 
+const wsSessions = new Map<WebSocket, WsSession>();
+
+wss.on('connection', (ws: WebSocket) => {
     ws.on('message', (raw: string) => {
         try {
             const msg: ClientMessage = JSON.parse(raw.toString());
 
             switch (msg.type) {
-                case 'join': {
-                    const player = gameRoom.handlePlayerJoin(
+                case 'room_join': {
+                    const room = roomManager.getOrCreateDefaultRoom();
+
+                    const player = room.handlePlayerJoin(
                         ws,
                         msg.name,
                         msg.color,
                         msg.blueprintId,
                         msg.sessionToken
                     );
-                    playerId = player.id;
+
+                    wsSessions.set(ws, { room, playerId: player.id });
                     break;
                 }
 
                 case 'input': {
-                    if (playerId) {
-                        gameRoom.handlePlayerInput(playerId, msg.input);
+                    const session = wsSessions.get(ws);
+                    if (session) {
+                        session.room.handlePlayerInput(session.playerId, msg.input);
                     }
                     break;
                 }
 
                 case 'respawn': {
-                    if (playerId) {
-                        gameRoom.handlePlayerRespawn(playerId);
+                    const session = wsSessions.get(ws);
+                    if (session) {
+                        session.room.handlePlayerRespawn(session.playerId);
                     }
                     break;
                 }
 
                 case 'rematch': {
-                    if (playerId) {
-                        gameRoom.handlePlayerRematch(playerId);
+                    const session = wsSessions.get(ws);
+                    if (session) {
+                        session.room.handlePlayerRematch(session.playerId);
                     }
                     break;
                 }
 
                 case 'leave': {
-                    if (playerId) {
-                        console.log(`[Server] Player left match intentionally: ${playerId}`);
-                        gameRoom.removePlayerCompletely(playerId);
-                        playerId = null;
+                    const session = wsSessions.get(ws);
+                    if (session) {
+                        console.log(
+                            `[Server] Player left match intentionally: ${session.playerId}`
+                        );
+                        session.room.removePlayerCompletely(session.playerId);
+                        wsSessions.delete(ws);
                     }
                     break;
                 }
@@ -107,16 +122,20 @@ wss.on('connection', (ws: WebSocket) => {
     });
 
     ws.on('close', () => {
-        if (playerId) {
-            console.log(`[Server] Player disconnected: ${playerId}`);
-            gameRoom.handlePlayerDisconnect(playerId);
+        const session = wsSessions.get(ws);
+        if (session) {
+            console.log(`[Server] Player disconnected: ${session.playerId}`);
+            session.room.handlePlayerDisconnect(session.playerId);
+            wsSessions.delete(ws);
         }
     });
 
     ws.on('error', (err) => {
-        console.error(`[Server] WebSocket error on player ${playerId}:`, err);
-        if (playerId) {
-            gameRoom.handlePlayerDisconnect(playerId);
+        const session = wsSessions.get(ws);
+        console.error(`[Server] WebSocket error on player ${session?.playerId}:`, err);
+        if (session) {
+            session.room.handlePlayerDisconnect(session.playerId);
+            wsSessions.delete(ws);
         }
     });
 });
