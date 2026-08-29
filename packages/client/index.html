@@ -203,57 +203,15 @@
                             />
                         </div>
 
-                        <button id="btn-play" class="btn-bubble btn-full">В БОЙ</button>
+                        <button id="btn-play" class="btn-bubble btn-full">ВЫБРАТЬ ЛОББИ</button>
                         <div class="menu-card-footer">
-                            <span>Enter — быстрый старт</span>
+                            <span>Enter — перейти к аренам</span>
                             <a href="/admin" target="_blank" class="admin-link">⚙️ Админка</a>
                         </div>
                     </div>
 
-                    <!-- Panel 2: Tank Selection Panel -->
-                    <div id="tank-preview-card" class="panel rise-in menu-card tank-choice-panel delayed-1" role="button" tabindex="0">
-                        <div class="tank-panel-top-row">
-                            <span class="section-label">МОДЕЛЬ ТАНКА</span>
-                            <span id="tank-preview-role" class="tank-role-badge">УНИВЕРСАЛ</span>
-                        </div>
-
-                        <div class="tank-panel-canvas-box">
-                            <canvas id="tank-preview-canvas" width="200" height="130"></canvas>
-                        </div>
-
-                        <div class="tank-panel-info">
-                            <h3 id="tank-preview-name" class="tank-card-title">Классический пузырь</h3>
-                            <p id="tank-preview-desc" class="tank-card-desc">Сбалансированный мыльный танк с хорошей подвижностью и надёжным орудием.</p>
-
-                            <div class="tank-stats-list">
-                                <div class="tank-stat-row">
-                                    <span class="stat-label">Прочность</span>
-                                    <span id="tank-preview-val-hp" class="stat-val">100</span>
-                                    <div class="stat-bar-bg"><div id="tank-preview-bar-hp" class="stat-bar-fill hp" style="width: 62%"></div></div>
-                                </div>
-                                <div class="tank-stat-row">
-                                    <span class="stat-label">Скорость</span>
-                                    <span id="tank-preview-val-speed" class="stat-val">3/5</span>
-                                    <div class="stat-bar-bg"><div id="tank-preview-bar-speed" class="stat-bar-fill speed" style="width: 60%"></div></div>
-                                </div>
-                                <div class="tank-stat-row">
-                                    <span class="stat-label">Урон / Залп</span>
-                                    <span id="tank-preview-val-damage" class="stat-val">3/5</span>
-                                    <div class="stat-bar-bg"><div id="tank-preview-bar-damage" class="stat-bar-fill damage" style="width: 60%"></div></div>
-                                </div>
-                            </div>
-
-                            <div class="tank-weapon-info" style="margin-bottom: 0">
-                                <span class="weapon-icon">🫧</span>
-                                <span id="tank-preview-weapon-text" class="weapon-text">Стандартный мыломёт (16 урона)</span>
-                            </div>
-                        </div>
-
-                        <button id="btn-open-hangar" class="btn-bubble btn-full btn-open-hangar">АНГАР ТАНКОВ ⚙️</button>
-                    </div>
-
-                    <!-- Panel 3: Controls -->
-                    <div class="panel rise-in menu-card delayed-2">
+                    <!-- Panel 2: Controls -->
+                    <div class="panel rise-in menu-card delayed-1">
                         <div class="section-label">УПРАВЛЕНИЕ</div>
                         <div class="controls-list">
                             <div class="control-item">
@@ -584,18 +542,76 @@
             </div>
         </div>
 
+        <!-- Lobby Browser Screen Overlay -->
+        <div id="lobby-modal" class="overlay join-backdrop hidden" style="z-index: 120">
+            <div class="menu-content lobby-content">
+                <div class="lobby-header-row">
+                    <button id="btn-back-to-pilot" class="btn-ghost" title="Назад к пилоту">← Назад к пилоту</button>
+                    <div class="lobby-header-titles">
+                        <h1 class="title-bubble modal-main-title">АРЕНЫ BUBBLE WARS</h1>
+                        <div class="modal-supertitle">ВЫБЕРИТЕ ЛОББИ ИЛИ СОЗДАЙТЕ СВОЁ</div>
+                    </div>
+                    <div class="lobby-header-spacer"></div>
+                </div>
+
+                <div class="lobby-actions-bar panel-soft">
+                    <div class="lobby-stats-badge">
+                        <span>Арен онлайн:</span>
+                        <strong id="lobby-room-count" style="color: var(--color-soap-cyan)">0</strong>
+                    </div>
+                    <div class="lobby-actions-group">
+                        <button id="btn-refresh-rooms" class="btn-ghost btn-sm" title="Обновить список">🔄 Обновить</button>
+                        <button id="btn-open-create-room" class="btn-bubble btn-sm">➕ Создать арену</button>
+                    </div>
+                </div>
+
+                <div id="lobby-rooms-grid" class="lobby-rooms-grid">
+                    <!-- Filled dynamically with room cards -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Room Modal Overlay -->
+        <div id="create-room-modal" class="overlay hidden" style="z-index: 160">
+            <div class="panel rise-in create-room-card">
+                <div class="create-room-header">
+                    <h2 class="title-bubble create-room-title">СОЗДАТЬ АРЕНУ</h2>
+                    <button id="btn-close-create-modal" class="btn-close-modal" aria-label="Закрыть">✕</button>
+                </div>
+                <div class="form-group" style="margin-top: 16px">
+                    <label class="section-label" for="create-room-name-input">НАЗВАНИЕ АРЕНЫ</label>
+                    <input
+                        id="create-room-name-input"
+                        class="name-input player-input-style"
+                        placeholder="Название арены (например: Мыльный Шторм)"
+                        maxlength="24"
+                        autocomplete="off"
+                    />
+                </div>
+                <div class="create-room-actions">
+                    <button id="btn-create-room-submit" class="btn-bubble btn-full">СОЗДАТЬ АРЕНУ 🚀</button>
+                    <button id="btn-create-room-cancel" class="btn-ghost btn-full">ОТМЕНА</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Tank Selection / Hangar Modal Overlay -->
         <div id="tank-modal" class="overlay hidden" style="z-index: 150">
             <div class="panel rise-in tank-modal-content">
                 <div class="tank-modal-header">
                     <div>
                         <h2 class="title-bubble modal-main-title">АНГАР ТАНКОВ</h2>
-                        <div class="modal-supertitle">ВЫБЕРИТЕ ПУЗЫРЬ</div>
+                        <div id="tank-modal-subtitle" class="modal-supertitle">ВЫБЕРИТЕ ПУЗЫРЬ ДЛЯ ВЫБРАННОЙ АРЕНЫ</div>
                     </div>
                     <button id="btn-close-tank-modal" class="btn-close-modal" aria-label="Закрыть">✕</button>
                 </div>
                 <div id="tank-grid" class="tank-grid">
                     <!-- Filled dynamically by TankSelectionManager -->
+                </div>
+                <div class="tank-modal-footer">
+                    <button id="btn-tank-confirm-join" class="btn-bubble btn-full" style="padding: 14px 20px; font-size: 18px">
+                        В БОЙ НА АРЕНУ 🚀
+                    </button>
                 </div>
             </div>
         </div>

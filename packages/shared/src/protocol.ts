@@ -17,9 +17,22 @@ import { ImpactEvent } from './effects/index.js';
 export interface RoomJoinMessage {
     type: 'room_join';
     name: string;
+    roomId: string;
     color?: ColorDef;
     blueprintId: string;
     sessionToken?: string;
+}
+
+export interface RoomCreateMessage {
+    type: 'room_create';
+    name: string;
+    maxPlayers?: number;
+    botCount?: number;
+    fragLimit?: number;
+}
+
+export interface RoomListRequestMessage {
+    type: 'room_list';
 }
 
 export interface InputMessage {
@@ -46,6 +59,8 @@ export interface LeaveMessage {
 
 export type ClientMessage =
     | RoomJoinMessage
+    | RoomCreateMessage
+    | RoomListRequestMessage
     | InputMessage
     | PingMessage
     | RespawnMessage
@@ -90,6 +105,23 @@ export interface RoomJoinedMessage {
     isDead?: boolean;
     score?: number;
     killer?: KillerInfo | null;
+}
+
+export interface RoomCreatedMessage {
+    type: 'room_created';
+    roomId: string;
+    roomName: string;
+}
+
+export interface RoomListMessage {
+    type: 'room_list';
+    rooms: RoomInfo[];
+}
+
+export interface ErrorMessage {
+    type: 'error';
+    code: string;
+    message: string;
 }
 
 export interface WorldStateMessage {
@@ -171,6 +203,9 @@ export interface TankDespawnMessage {
 
 export type ServerMessage =
     | RoomJoinedMessage
+    | RoomCreatedMessage
+    | RoomListMessage
+    | ErrorMessage
     | WorldStateMessage
     | BubblePopMessage
     | PongMessage

@@ -2,6 +2,7 @@ import {
     BubblePopEvent,
     ClientMessage,
     ColorDef,
+    ErrorMessage,
     EventBus,
     GameOverMessage,
     ImpactEvent,
@@ -10,8 +11,12 @@ import {
     PlayerLeftMessage,
     PlayerInput,
     ProjectilesSpawnMessage,
+    RoomCreateMessage,
+    RoomCreatedMessage,
     RoomJoinedMessage,
     RoomJoinMessage,
+    RoomListMessage,
+    RoomListRequestMessage,
     ServerMessage,
     TankDespawnMessage,
     TankSpawnMessage,
@@ -20,6 +25,9 @@ import {
 
 export interface NetworkEvents {
     room_joined: RoomJoinedMessage;
+    room_created: RoomCreatedMessage;
+    room_list: RoomListMessage;
+    error: ErrorMessage;
     world_state: WorldStateMessage;
     projectiles_spawn: ProjectilesSpawnMessage;
     player_joined: PlayerJoinedMessage;
@@ -38,6 +46,7 @@ export class NetworkManager extends EventBus<NetworkEvents> {
     public serverUrl: string;
     public playerId: string | null = null;
     public sessionToken: string | null = null;
+    public roomId: string | null = null;
     public latency: number = 0;
     public inboundKbps: number = 0;
     public avgPacketBytes: number = 0;
@@ -53,6 +62,7 @@ export class NetworkManager extends EventBus<NetworkEvents> {
         super();
         this.serverUrl = this.resolveServerUrl();
         this.sessionToken = sessionStorage.getItem('bubble_session_token');
+        this.roomId = sessionStorage.getItem('bubble_room_id');
     }
 
     public setServerUrl(url: string): void {
@@ -110,6 +120,10 @@ export class NetworkManager extends EventBus<NetworkEvents> {
     }
 
     public connect(): Promise<void> {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            return Promise.resolve();
+        }
+
         return new Promise((resolve, reject) => {
             try {
                 console.log('[Network] Connecting to Bubble Wars Server:', this.serverUrl);
@@ -141,6 +155,10 @@ export class NetworkManager extends EventBus<NetworkEvents> {
         });
     }
 
+    public isConnected(): boolean {
+        return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
+    }
+
     public disconnect(): void {
         this.stopPingLoop();
         if (this.ws) {
@@ -156,7 +174,9 @@ export class NetworkManager extends EventBus<NetworkEvents> {
 
     public clearSession(): void {
         this.sessionToken = null;
+        this.roomId = null;
         sessionStorage.removeItem('bubble_session_token');
+        sessionStorage.removeItem('bubble_room_id');
         sessionStorage.removeItem('bubble_game_active');
     }
 
@@ -183,11 +203,31 @@ export class NetworkManager extends EventBus<NetworkEvents> {
             switch (msg.type) {
                 case 'room_joined': {
                     this.playerId = msg.playerId;
+                    this.roomId = msg.roomId;
                     if (msg.sessionToken) {
                         this.sessionToken = msg.sessionToken;
                         sessionStorage.setItem('bubble_session_token', msg.sessionToken);
+                        sessionStorage.setItem('bubble_room_id', msg.roomId);
                     }
                     this.emit('room_joined', msg);
+                    break;
+                }
+
+                case 'room_created': {
+                    this.emit('room_created', msg);
+                    break;
+                }
+
+                case 'room_list': {
+                    this.emit('room_list', msg);
+                    break;
+                }
+
+                case 'error': {
+                    if (msg.code === 'room_not_found' || msg.code === 'room_full' || !msg.code) {
+                        this.clearSession();
+                    }
+                    this.emit('error', msg);
                     break;
                 }
 
@@ -251,11 +291,34 @@ export class NetworkManager extends EventBus<NetworkEvents> {
         }
     }
 
-    public join(name: string, color: ColorDef, blueprintId: string, sessionToken?: string | null): void {
+    public requestRoomList(): void {
+        const msg: RoomListRequestMessage = {
+            type: 'room_list',
+        };
+        this.sendMessage(msg);
+    }
+
+    public createRoom(name: string, options?: Partial<Omit<RoomCreateMessage, 'type' | 'name'>>): void {
+        const msg: RoomCreateMessage = {
+            type: 'room_create',
+            name,
+            ...options,
+        };
+        this.sendMessage(msg);
+    }
+
+    public join(
+        name: string,
+        color: ColorDef,
+        blueprintId: string,
+        roomId: string,
+        sessionToken?: string | null
+    ): void {
         const token = sessionToken || this.sessionToken;
         const msg: RoomJoinMessage = {
             type: 'room_join',
             name,
+            roomId,
             color,
             blueprintId,
             ...(token ? { sessionToken: token } : {}),
@@ -282,12 +345,14 @@ export class NetworkManager extends EventBus<NetworkEvents> {
         });
     }
 
-    public leave(): void {
+    public leave(keepConnection: boolean = false): void {
         this.sendMessage({
             type: 'leave',
         });
         this.clearSession();
-        this.disconnect();
+        if (!keepConnection) {
+            this.disconnect();
+        }
     }
 
     private sendMessage(msg: ClientMessage): void {

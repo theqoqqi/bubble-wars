@@ -300,6 +300,8 @@ export class GameRoom {
         this.players.set(id, player);
         this.playersByToken.set(newSessionToken, player);
 
+        this.adjustBots();
+
         // Send room joined confirmation with session token
         this.sendTo(ws, {
             type: 'room_joined',
@@ -340,8 +342,27 @@ export class GameRoom {
         return count;
     }
 
+    public getTotalPlayerCount(): number {
+        return this.getActivePlayerCount() + this.bots.length;
+    }
+
     public isEmpty(): boolean {
         return this.getActivePlayerCount() === 0;
+    }
+
+    public hasPlayerToken(token: string): boolean {
+        return this.playersByToken.has(token);
+    }
+
+    public adjustBots(): void {
+        const availableSlots = Math.max(0, this.maxPlayers - this.getActivePlayerCount());
+        const targetBotCount = Math.min(this.botCount, availableSlots);
+
+        if (this.bots.length < targetBotCount) {
+            this.addBots(targetBotCount - this.bots.length);
+        } else if (this.bots.length > targetBotCount) {
+            this.removeBots(this.bots.length - targetBotCount, true);
+        }
     }
 
     public getRoomInfo(): RoomInfo {
@@ -434,6 +455,8 @@ export class GameRoom {
                 type: 'player_left',
                 playerId,
             });
+
+            this.adjustBots();
         }
     }
 
@@ -629,19 +652,13 @@ export class GameRoom {
 
     private respawnAllBots(): void {
         this.removeBots(this.bots.length, false);
-        this.addBots(this.botCount);
+        this.adjustBots();
     }
 
     public setBotCount(targetCount: number): number {
-        const count = Math.max(0, Math.min(15, Math.floor(targetCount)));
+        const count = Math.max(0, Math.min(this.maxPlayers, Math.floor(targetCount)));
         this.botCount = count;
-
-        if (this.bots.length < count) {
-            this.addBots(count - this.bots.length);
-        } else if (this.bots.length > count) {
-            this.removeBots(this.bots.length - count, true);
-        }
-
+        this.adjustBots();
         return this.bots.length;
     }
 

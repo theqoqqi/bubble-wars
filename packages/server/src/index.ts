@@ -52,8 +52,70 @@ wss.on('connection', (ws: WebSocket) => {
             const msg: ClientMessage = JSON.parse(raw.toString());
 
             switch (msg.type) {
+                case 'room_list': {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(
+                            JSON.stringify({
+                                type: 'room_list',
+                                rooms: roomManager.getPublicRoomInfos(),
+                            })
+                        );
+                    }
+                    break;
+                }
+
+                case 'room_create': {
+                    const cleanName = (msg.name || 'Мыльная Арена').trim().slice(0, 32);
+                    const room = roomManager.createRoom(undefined, {
+                        name: cleanName,
+                        maxPlayers: msg.maxPlayers,
+                        botCount: msg.botCount,
+                        fragLimit: msg.fragLimit,
+                    });
+
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(
+                            JSON.stringify({
+                                type: 'room_created',
+                                roomId: room.roomId,
+                                roomName: room.roomName,
+                            })
+                        );
+                    }
+                    break;
+                }
+
                 case 'room_join': {
-                    const room = roomManager.getOrCreateDefaultRoom();
+                    const room = roomManager.getRoom(msg.roomId);
+
+                    if (!room) {
+                        if (ws.readyState === WebSocket.OPEN) {
+                            ws.send(
+                                JSON.stringify({
+                                    type: 'error',
+                                    code: 'room_not_found',
+                                    message: 'Комната не найдена или была закрыта',
+                                })
+                            );
+                        }
+                        break;
+                    }
+
+                    const isFull = room.getActivePlayerCount() >= room.maxPlayers;
+                    const isReconnecting = !!msg.sessionToken && room.hasPlayerToken(msg.sessionToken);
+
+                    if (isFull && !isReconnecting) {
+                        if (ws.readyState === WebSocket.OPEN) {
+                            ws.send(
+                                JSON.stringify({
+                                    type: 'error',
+                                    code: 'room_full',
+                                    message: 'В выбранной комнате достигнут лимит игроков',
+                                })
+                            );
+                        }
+                        break;
+                    }
 
                     const player = room.handlePlayerJoin(
                         ws,

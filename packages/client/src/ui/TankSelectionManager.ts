@@ -172,18 +172,22 @@ export class TankSelectionManager {
         this.redrawAllModalCanvases();
     }
 
+    public onConfirm: ((blueprintId: string) => void) | null = null;
+
     public closeModal(): void {
         if (!this.modalEl) return;
         this.modalEl.classList.add('hidden');
     }
 
-    public selectTank(blueprintId: string): void {
+    public selectTank(blueprintId: string, triggerConfirm: boolean = true): void {
         if (!tankBlueprintRegistry.has(blueprintId)) return;
         this.selectedBlueprintId = blueprintId;
         localStorage.setItem('bubble_selected_tank', blueprintId);
         this.renderMainPreview();
         this.updateActiveCardClass();
-        this.closeModal();
+        if (triggerConfirm && this.onConfirm) {
+            this.onConfirm(blueprintId);
+        }
     }
 
     public renderMainPreview(): void {
