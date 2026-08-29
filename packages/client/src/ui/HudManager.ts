@@ -131,10 +131,22 @@ export class HudManager {
             }
         }
 
-        // 1. Update top bar compact badges (Top-3 + local player if outside top-3)
+        // 1. Update top bar compact badges (Frag limit + Top-3 + local player if outside top-3)
         const container = this.leaderboardContainer;
         if (container) {
             container.innerHTML = '';
+
+            // Frag limit target badge before top-3 players
+            if (this.fragLimit > 0) {
+                const limitCard = document.createElement('div');
+                limitCard.className = 'leaderboard-badge leaderboard-frag-limit-badge';
+                limitCard.title = `Лимит фрагов для победы: ${this.fragLimit}`;
+                limitCard.innerHTML = `
+                    <span class="leaderboard-frag-limit-num">${this.fragLimit}</span>
+                    <span class="leaderboard-frag-limit-label">ЦЕЛЬ</span>
+                `;
+                container.appendChild(limitCard);
+            }
 
             const topCount = 3;
             const topEntries = leaderboard.slice(0, topCount).map((entry, index) => ({

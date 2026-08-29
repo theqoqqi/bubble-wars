@@ -866,11 +866,12 @@ body.crosshair-active .color-dot {
 
 .hud-leaderboard-bar {
     position: absolute;
-    top: 56px;
+    top: 64px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 8px;
+    align-items: center;
+    gap: 10px;
     z-index: 20;
     pointer-events: none;
 }
@@ -971,6 +972,61 @@ body.crosshair-active .color-dot {
     background: rgba(16, 52, 88, 0.95);
     border-color: rgba(53, 224, 255, 0.7);
     box-shadow: 0 0 16px rgba(53, 224, 255, 0.35);
+}
+
+.leaderboard-frag-limit-badge {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 28%, rgba(255, 227, 110, 0.35), rgba(38, 30, 8, 0.96) 75%);
+    border: 2px solid rgba(255, 227, 110, 0.85);
+    box-shadow:
+        0 4px 18px rgba(0, 0, 0, 0.55),
+        0 0 20px rgba(255, 200, 0, 0.45),
+        inset 0 1.5px 3px rgba(255, 255, 255, 0.5);
+    padding: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.leaderboard-frag-limit-num {
+    font-family: var(--font-body);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    color: #ffe36e;
+    text-shadow: 0 0 6px rgba(255, 227, 110, 0.45);
+    letter-spacing: 0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+}
+
+.leaderboard-frag-limit-label {
+    font-family: var(--font-disp);
+    font-size: 8px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 1px;
+    color: #ffe36e;
+    text-shadow: 0 0 4px rgba(255, 200, 0, 0.5);
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    text-align: center;
+    pointer-events: none;
 }
 
 .leaderboard-rank {
