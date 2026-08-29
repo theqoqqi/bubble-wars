@@ -66,9 +66,9 @@ export class GameRoom {
     constructor(roomId: string = 'default', config?: Partial<RoomConfig>) {
         this.roomId = roomId;
         this.roomName = config?.name || 'Основная арена';
-        this.maxPlayers = config?.maxPlayers ?? 16;
-        this.botCount = config?.botCount ?? GAME_CONFIG.BOT.SPAWN_COUNT;
-        this.fragLimit = config?.fragLimit ?? GAME_CONFIG.MATCH.DEFAULT_FRAG_LIMIT;
+        this.maxPlayers = Math.max(2, Math.min(32, config?.maxPlayers ?? 16));
+        this.botCount = Math.max(0, Math.min(this.maxPlayers, config?.botCount ?? GAME_CONFIG.BOT.SPAWN_COUNT));
+        this.fragLimit = Math.max(1, Math.min(100, config?.fragLimit ?? GAME_CONFIG.MATCH.DEFAULT_FRAG_LIMIT));
         this.createdAt = Date.now();
 
         this.physics = new PhysicsWorld();
@@ -247,6 +247,9 @@ export class GameRoom {
                 playerId: player.id,
                 sessionToken: player.sessionToken,
                 roomId: this.roomId,
+                roomName: this.roomName,
+                maxPlayers: this.maxPlayers,
+                botCount: this.botCount,
                 reconnected: true,
                 arena: GAME_CONFIG.ARENA,
                 obstacles: this.physics.getObstacleSnapshots(),
@@ -308,6 +311,9 @@ export class GameRoom {
             playerId: id,
             sessionToken: newSessionToken,
             roomId: this.roomId,
+            roomName: this.roomName,
+            maxPlayers: this.maxPlayers,
+            botCount: this.botCount,
             reconnected: false,
             arena: GAME_CONFIG.ARENA,
             obstacles: this.physics.getObstacleSnapshots(),

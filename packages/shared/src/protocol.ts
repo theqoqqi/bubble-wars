@@ -96,6 +96,9 @@ export interface RoomJoinedMessage {
     playerId: string;
     sessionToken: string;
     roomId: string;
+    roomName: string;
+    maxPlayers: number;
+    botCount: number;
     reconnected?: boolean;
     arena: ArenaBounds;
     obstacles: ObstacleSnapshot[];

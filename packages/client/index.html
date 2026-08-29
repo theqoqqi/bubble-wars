@@ -578,6 +578,7 @@
                     <h2 class="title-bubble create-room-title">СОЗДАТЬ АРЕНУ</h2>
                     <button id="btn-close-create-modal" class="btn-close-modal" aria-label="Закрыть">✕</button>
                 </div>
+
                 <div class="form-group" style="margin-top: 16px">
                     <label class="section-label" for="create-room-name-input">НАЗВАНИЕ АРЕНЫ</label>
                     <input
@@ -588,6 +589,55 @@
                         autocomplete="off"
                     />
                 </div>
+
+                <div class="form-group">
+                    <div class="form-header-row">
+                        <label class="section-label" for="create-room-max-players">СЛОТЫ АРЕНЫ (МАКС. ИГРОКОВ)</label>
+                        <span id="create-room-max-players-val" class="setting-val-badge">16</span>
+                    </div>
+                    <input
+                        id="create-room-max-players"
+                        type="range"
+                        class="bubble-slider"
+                        min="2"
+                        max="16"
+                        step="1"
+                        value="16"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <div class="form-header-row">
+                        <label class="section-label" for="create-room-bots">КОЛИЧЕСТВО БОТОВ</label>
+                        <span id="create-room-bots-val" class="setting-val-badge">8</span>
+                    </div>
+                    <input
+                        id="create-room-bots"
+                        type="range"
+                        class="bubble-slider"
+                        min="0"
+                        max="16"
+                        step="1"
+                        value="8"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <div class="form-header-row">
+                        <label class="section-label" for="create-room-frag-limit">ЛИМИТ ФРАГОВ (ДЛЯ ПОБЕДЫ)</label>
+                        <span id="create-room-frag-limit-val" class="setting-val-badge">10</span>
+                    </div>
+                    <input
+                        id="create-room-frag-limit"
+                        type="range"
+                        class="bubble-slider"
+                        min="3"
+                        max="30"
+                        step="1"
+                        value="10"
+                    />
+                </div>
+
                 <div class="create-room-actions">
                     <button id="btn-create-room-submit" class="btn-bubble btn-full">СОЗДАТЬ АРЕНУ 🚀</button>
                     <button id="btn-create-room-cancel" class="btn-ghost btn-full">ОТМЕНА</button>

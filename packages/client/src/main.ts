@@ -58,6 +58,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Create Room Modal elements
     const createRoomNameInput = document.getElementById('create-room-name-input') as HTMLInputElement;
+    const createRoomMaxPlayers = document.getElementById('create-room-max-players') as HTMLInputElement | null;
+    const createRoomMaxPlayersVal = document.getElementById('create-room-max-players-val');
+    const createRoomBots = document.getElementById('create-room-bots') as HTMLInputElement | null;
+    const createRoomBotsVal = document.getElementById('create-room-bots-val');
+    const createRoomFragLimit = document.getElementById('create-room-frag-limit') as HTMLInputElement | null;
+    const createRoomFragLimitVal = document.getElementById('create-room-frag-limit-val');
     const btnCreateRoomSubmit = document.getElementById('btn-create-room-submit');
     const btnCreateRoomCancel = document.getElementById('btn-create-room-cancel');
     const btnCloseCreateModal = document.getElementById('btn-close-create-modal');
@@ -412,10 +418,54 @@ window.addEventListener('DOMContentLoaded', () => {
     };
 
     // Create Room Modal controls
+    if (createRoomMaxPlayers) {
+        createRoomMaxPlayers.addEventListener('input', () => {
+            const maxVal = parseInt(createRoomMaxPlayers.value, 10) || 16;
+            if (createRoomMaxPlayersVal) createRoomMaxPlayersVal.textContent = maxVal.toString();
+            if (createRoomBots) {
+                createRoomBots.max = maxVal.toString();
+                const currentBotVal = parseInt(createRoomBots.value, 10) || 0;
+                if (currentBotVal > maxVal) {
+                    createRoomBots.value = maxVal.toString();
+                }
+                if (createRoomBotsVal) {
+                    createRoomBotsVal.textContent = createRoomBots.value;
+                }
+            }
+        });
+    }
+
+    if (createRoomBots) {
+        createRoomBots.addEventListener('input', () => {
+            const botVal = parseInt(createRoomBots.value, 10) || 0;
+            if (createRoomBotsVal) createRoomBotsVal.textContent = botVal.toString();
+        });
+    }
+
+    if (createRoomFragLimit) {
+        createRoomFragLimit.addEventListener('input', () => {
+            const fragVal = parseInt(createRoomFragLimit.value, 10) || 10;
+            if (createRoomFragLimitVal) createRoomFragLimitVal.textContent = fragVal.toString();
+        });
+    }
+
     if (btnOpenCreateRoom) {
         btnOpenCreateRoom.addEventListener('click', () => {
             if (createRoomNameInput) {
                 createRoomNameInput.value = `Арена #${Math.floor(100 + Math.random() * 900)}`;
+            }
+            if (createRoomMaxPlayers) {
+                createRoomMaxPlayers.value = '16';
+                if (createRoomMaxPlayersVal) createRoomMaxPlayersVal.textContent = '16';
+            }
+            if (createRoomBots) {
+                createRoomBots.max = '16';
+                createRoomBots.value = '8';
+                if (createRoomBotsVal) createRoomBotsVal.textContent = '8';
+            }
+            if (createRoomFragLimit) {
+                createRoomFragLimit.value = '10';
+                if (createRoomFragLimitVal) createRoomFragLimitVal.textContent = '10';
             }
             createRoomModal?.classList.remove('hidden');
             createRoomNameInput?.focus();
@@ -432,7 +482,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const submitCreateRoom = () => {
         const roomName = createRoomNameInput?.value.trim() || 'Мыльная Арена';
-        networkManager.createRoom(roomName);
+        const maxPlayers = createRoomMaxPlayers ? parseInt(createRoomMaxPlayers.value, 10) : 16;
+        const botCount = createRoomBots ? parseInt(createRoomBots.value, 10) : 8;
+        const fragLimit = createRoomFragLimit ? parseInt(createRoomFragLimit.value, 10) : 10;
+
+        networkManager.createRoom(roomName, {
+            maxPlayers,
+            botCount,
+            fragLimit,
+        });
         closeCreateModal();
     };
 
