@@ -10,6 +10,7 @@ import {
     PlayerJoinedMessage,
     PlayerLeftMessage,
     ProjectilesSpawnMessage,
+    RoomConfigUpdatedMessage,
     TankDespawnMessage,
     TankSpawnMessage,
     WorldStateMessage,
@@ -115,6 +116,7 @@ export class Game {
                 }
             }),
             networkManager.on('host_changed', (data) => this.handleHostChanged(data)),
+            networkManager.on('room_config_updated', (data) => this.handleRoomConfigUpdated(data)),
             networkManager.on('world_state', (data) => this.handleWorldState(data)),
             networkManager.on('projectiles_spawn', (data) => this.handleProjectilesSpawn(data)),
             networkManager.on('player_joined', (data) => this.handlePlayerJoined(data)),
@@ -514,6 +516,12 @@ export class Game {
 
     private handleHostChanged(data: HostChangedMessage): void {
         this.hudManager.setHostId(data.hostId ?? null);
+    }
+
+    private handleRoomConfigUpdated(data: RoomConfigUpdatedMessage): void {
+        if (data.fragLimit) {
+            this.hudManager.updateFragLimit(data.fragLimit);
+        }
     }
 
     private handlePlayerJoined(data: PlayerJoinedMessage): void {

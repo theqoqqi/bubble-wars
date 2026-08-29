@@ -68,6 +68,20 @@ window.addEventListener('DOMContentLoaded', () => {
     const btnCreateRoomCancel = document.getElementById('btn-create-room-cancel');
     const btnCloseCreateModal = document.getElementById('btn-close-create-modal');
 
+    // Edit Room Modal elements (Host only)
+    const editRoomModal = document.getElementById('edit-room-modal');
+    const editRoomNameInput = document.getElementById('edit-room-name-input') as HTMLInputElement | null;
+    const editRoomMaxPlayers = document.getElementById('edit-room-max-players') as HTMLInputElement | null;
+    const editRoomMaxPlayersVal = document.getElementById('edit-room-max-players-val');
+    const editRoomBots = document.getElementById('edit-room-bots') as HTMLInputElement | null;
+    const editRoomBotsVal = document.getElementById('edit-room-bots-val');
+    const editRoomFragLimit = document.getElementById('edit-room-frag-limit') as HTMLInputElement | null;
+    const editRoomFragLimitVal = document.getElementById('edit-room-frag-limit-val');
+    const btnEditRoomSave = document.getElementById('btn-edit-room-save');
+    const btnEditRoomCancel = document.getElementById('btn-edit-room-cancel');
+    const btnCloseEditModal = document.getElementById('btn-close-edit-modal');
+    const btnGameOverHostConfig = document.getElementById('btn-gameover-host-config');
+
     // Tank Modal elements
     const tankModalSubtitle = document.getElementById('tank-modal-subtitle');
     const btnTankConfirmJoin = document.getElementById('btn-tank-confirm-join');
@@ -92,6 +106,12 @@ window.addEventListener('DOMContentLoaded', () => {
     let currentSelectedRoomId: string | null = null;
     let currentRoomName: string = '';
     let lobbyPollTimer: number | null = null;
+    let currentRoomConfig = {
+        name: 'Основная арена',
+        maxPlayers: 16,
+        botCount: 8,
+        fragLimit: 10,
+    };
 
     // Pre-fill server address input
     if (serverInput) {
@@ -505,6 +525,96 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Edit Room Modal controls (Host only)
+    if (editRoomMaxPlayers) {
+        editRoomMaxPlayers.addEventListener('input', () => {
+            const maxVal = parseInt(editRoomMaxPlayers.value, 10) || 16;
+            if (editRoomMaxPlayersVal) editRoomMaxPlayersVal.textContent = maxVal.toString();
+            if (editRoomBots) {
+                editRoomBots.max = maxVal.toString();
+                const currentBotVal = parseInt(editRoomBots.value, 10) || 0;
+                if (currentBotVal > maxVal) {
+                    editRoomBots.value = maxVal.toString();
+                }
+                if (editRoomBotsVal) {
+                    editRoomBotsVal.textContent = editRoomBots.value;
+                }
+            }
+        });
+    }
+
+    if (editRoomBots) {
+        editRoomBots.addEventListener('input', () => {
+            const botVal = parseInt(editRoomBots.value, 10) || 0;
+            if (editRoomBotsVal) editRoomBotsVal.textContent = botVal.toString();
+        });
+    }
+
+    if (editRoomFragLimit) {
+        editRoomFragLimit.addEventListener('input', () => {
+            const fragVal = parseInt(editRoomFragLimit.value, 10) || 10;
+            if (editRoomFragLimitVal) editRoomFragLimitVal.textContent = fragVal.toString();
+        });
+    }
+
+    const openEditModal = () => {
+        if (!networkManager.isHost) return;
+        if (editRoomNameInput) editRoomNameInput.value = currentRoomConfig.name;
+        if (editRoomMaxPlayers) {
+            editRoomMaxPlayers.value = currentRoomConfig.maxPlayers.toString();
+            if (editRoomMaxPlayersVal) editRoomMaxPlayersVal.textContent = currentRoomConfig.maxPlayers.toString();
+        }
+        if (editRoomBots) {
+            editRoomBots.max = currentRoomConfig.maxPlayers.toString();
+            editRoomBots.value = currentRoomConfig.botCount.toString();
+            if (editRoomBotsVal) editRoomBotsVal.textContent = currentRoomConfig.botCount.toString();
+        }
+        if (editRoomFragLimit) {
+            editRoomFragLimit.value = currentRoomConfig.fragLimit.toString();
+            if (editRoomFragLimitVal) editRoomFragLimitVal.textContent = currentRoomConfig.fragLimit.toString();
+        }
+        editRoomModal?.classList.remove('hidden');
+        editRoomNameInput?.focus();
+        editRoomNameInput?.select();
+    };
+
+    const closeEditModal = () => {
+        editRoomModal?.classList.add('hidden');
+    };
+
+    if (btnGameOverHostConfig) {
+        btnGameOverHostConfig.addEventListener('click', openEditModal);
+    }
+    if (btnEditRoomCancel) btnEditRoomCancel.addEventListener('click', closeEditModal);
+    if (btnCloseEditModal) btnCloseEditModal.addEventListener('click', closeEditModal);
+
+    const submitEditRoom = () => {
+        if (!networkManager.isHost) return;
+        const name = editRoomNameInput?.value.trim() || currentRoomConfig.name;
+        const maxPlayers = editRoomMaxPlayers ? parseInt(editRoomMaxPlayers.value, 10) : currentRoomConfig.maxPlayers;
+        const botCount = editRoomBots ? parseInt(editRoomBots.value, 10) : currentRoomConfig.botCount;
+        const fragLimit = editRoomFragLimit ? parseInt(editRoomFragLimit.value, 10) : currentRoomConfig.fragLimit;
+
+        networkManager.updateRoomConfig({
+            name,
+            maxPlayers,
+            botCount,
+            fragLimit,
+        });
+        closeEditModal();
+    };
+
+    if (btnEditRoomSave) {
+        btnEditRoomSave.addEventListener('click', submitEditRoom);
+    }
+    if (editRoomNameInput) {
+        editRoomNameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                submitEditRoom();
+            }
+        });
+    }
+
     // Join room with selected tank
     const joinCurrentRoom = (sessionToken?: string) => {
         if (!currentSelectedRoomId) return;
@@ -555,8 +665,25 @@ window.addEventListener('DOMContentLoaded', () => {
         tankSelectionManager.openModal();
     });
 
-    networkManager.on('room_joined', () => {
+    networkManager.on('room_joined', (msg) => {
+        currentRoomConfig = {
+            name: msg.roomName || currentRoomConfig.name,
+            maxPlayers: msg.maxPlayers || currentRoomConfig.maxPlayers,
+            botCount: msg.botCount !== undefined ? msg.botCount : currentRoomConfig.botCount,
+            fragLimit: msg.fragLimit || currentRoomConfig.fragLimit,
+        };
+        currentRoomName = msg.roomName || currentRoomName;
         showScreen('game');
+    });
+
+    networkManager.on('room_config_updated', (msg) => {
+        currentRoomConfig = {
+            name: msg.name,
+            maxPlayers: msg.maxPlayers,
+            botCount: msg.botCount,
+            fragLimit: msg.fragLimit,
+        };
+        currentRoomName = msg.name;
     });
 
     networkManager.on('error', (msg) => {
@@ -592,6 +719,10 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             if (createRoomModal && !createRoomModal.classList.contains('hidden')) {
                 closeCreateModal();
+                return;
+            }
+            if (editRoomModal && !editRoomModal.classList.contains('hidden')) {
+                closeEditModal();
                 return;
             }
             toggleLeaveModal();

@@ -532,6 +532,14 @@
                             РЕВАНШ
                         </button>
                         <button
+                            id="btn-gameover-host-config"
+                            class="btn-ghost hidden"
+                            style="padding: 14px 20px; font-size: 16px"
+                            title="Изменить параметры арены (только для хоста)"
+                        >
+                            ⚙️ Настройки
+                        </button>
+                        <button
                             id="btn-gameover-menu"
                             class="btn-ghost"
                             style="padding: 14px 24px; font-size: 16px"
@@ -642,6 +650,80 @@
                 <div class="create-room-actions">
                     <button id="btn-create-room-submit" class="btn-bubble btn-full">СОЗДАТЬ АРЕНУ 🚀</button>
                     <button id="btn-create-room-cancel" class="btn-ghost btn-full">ОТМЕНА</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Room Config Modal Overlay (Host only) -->
+        <div id="edit-room-modal" class="overlay hidden" style="z-index: 170">
+            <div class="panel rise-in create-room-card">
+                <div class="create-room-header">
+                    <h2 class="title-bubble create-room-title">НАСТРОЙКИ АРЕНЫ</h2>
+                    <button id="btn-close-edit-modal" class="btn-close-modal" aria-label="Закрыть">✕</button>
+                </div>
+
+                <div class="form-group" style="margin-top: 16px">
+                    <label class="section-label" for="edit-room-name-input">НАЗВАНИЕ АРЕНЫ</label>
+                    <input
+                        id="edit-room-name-input"
+                        class="name-input player-input-style"
+                        placeholder="Название арены"
+                        maxlength="24"
+                        autocomplete="off"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <div class="form-header-row">
+                        <label class="section-label" for="edit-room-max-players">СЛОТЫ АРЕНЫ (МАКС. ИГРОКОВ)</label>
+                        <span id="edit-room-max-players-val" class="setting-val-badge">16</span>
+                    </div>
+                    <input
+                        id="edit-room-max-players"
+                        type="range"
+                        class="bubble-slider"
+                        min="2"
+                        max="16"
+                        step="1"
+                        value="16"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <div class="form-header-row">
+                        <label class="section-label" for="edit-room-bots">КОЛИЧЕСТВО БОТОВ</label>
+                        <span id="edit-room-bots-val" class="setting-val-badge">8</span>
+                    </div>
+                    <input
+                        id="edit-room-bots"
+                        type="range"
+                        class="bubble-slider"
+                        min="0"
+                        max="16"
+                        step="1"
+                        value="8"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <div class="form-header-row">
+                        <label class="section-label" for="edit-room-frag-limit">ЛИМИТ ФРАГОВ (ДЛЯ ПОБЕДЫ)</label>
+                        <span id="edit-room-frag-limit-val" class="setting-val-badge">10</span>
+                    </div>
+                    <input
+                        id="edit-room-frag-limit"
+                        type="range"
+                        class="bubble-slider"
+                        min="3"
+                        max="30"
+                        step="1"
+                        value="10"
+                    />
+                </div>
+
+                <div class="create-room-actions">
+                    <button id="btn-edit-room-save" class="btn-bubble btn-full">СОХРАНИТЬ И ПРИМЕНИТЬ 💾</button>
+                    <button id="btn-edit-room-cancel" class="btn-ghost btn-full">ОТМЕНА</button>
                 </div>
             </div>
         </div>

@@ -12,6 +12,8 @@ import {
     PlayerLeftMessage,
     PlayerInput,
     ProjectilesSpawnMessage,
+    RoomConfigUpdateMessage,
+    RoomConfigUpdatedMessage,
     RoomCreateMessage,
     RoomCreatedMessage,
     RoomJoinedMessage,
@@ -28,6 +30,7 @@ export interface NetworkEvents {
     room_joined: RoomJoinedMessage;
     room_created: RoomCreatedMessage;
     room_list: RoomListMessage;
+    room_config_updated: RoomConfigUpdatedMessage;
     host_changed: HostChangedMessage;
     error: ErrorMessage;
     world_state: WorldStateMessage;
@@ -233,6 +236,11 @@ export class NetworkManager extends EventBus<NetworkEvents> {
                     break;
                 }
 
+                case 'room_config_updated': {
+                    this.emit('room_config_updated', msg);
+                    break;
+                }
+
                 case 'host_changed': {
                     this.hostId = msg.hostId;
                     this.emit('host_changed', msg);
@@ -319,6 +327,14 @@ export class NetworkManager extends EventBus<NetworkEvents> {
             type: 'room_create',
             name,
             ...options,
+        };
+        this.sendMessage(msg);
+    }
+
+    public updateRoomConfig(config: Partial<Omit<RoomConfigUpdateMessage, 'type'>>): void {
+        const msg: RoomConfigUpdateMessage = {
+            type: 'room_config_update',
+            ...config,
         };
         this.sendMessage(msg);
     }

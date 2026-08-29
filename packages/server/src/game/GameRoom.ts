@@ -391,6 +391,58 @@ export class GameRoom {
         };
     }
 
+    public updateConfigByHost(
+        playerId: string,
+        config: { name?: string; maxPlayers?: number; botCount?: number; fragLimit?: number }
+    ): boolean {
+        if (playerId !== this.hostId) {
+            console.warn(
+                `⚠️ [Room ${this.roomId}] Player ${playerId} tried to update config, but is not the host (${this.hostId})`
+            );
+            return false;
+        }
+
+        if (!this.isMatchOver) {
+            console.warn(`⚠️ [Room ${this.roomId}] Host tried to update config during active match. Rejected.`);
+            return false;
+        }
+
+        if (config.name && typeof config.name === 'string') {
+            const cleanName = config.name.trim().slice(0, 32);
+            if (cleanName.length > 0) {
+                this.roomName = cleanName;
+            }
+        }
+
+        if (typeof config.maxPlayers === 'number') {
+            this.maxPlayers = Math.max(2, Math.min(32, Math.floor(config.maxPlayers)));
+        }
+
+        if (typeof config.botCount === 'number') {
+            this.botCount = Math.max(0, Math.min(this.maxPlayers, Math.floor(config.botCount)));
+        }
+
+        if (typeof config.fragLimit === 'number') {
+            this.fragLimit = Math.max(1, Math.min(100, Math.floor(config.fragLimit)));
+        }
+
+        this.adjustBots();
+
+        console.log(
+            `⚙️ [Room ${this.roomId}] Host updated config: Name="${this.roomName}", MaxPlayers=${this.maxPlayers}, BotCount=${this.botCount}, FragLimit=${this.fragLimit}`
+        );
+
+        this.broadcast({
+            type: 'room_config_updated',
+            name: this.roomName,
+            maxPlayers: this.maxPlayers,
+            botCount: this.botCount,
+            fragLimit: this.fragLimit,
+        });
+
+        return true;
+    }
+
     public handlePlayerRematch(playerId: string): void {
         if (this.isMatchOver) {
             console.log(`🔄 [Rematch] Player ${playerId} requested rematch. Resetting arena!`);
@@ -668,8 +720,12 @@ export class GameRoom {
 
         this.broadcast(worldStateMsg);
 
-        // Auto-restart next match after delay if game over
-        if (this.isMatchOver && now - this.matchOverTime > GAME_CONFIG.MATCH.AUTO_RESET_DELAY_MS) {
+        // Auto-restart next match after delay only if room is empty of human players
+        if (
+            this.isMatchOver &&
+            this.getActivePlayerCount() === 0 &&
+            now - this.matchOverTime > GAME_CONFIG.MATCH.AUTO_RESET_DELAY_MS
+        ) {
             this.resetArena();
         }
     }

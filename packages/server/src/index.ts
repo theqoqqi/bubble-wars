@@ -153,6 +153,19 @@ wss.on('connection', (ws: WebSocket) => {
                     break;
                 }
 
+                case 'room_config_update': {
+                    const session = wsSessions.get(ws);
+                    if (session) {
+                        session.room.updateConfigByHost(session.playerId, {
+                            name: msg.name,
+                            maxPlayers: msg.maxPlayers,
+                            botCount: msg.botCount,
+                            fragLimit: msg.fragLimit,
+                        });
+                    }
+                    break;
+                }
+
                 case 'leave': {
                     const session = wsSessions.get(ws);
                     if (session) {

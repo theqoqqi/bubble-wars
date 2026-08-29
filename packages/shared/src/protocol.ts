@@ -57,10 +57,19 @@ export interface LeaveMessage {
     type: 'leave';
 }
 
+export interface RoomConfigUpdateMessage {
+    type: 'room_config_update';
+    name?: string;
+    maxPlayers?: number;
+    botCount?: number;
+    fragLimit?: number;
+}
+
 export type ClientMessage =
     | RoomJoinMessage
     | RoomCreateMessage
     | RoomListRequestMessage
+    | RoomConfigUpdateMessage
     | InputMessage
     | PingMessage
     | RespawnMessage
@@ -121,6 +130,14 @@ export interface RoomCreatedMessage {
     type: 'room_created';
     roomId: string;
     roomName: string;
+}
+
+export interface RoomConfigUpdatedMessage {
+    type: 'room_config_updated';
+    name: string;
+    maxPlayers: number;
+    botCount: number;
+    fragLimit: number;
 }
 
 export interface RoomListMessage {
@@ -215,6 +232,7 @@ export type ServerMessage =
     | RoomJoinedMessage
     | RoomCreatedMessage
     | RoomListMessage
+    | RoomConfigUpdatedMessage
     | HostChangedMessage
     | ErrorMessage
     | WorldStateMessage

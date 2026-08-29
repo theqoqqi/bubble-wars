@@ -32,6 +32,7 @@ export class HudManager {
     private gameoverSubtitle = document.getElementById('gameover-subtitle');
     private gameoverCrown = document.getElementById('gameover-crown');
     private gameoverLeaderboard = document.getElementById('gameover-leaderboard');
+    private btnGameOverHostConfig = document.getElementById('btn-gameover-host-config');
 
     // In-game Tab Overlay Elements & State
     private tabStatsOverlay = document.getElementById('tab-stats-overlay');
@@ -52,6 +53,13 @@ export class HudManager {
                 this.hudHostBadge.classList.remove('hidden');
             } else {
                 this.hudHostBadge.classList.add('hidden');
+            }
+        }
+        if (this.btnGameOverHostConfig) {
+            if (isMyHost && this.gameoverModal && !this.gameoverModal.classList.contains('hidden')) {
+                this.btnGameOverHostConfig.classList.remove('hidden');
+            } else {
+                this.btnGameOverHostConfig.classList.add('hidden');
             }
         }
         if (this.isTabVisible) {
@@ -389,6 +397,15 @@ export class HudManager {
         `;
                 })
                 .join('');
+        }
+
+        if (this.btnGameOverHostConfig) {
+            const isHost = !!(this.lastHostId && myId && this.lastHostId === myId);
+            if (isHost) {
+                this.btnGameOverHostConfig.classList.remove('hidden');
+            } else {
+                this.btnGameOverHostConfig.classList.add('hidden');
+            }
         }
 
         if (this.gameoverModal) this.gameoverModal.classList.remove('hidden');

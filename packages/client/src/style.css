@@ -449,7 +449,12 @@ body.crosshair-active .color-dot {
         visibility 0.25s ease;
 }
 
+.hidden {
+    display: none !important;
+}
+
 .overlay.hidden {
+    display: flex !important;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -466,7 +471,7 @@ body.crosshair-active .color-dot {
 }
 
 .hud-container.hidden {
-    display: none;
+    display: none !important;
 }
 
 /* ---------- Menu / Join Modal Layout Classes ---------- */
