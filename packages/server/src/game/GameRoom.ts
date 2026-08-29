@@ -492,6 +492,7 @@ export class GameRoom {
 
             // 4.2. Projectiles lifetime & cleanup
             for (let i = this.projectiles.length - 1; i >= 0; i--) {
+                if (this.isMatchOver) break;
                 const proj = this.projectiles[i];
                 if (proj.isDestroyed || proj.isExpired(now)) {
                     if (!proj.isDestroyed && proj.isExpired(now)) {
