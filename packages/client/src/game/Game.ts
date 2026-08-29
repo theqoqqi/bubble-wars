@@ -69,7 +69,7 @@ export class Game {
 
     private setupNetwork(): void {
         this.unsubscribers.push(
-            networkManager.on('welcome', (data) => {
+            networkManager.on('room_joined', (data) => {
                 this.clientObstacles.clear();
                 if (data.obstacles) {
                     for (const o of data.obstacles) {

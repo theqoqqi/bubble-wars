@@ -14,12 +14,12 @@ import {
     ServerMessage,
     TankDespawnMessage,
     TankSpawnMessage,
-    WelcomeMessage,
+    RoomJoinedMessage,
     WorldStateMessage,
 } from '@bubble-wars/shared';
 
 export interface NetworkEvents {
-    welcome: WelcomeMessage;
+    room_joined: RoomJoinedMessage;
     world_state: WorldStateMessage;
     projectiles_spawn: ProjectilesSpawnMessage;
     player_joined: PlayerJoinedMessage;
@@ -181,13 +181,13 @@ export class NetworkManager extends EventBus<NetworkEvents> {
             const msg: ServerMessage = JSON.parse(dataStr);
 
             switch (msg.type) {
-                case 'welcome': {
+                case 'room_joined': {
                     this.playerId = msg.playerId;
                     if (msg.sessionToken) {
                         this.sessionToken = msg.sessionToken;
                         sessionStorage.setItem('bubble_session_token', msg.sessionToken);
                     }
-                    this.emit('welcome', msg);
+                    this.emit('room_joined', msg);
                     break;
                 }
 

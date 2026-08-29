@@ -228,9 +228,9 @@ export class GameRoom {
                 seq: 0,
             };
 
-            // Send welcome confirmation with existing playerId, sessionToken and reconnected flag
+            // Send room joined confirmation with existing playerId, sessionToken and reconnected flag
             this.sendTo(ws, {
-                type: 'welcome',
+                type: 'room_joined',
                 playerId: player.id,
                 sessionToken: player.sessionToken,
                 reconnected: true,
@@ -286,9 +286,9 @@ export class GameRoom {
         this.players.set(id, player);
         this.playersByToken.set(newSessionToken, player);
 
-        // Send welcome with session token
+        // Send room joined confirmation with session token
         this.sendTo(ws, {
-            type: 'welcome',
+            type: 'room_joined',
             playerId: id,
             sessionToken: newSessionToken,
             reconnected: false,

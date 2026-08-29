@@ -59,8 +59,8 @@ export interface KillerInfo {
 }
 
 // Server -> Client
-export interface WelcomeMessage {
-    type: 'welcome';
+export interface RoomJoinedMessage {
+    type: 'room_joined';
     playerId: string;
     sessionToken: string;
     reconnected?: boolean;
@@ -152,7 +152,7 @@ export interface TankDespawnMessage {
 }
 
 export type ServerMessage =
-    | WelcomeMessage
+    | RoomJoinedMessage
     | WorldStateMessage
     | BubblePopMessage
     | PongMessage
