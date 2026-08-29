@@ -1262,6 +1262,36 @@ body.crosshair-active .color-dot {
     flex-shrink: 0;
 }
 
+.gameover-badge-host {
+    background: rgba(255, 180, 0, 0.18);
+    color: #ffc400;
+    border: 1px solid rgba(255, 196, 0, 0.45);
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 700;
+    flex-shrink: 0;
+    letter-spacing: 0.3px;
+}
+
+.hud-host-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 180, 0, 0.15);
+    color: #ffc400;
+    border: 1px solid rgba(255, 196, 0, 0.4);
+    font-family: var(--font-disp);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    box-shadow: 0 0 10px rgba(255, 180, 0, 0.25);
+    text-shadow: 0 0 8px rgba(255, 196, 0, 0.4);
+    transition: opacity 0.2s ease;
+}
+
 .gameover-col-stat {
     font-family: var(--font-body);
     font-size: 14px;

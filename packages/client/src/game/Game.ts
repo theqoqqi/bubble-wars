@@ -3,6 +3,7 @@ import {
     GAME_CONFIG,
     GameOverMessage,
     GunBarrelDef,
+    HostChangedMessage,
     ImpactEvent,
     KillEventMessage,
     PlayerInfo,
@@ -98,6 +99,7 @@ export class Game {
                 }
 
                 const myId = data.playerId;
+                this.hudManager.setHostId(data.hostId ?? null);
                 const isMyTankAlive = (data.tanks ?? []).some(
                     (s) => s.id === myId || s.playerId === myId
                 );
@@ -112,6 +114,7 @@ export class Game {
                     this.hudManager.showDeathModal(data.score ?? 0, this.lastKiller);
                 }
             }),
+            networkManager.on('host_changed', (data) => this.handleHostChanged(data)),
             networkManager.on('world_state', (data) => this.handleWorldState(data)),
             networkManager.on('projectiles_spawn', (data) => this.handleProjectilesSpawn(data)),
             networkManager.on('player_joined', (data) => this.handlePlayerJoined(data)),
@@ -507,6 +510,10 @@ export class Game {
                 soundFx.playShoot(typeId);
             }
         }
+    }
+
+    private handleHostChanged(data: HostChangedMessage): void {
+        this.hudManager.setHostId(data.hostId ?? null);
     }
 
     private handlePlayerJoined(data: PlayerJoinedMessage): void {

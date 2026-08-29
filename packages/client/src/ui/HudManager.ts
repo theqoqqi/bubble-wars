@@ -21,6 +21,7 @@ export class HudManager {
     private pingEl = document.getElementById('hud-ping');
     private netInEl = document.getElementById('hud-net-in');
     private netPacketEl = document.getElementById('hud-net-packet');
+    private hudHostBadge = document.getElementById('hud-host-badge');
     private leaderboardContainer = document.getElementById('leaderboard-container');
     private killFeed = document.getElementById('kill-feed');
     private deathModal = document.getElementById('death-modal');
@@ -40,7 +41,23 @@ export class HudManager {
     private lastLeaderboard: LeaderboardEntry[] = [];
     private lastPlayersInfo: Map<string, PlayerInfo> = new Map();
     private lastMyId: string | null = null;
+    private lastHostId: string | null = null;
     private fragLimit: number = 10;
+
+    public setHostId(hostId: string | null): void {
+        this.lastHostId = hostId;
+        const isMyHost = !!(hostId && this.lastMyId && hostId === this.lastMyId);
+        if (this.hudHostBadge) {
+            if (isMyHost) {
+                this.hudHostBadge.classList.remove('hidden');
+            } else {
+                this.hudHostBadge.classList.add('hidden');
+            }
+        }
+        if (this.isTabVisible) {
+            this.renderTabStats();
+        }
+    }
 
     public updatePlayerHUD(hp: number, maxHp: number): void {
         const pct = maxHp > 0 ? Math.max(0, Math.round((hp / maxHp) * 100)) : 0;
@@ -202,12 +219,14 @@ export class HudManager {
         this.tabStatsLeaderboard.innerHTML = list
             .map((pl: LeaderboardEntry, i: number) => {
                 const isPlayer = pl.id === this.lastMyId;
+                const isHost = pl.id === this.lastHostId;
                 const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
                 const badge = isPlayer
                     ? '<span class="gameover-badge-you">ВЫ</span>'
                     : pl.isBot
                     ? '<span class="gameover-badge-bot">BOT</span>'
                     : '';
+                const hostBadge = isHost ? '<span class="gameover-badge-host" title="Хост арены">ХОСТ</span>' : '';
                 const bpId = this.lastPlayersInfo.get(pl.id)?.blueprintId;
                 const bp = bpId ? tankBlueprintRegistry.get(bpId) : null;
                 const tankName = bp ? bp.name : 'Танк';
@@ -221,6 +240,7 @@ export class HudManager {
                 <div class="gameover-name-row">
                   <span class="gameover-row-name">${pl.name}</span>
                   ${badge}
+                  ${hostBadge}
                 </div>
                 <span class="gameover-row-tank">${tankName}</span>
               </div>
@@ -321,12 +341,14 @@ export class HudManager {
             this.gameoverLeaderboard.innerHTML = list
                 .map((pl: LeaderboardEntry, i: number) => {
                     const isPlayer = pl.id === myId;
+                    const isHost = pl.id === this.lastHostId;
                     const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
                     const badge = isPlayer
                         ? '<span class="gameover-badge-you">ВЫ</span>'
                         : pl.isBot
                         ? '<span class="gameover-badge-bot">BOT</span>'
                         : '';
+                    const hostBadge = isHost ? '<span class="gameover-badge-host" title="Хост арены">ХОСТ</span>' : '';
                     const bpId = this.lastPlayersInfo.get(pl.id)?.blueprintId;
                     const bp = bpId ? tankBlueprintRegistry.get(bpId) : null;
                     const tankName = bp ? bp.name : 'Танк';
@@ -340,6 +362,7 @@ export class HudManager {
                 <div class="gameover-name-row">
                   <span class="gameover-row-name">${pl.name}</span>
                   ${badge}
+                  ${hostBadge}
                 </div>
                 <span class="gameover-row-tank">${tankName}</span>
               </div>

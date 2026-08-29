@@ -5,6 +5,7 @@ import {
     ErrorMessage,
     EventBus,
     GameOverMessage,
+    HostChangedMessage,
     ImpactEvent,
     KillEventMessage,
     PlayerJoinedMessage,
@@ -27,6 +28,7 @@ export interface NetworkEvents {
     room_joined: RoomJoinedMessage;
     room_created: RoomCreatedMessage;
     room_list: RoomListMessage;
+    host_changed: HostChangedMessage;
     error: ErrorMessage;
     world_state: WorldStateMessage;
     projectiles_spawn: ProjectilesSpawnMessage;
@@ -47,11 +49,16 @@ export class NetworkManager extends EventBus<NetworkEvents> {
     public playerId: string | null = null;
     public sessionToken: string | null = null;
     public roomId: string | null = null;
+    public hostId: string | null = null;
     public latency: number = 0;
     public inboundKbps: number = 0;
     public avgPacketBytes: number = 0;
     public packetsPerSec: number = 0;
     public lastPacketBytes: number = 0;
+
+    public get isHost(): boolean {
+        return this.hostId !== null && this.hostId === this.playerId;
+    }
 
     private bytesInWindow: number = 0;
     private packetsInWindow: number = 0;
@@ -170,11 +177,13 @@ export class NetworkManager extends EventBus<NetworkEvents> {
             this.ws = null;
         }
         this.playerId = null;
+        this.hostId = null;
     }
 
     public clearSession(): void {
         this.sessionToken = null;
         this.roomId = null;
+        this.hostId = null;
         sessionStorage.removeItem('bubble_session_token');
         sessionStorage.removeItem('bubble_room_id');
         sessionStorage.removeItem('bubble_game_active');
@@ -204,6 +213,7 @@ export class NetworkManager extends EventBus<NetworkEvents> {
                 case 'room_joined': {
                     this.playerId = msg.playerId;
                     this.roomId = msg.roomId;
+                    this.hostId = msg.hostId || null;
                     if (msg.sessionToken) {
                         this.sessionToken = msg.sessionToken;
                         sessionStorage.setItem('bubble_session_token', msg.sessionToken);
@@ -220,6 +230,12 @@ export class NetworkManager extends EventBus<NetworkEvents> {
 
                 case 'room_list': {
                     this.emit('room_list', msg);
+                    break;
+                }
+
+                case 'host_changed': {
+                    this.hostId = msg.hostId;
+                    this.emit('host_changed', msg);
                     break;
                 }
 

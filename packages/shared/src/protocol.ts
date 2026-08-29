@@ -96,6 +96,7 @@ export interface RoomJoinedMessage {
     playerId: string;
     sessionToken: string;
     roomId: string;
+    hostId: string | null;
     roomName: string;
     maxPlayers: number;
     botCount: number;
@@ -108,6 +109,12 @@ export interface RoomJoinedMessage {
     isDead?: boolean;
     score?: number;
     killer?: KillerInfo | null;
+}
+
+export interface HostChangedMessage {
+    type: 'host_changed';
+    hostId: string | null;
+    hostName?: string;
 }
 
 export interface RoomCreatedMessage {
@@ -208,6 +215,7 @@ export type ServerMessage =
     | RoomJoinedMessage
     | RoomCreatedMessage
     | RoomListMessage
+    | HostChangedMessage
     | ErrorMessage
     | WorldStateMessage
     | BubblePopMessage

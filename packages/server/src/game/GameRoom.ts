@@ -35,6 +35,7 @@ interface ConnectedPlayer {
 export class GameRoom {
     public readonly roomId: string;
     public roomName: string;
+    public hostId: string | null = null;
     public maxPlayers: number;
     public readonly createdAt: number;
     public physics: PhysicsWorld;
@@ -247,6 +248,7 @@ export class GameRoom {
                 playerId: player.id,
                 sessionToken: player.sessionToken,
                 roomId: this.roomId,
+                hostId: this.hostId,
                 roomName: this.roomName,
                 maxPlayers: this.maxPlayers,
                 botCount: this.botCount,
@@ -303,6 +305,11 @@ export class GameRoom {
         this.players.set(id, player);
         this.playersByToken.set(newSessionToken, player);
 
+        // First joined player becomes room host
+        if (this.hostId === null) {
+            this.hostId = id;
+        }
+
         this.adjustBots();
 
         // Send room joined confirmation with session token
@@ -311,6 +318,7 @@ export class GameRoom {
             playerId: id,
             sessionToken: newSessionToken,
             roomId: this.roomId,
+            hostId: this.hostId,
             roomName: this.roomName,
             maxPlayers: this.maxPlayers,
             botCount: this.botCount,
@@ -461,6 +469,31 @@ export class GameRoom {
                 type: 'player_left',
                 playerId,
             });
+
+            // Host migration: if the completely removed player was the host, transfer host to next active human player
+            if (playerId === this.hostId) {
+                let nextHost: ConnectedPlayer | null = null;
+                for (const other of this.players.values()) {
+                    if (other.id !== playerId && other.ws !== null) {
+                        nextHost = other;
+                        break;
+                    }
+                }
+
+                if (nextHost) {
+                    this.hostId = nextHost.id;
+                    console.log(
+                        `👑 [Host Migration] Room "${this.roomName}" (${this.roomId}): host transferred to "${nextHost.tank.name}" (${nextHost.id})`
+                    );
+                    this.broadcast({
+                        type: 'host_changed',
+                        hostId: this.hostId,
+                        hostName: nextHost.tank.name,
+                    });
+                } else {
+                    this.hostId = null;
+                }
+            }
 
             this.adjustBots();
         }
