@@ -502,30 +502,75 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const STORAGE_KEY_LAST_ROOM_CONFIG = 'bubble_last_room_config';
+
+    interface LastSavedRoomConfig {
+        maxPlayers?: number;
+        botCount?: number;
+        fragLimit?: number;
+        breakSeconds?: number;
+        breakReadyCheck?: boolean;
+    }
+
+    const loadLastSavedRoomConfig = (): LastSavedRoomConfig => {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY_LAST_ROOM_CONFIG);
+            if (raw) {
+                return JSON.parse(raw);
+            }
+        } catch (e) {
+            console.error('Failed to load last room config', e);
+        }
+        return {
+            maxPlayers: 16,
+            botCount: 8,
+            fragLimit: 10,
+            breakSeconds: 15,
+            breakReadyCheck: false,
+        };
+    };
+
+    const saveLastRoomConfig = (config: LastSavedRoomConfig) => {
+        try {
+            localStorage.setItem(STORAGE_KEY_LAST_ROOM_CONFIG, JSON.stringify(config));
+        } catch (e) {
+            console.error('Failed to save last room config', e);
+        }
+    };
+
     if (btnOpenCreateRoom) {
         btnOpenCreateRoom.addEventListener('click', () => {
+            const saved = loadLastSavedRoomConfig();
+            const maxP = saved.maxPlayers !== undefined ? saved.maxPlayers : 16;
+            const bots = saved.botCount !== undefined ? Math.min(saved.botCount, maxP) : 8;
+            const frags = saved.fragLimit !== undefined ? saved.fragLimit : 10;
+            const breakSec = saved.breakSeconds !== undefined ? saved.breakSeconds : 15;
+            const breakReady = saved.breakReadyCheck !== undefined ? saved.breakReadyCheck : false;
+
             if (createRoomNameInput) {
                 createRoomNameInput.value = `Арена #${Math.floor(100 + Math.random() * 900)}`;
             }
             if (createRoomMaxPlayers) {
-                createRoomMaxPlayers.value = '16';
-                if (createRoomMaxPlayersVal) createRoomMaxPlayersVal.textContent = '16';
+                createRoomMaxPlayers.value = maxP.toString();
+                if (createRoomMaxPlayersVal) createRoomMaxPlayersVal.textContent = maxP.toString();
             }
             if (createRoomBots) {
-                createRoomBots.max = '16';
-                createRoomBots.value = '8';
-                if (createRoomBotsVal) createRoomBotsVal.textContent = '8';
+                createRoomBots.max = maxP.toString();
+                createRoomBots.value = bots.toString();
+                if (createRoomBotsVal) createRoomBotsVal.textContent = bots.toString();
             }
             if (createRoomFragLimit) {
-                createRoomFragLimit.value = '10';
-                if (createRoomFragLimitVal) createRoomFragLimitVal.textContent = '10';
+                createRoomFragLimit.value = frags.toString();
+                if (createRoomFragLimitVal) createRoomFragLimitVal.textContent = frags.toString();
             }
             if (createRoomBreakTime) {
-                createRoomBreakTime.value = '15';
-                if (createRoomBreakTimeVal) createRoomBreakTimeVal.textContent = '15 сек';
+                createRoomBreakTime.value = breakSec.toString();
+                if (createRoomBreakTimeVal) {
+                    createRoomBreakTimeVal.textContent = breakSec === 0 ? 'Выкл' : `${breakSec} сек`;
+                }
             }
             if (createRoomBreakReadyCheck) {
-                createRoomBreakReadyCheck.checked = false;
+                createRoomBreakReadyCheck.checked = breakReady;
             }
             createRoomModal?.classList.remove('hidden');
             createRoomNameInput?.focus();
@@ -547,6 +592,14 @@ window.addEventListener('DOMContentLoaded', () => {
         const fragLimit = createRoomFragLimit ? parseInt(createRoomFragLimit.value, 10) : 10;
         const breakSeconds = createRoomBreakTime ? parseInt(createRoomBreakTime.value, 10) : 15;
         const breakReadyCheck = createRoomBreakReadyCheck ? createRoomBreakReadyCheck.checked : false;
+
+        saveLastRoomConfig({
+            maxPlayers,
+            botCount,
+            fragLimit,
+            breakSeconds,
+            breakReadyCheck,
+        });
 
         networkManager.createRoom(roomName, {
             maxPlayers,
@@ -667,6 +720,14 @@ window.addEventListener('DOMContentLoaded', () => {
         const breakReadyCheck = editRoomBreakReadyCheck
             ? editRoomBreakReadyCheck.checked
             : currentRoomConfig.breakReadyCheck;
+
+        saveLastRoomConfig({
+            maxPlayers,
+            botCount,
+            fragLimit,
+            breakSeconds,
+            breakReadyCheck,
+        });
 
         networkManager.updateRoomConfig({
             name,
