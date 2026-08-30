@@ -3,6 +3,7 @@ import { Game } from './game/Game.js';
 import { networkManager } from './net/NetworkManager.js';
 import { soundFx } from './audio/SoundFx.js';
 import { TankSelectionManager } from './ui/TankSelectionManager.js';
+import { toastManager } from './ui/ToastManager.js';
 
 const COLOR_HUES: Record<string, number> = {
     cyan: 192,
@@ -29,6 +30,7 @@ function escapeHtml(str: string): string {
 
 // 2. DOM UI Bindings
 window.addEventListener('DOMContentLoaded', () => {
+    toastManager.init();
     tankSelectionManager.init();
 
     // Modals & Screens
@@ -923,6 +925,10 @@ window.addEventListener('DOMContentLoaded', () => {
         currentSelectedRoomId = null;
         alert(`Ошибка подключения: ${msg.message}`);
         showScreen('lobby');
+    });
+
+    networkManager.on('disconnect', () => {
+        toastManager.warn('Соединение с сервером разорвано');
     });
 
     // In-game Exit / Return to Lobby
