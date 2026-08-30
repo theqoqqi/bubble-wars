@@ -923,7 +923,7 @@ window.addEventListener('DOMContentLoaded', () => {
     networkManager.on('error', (msg) => {
         networkManager.clearSession();
         currentSelectedRoomId = null;
-        alert(`Ошибка подключения: ${msg.message}`);
+        toastManager.error(msg.message);
         showScreen('lobby');
     });
 
