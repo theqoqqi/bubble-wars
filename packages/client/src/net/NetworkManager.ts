@@ -16,6 +16,7 @@ import {
     RoomConfigUpdatedMessage,
     RoomConfigEditingMessage,
     RoomConfigEditingStateMessage,
+    ReadyStateMessage,
     RoomCreateMessage,
     RoomCreatedMessage,
     RoomJoinedMessage,
@@ -34,6 +35,7 @@ export interface NetworkEvents {
     room_list: RoomListMessage;
     room_config_updated: RoomConfigUpdatedMessage;
     room_config_editing_state: RoomConfigEditingStateMessage;
+    ready_state: ReadyStateMessage;
     host_changed: HostChangedMessage;
     error: ErrorMessage;
     world_state: WorldStateMessage;
@@ -249,6 +251,11 @@ export class NetworkManager extends EventBus<NetworkEvents> {
                     break;
                 }
 
+                case 'ready_state': {
+                    this.emit('ready_state', msg);
+                    break;
+                }
+
                 case 'host_changed': {
                     this.hostId = msg.hostId;
                     this.emit('host_changed', msg);
@@ -387,9 +394,10 @@ export class NetworkManager extends EventBus<NetworkEvents> {
         });
     }
 
-    public rematch(): void {
+    public sendReady(isReady: boolean = true): void {
         this.sendMessage({
-            type: 'rematch',
+            type: 'ready',
+            isReady,
         });
     }
 

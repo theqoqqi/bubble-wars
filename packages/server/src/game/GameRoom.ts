@@ -41,10 +41,15 @@ export class GameRoom {
     public physics: PhysicsWorld;
     public botCount: number = GAME_CONFIG.BOT.SPAWN_COUNT;
     public fragLimit: number = GAME_CONFIG.MATCH.DEFAULT_FRAG_LIMIT;
+    public breakSeconds: number = GAME_CONFIG.MATCH.DEFAULT_BREAK_SECONDS;
+    public breakReadyCheck: boolean = GAME_CONFIG.MATCH.DEFAULT_BREAK_READY_CHECK;
     public isMatchOver: boolean = false;
     public matchOverTime: number = 0;
     public isConfigEditing: boolean = false;
     public impactExecutor: ImpactEffectExecutor = new ImpactEffectExecutor();
+    private readyPlayerIds: Set<string> = new Set();
+    private breakCountdownSeconds: number = 0;
+    private breakInterval: NodeJS.Timeout | null = null;
     private collisionHandler: CollisionHandler;
     private players: Map<string, ConnectedPlayer> = new Map();
     private playersByToken: Map<string, ConnectedPlayer> = new Map();
@@ -71,6 +76,14 @@ export class GameRoom {
         this.maxPlayers = Math.max(2, Math.min(32, config?.maxPlayers ?? 16));
         this.botCount = Math.max(0, Math.min(this.maxPlayers, config?.botCount ?? GAME_CONFIG.BOT.SPAWN_COUNT));
         this.fragLimit = Math.max(1, Math.min(100, config?.fragLimit ?? GAME_CONFIG.MATCH.DEFAULT_FRAG_LIMIT));
+        this.breakSeconds =
+            typeof config?.breakSeconds === 'number'
+                ? Math.max(0, Math.min(60, Math.floor(config.breakSeconds)))
+                : GAME_CONFIG.MATCH.DEFAULT_BREAK_SECONDS;
+        this.breakReadyCheck =
+            typeof config?.breakReadyCheck === 'boolean'
+                ? config.breakReadyCheck
+                : GAME_CONFIG.MATCH.DEFAULT_BREAK_READY_CHECK;
         this.createdAt = Date.now();
 
         this.physics = new PhysicsWorld();
@@ -176,6 +189,7 @@ export class GameRoom {
         if (this.isMatchOver) return;
         this.isMatchOver = true;
         this.matchOverTime = Date.now();
+        this.readyPlayerIds.clear();
 
         // Clear all existing projectiles so no damage/clashes occur after match ends
         for (const proj of this.projectiles) {
@@ -203,6 +217,8 @@ export class GameRoom {
             fragLimit: this.fragLimit,
             leaderboard,
         });
+
+        this.startBreakSequence();
     }
 
     public handlePlayerJoin(
@@ -253,6 +269,8 @@ export class GameRoom {
                 roomName: this.roomName,
                 maxPlayers: this.maxPlayers,
                 botCount: this.botCount,
+                breakSeconds: this.breakSeconds,
+                breakReadyCheck: this.breakReadyCheck,
                 reconnected: true,
                 arena: GAME_CONFIG.ARENA,
                 obstacles: this.physics.getObstacleSnapshots(),
@@ -323,6 +341,8 @@ export class GameRoom {
             roomName: this.roomName,
             maxPlayers: this.maxPlayers,
             botCount: this.botCount,
+            breakSeconds: this.breakSeconds,
+            breakReadyCheck: this.breakReadyCheck,
             reconnected: false,
             arena: GAME_CONFIG.ARENA,
             obstacles: this.physics.getObstacleSnapshots(),
@@ -388,13 +408,22 @@ export class GameRoom {
             maxPlayers: this.maxPlayers,
             botCount: this.bots.length,
             fragLimit: this.fragLimit,
+            breakSeconds: this.breakSeconds,
+            breakReadyCheck: this.breakReadyCheck,
             isMatchOver: this.isMatchOver,
         };
     }
 
     public updateConfigByHost(
         playerId: string,
-        config: { name?: string; maxPlayers?: number; botCount?: number; fragLimit?: number }
+        config: {
+            name?: string;
+            maxPlayers?: number;
+            botCount?: number;
+            fragLimit?: number;
+            breakSeconds?: number;
+            breakReadyCheck?: boolean;
+        }
     ): boolean {
         if (playerId !== this.hostId) {
             console.warn(
@@ -427,10 +456,24 @@ export class GameRoom {
             this.fragLimit = Math.max(1, Math.min(100, Math.floor(config.fragLimit)));
         }
 
+        if (typeof config.breakSeconds === 'number') {
+            this.breakSeconds = Math.max(0, Math.min(60, Math.floor(config.breakSeconds)));
+        }
+
+        if (typeof config.breakReadyCheck === 'boolean') {
+            this.breakReadyCheck = config.breakReadyCheck;
+        }
+
         this.adjustBots();
 
         console.log(
-            `⚙️ [Room ${this.roomId}] Host updated config: Name="${this.roomName}", MaxPlayers=${this.maxPlayers}, BotCount=${this.botCount}, FragLimit=${this.fragLimit}`
+            `⚙️ [Room ${this.roomId}] Host updated config:`
+            + ` Name="${this.roomName}",`
+            + ` MaxPlayers=${this.maxPlayers},`
+            + ` BotCount=${this.botCount},`
+            + ` FragLimit=${this.fragLimit},`
+            + ` BreakSeconds=${this.breakSeconds}s,`
+            + ` BreakReadyCheck=${this.breakReadyCheck}`
         );
 
         this.isConfigEditing = false;
@@ -445,7 +488,13 @@ export class GameRoom {
             maxPlayers: this.maxPlayers,
             botCount: this.botCount,
             fragLimit: this.fragLimit,
+            breakSeconds: this.breakSeconds,
+            breakReadyCheck: this.breakReadyCheck,
         });
+
+        if (this.isMatchOver) {
+            this.startBreakSequence();
+        }
 
         return true;
     }
@@ -457,18 +506,93 @@ export class GameRoom {
             type: 'room_config_editing_state',
             isEditing: this.isConfigEditing,
         });
+        if (this.isMatchOver) {
+            this.broadcastReadyState();
+        }
     }
 
-    public handlePlayerRematch(playerId: string): void {
-        if (this.isMatchOver) {
-            if (this.isConfigEditing) {
-                console.log(
-                    `⏳ [Rematch] Player ${playerId} requested rematch, but host is editing room config. Waiting.`
-                );
-                return;
+    public setPlayerReady(playerId: string, isReady: boolean): void {
+        if (!this.isMatchOver || !this.players.has(playerId)) return;
+        if (this.isConfigEditing) return;
+
+        if (this.breakReadyCheck) {
+            if (isReady) {
+                this.readyPlayerIds.add(playerId);
+            } else {
+                this.readyPlayerIds.delete(playerId);
             }
-            console.log(`🔄 [Rematch] Player ${playerId} requested rematch. Resetting arena!`);
-            this.resetArena();
+
+            this.broadcastReadyState();
+
+            if (this.checkAllPlayersReady()) {
+                this.stopBreakCountdown();
+                this.resetArena();
+            }
+        } else {
+            // Если подтверждение готовности выключено, ручной запуск матча разрешен только хосту
+            if (isReady && (!this.hostId || playerId === this.hostId)) {
+                this.stopBreakCountdown();
+                this.resetArena();
+            }
+        }
+    }
+
+    public checkAllPlayersReady(): boolean {
+        let activeHumanCount = 0;
+        let readyCount = 0;
+
+        for (const [id, player] of this.players.entries()) {
+            if (player.ws !== null) {
+                activeHumanCount++;
+                if (this.readyPlayerIds.has(id)) {
+                    readyCount++;
+                }
+            }
+        }
+
+        return activeHumanCount > 0 && readyCount >= activeHumanCount;
+    }
+
+    public broadcastReadyState(): void {
+        const activeHumanCount = this.getActivePlayerCount();
+        this.broadcast({
+            type: 'ready_state',
+            readyPlayerIds: Array.from(this.readyPlayerIds),
+            totalPlayers: activeHumanCount,
+            timeRemainingSeconds: this.breakSeconds > 0 ? this.breakCountdownSeconds : null,
+            isPaused: this.isConfigEditing,
+        });
+    }
+
+    public startBreakSequence(): void {
+        this.stopBreakCountdown();
+        this.breakCountdownSeconds = this.breakSeconds;
+
+        this.broadcastReadyState();
+
+        if (this.breakSeconds > 0) {
+            this.breakInterval = setInterval(() => {
+                if (this.isConfigEditing) {
+                    return;
+                }
+
+                if (this.breakCountdownSeconds > 0) {
+                    this.breakCountdownSeconds--;
+                    this.broadcastReadyState();
+                }
+
+                if (this.breakCountdownSeconds <= 0) {
+                    this.stopBreakCountdown();
+                    this.resetArena();
+                }
+            }, 1000);
+        }
+    }
+
+    public stopBreakCountdown(): void {
+        if (this.breakInterval) {
+            clearInterval(this.breakInterval);
+            this.breakInterval = null;
         }
     }
 
@@ -573,6 +697,15 @@ export class GameRoom {
                     type: 'room_config_editing_state',
                     isEditing: false,
                 });
+            }
+
+            this.readyPlayerIds.delete(playerId);
+            if (this.isMatchOver) {
+                this.broadcastReadyState();
+                if (this.checkAllPlayersReady()) {
+                    this.stopBreakCountdown();
+                    this.resetArena();
+                }
             }
 
             this.adjustBots();
@@ -747,15 +880,6 @@ export class GameRoom {
         };
 
         this.broadcast(worldStateMsg);
-
-        // Auto-restart next match after delay only if room is empty of human players
-        if (
-            this.isMatchOver &&
-            this.getActivePlayerCount() === 0 &&
-            now - this.matchOverTime > GAME_CONFIG.MATCH.AUTO_RESET_DELAY_MS
-        ) {
-            this.resetArena();
-        }
     }
 
     private sendTo(ws: WebSocket | null, msg: ServerMessage): void {
@@ -875,6 +999,8 @@ export class GameRoom {
     }
 
     public resetArena(): void {
+        this.stopBreakCountdown();
+        this.readyPlayerIds.clear();
         this.isMatchOver = false;
         this.matchOverTime = 0;
 
@@ -953,6 +1079,7 @@ export class GameRoom {
     }
 
     public cleanup(): void {
+        this.stopBreakCountdown();
         if (this.intervalId) {
             clearInterval(this.intervalId);
             this.intervalId = null;

@@ -86,7 +86,10 @@ export const GAME_CONFIG = {
 
     MATCH: {
         DEFAULT_FRAG_LIMIT: 10,
-        AUTO_RESET_DELAY_MS: 12000,
+        DEFAULT_BREAK_SECONDS: 15,
+        DEFAULT_BREAK_READY_CHECK: false,
+        MIN_BREAK_SECONDS: 0,
+        MAX_BREAK_SECONDS: 60,
     },
 
     TANK: {

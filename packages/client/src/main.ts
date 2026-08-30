@@ -64,6 +64,9 @@ window.addEventListener('DOMContentLoaded', () => {
     const createRoomBotsVal = document.getElementById('create-room-bots-val');
     const createRoomFragLimit = document.getElementById('create-room-frag-limit') as HTMLInputElement | null;
     const createRoomFragLimitVal = document.getElementById('create-room-frag-limit-val');
+    const createRoomBreakTime = document.getElementById('create-room-break-time') as HTMLInputElement | null;
+    const createRoomBreakTimeVal = document.getElementById('create-room-break-time-val');
+    const createRoomBreakReadyCheck = document.getElementById('create-room-break-ready-check') as HTMLInputElement | null;
     const btnCreateRoomSubmit = document.getElementById('btn-create-room-submit');
     const btnCreateRoomCancel = document.getElementById('btn-create-room-cancel');
     const btnCloseCreateModal = document.getElementById('btn-close-create-modal');
@@ -77,6 +80,9 @@ window.addEventListener('DOMContentLoaded', () => {
     const editRoomBotsVal = document.getElementById('edit-room-bots-val');
     const editRoomFragLimit = document.getElementById('edit-room-frag-limit') as HTMLInputElement | null;
     const editRoomFragLimitVal = document.getElementById('edit-room-frag-limit-val');
+    const editRoomBreakTime = document.getElementById('edit-room-break-time') as HTMLInputElement | null;
+    const editRoomBreakTimeVal = document.getElementById('edit-room-break-time-val');
+    const editRoomBreakReadyCheck = document.getElementById('edit-room-break-ready-check') as HTMLInputElement | null;
     const btnEditRoomSave = document.getElementById('btn-edit-room-save');
     const btnEditRoomCancel = document.getElementById('btn-edit-room-cancel');
     const btnCloseEditModal = document.getElementById('btn-close-edit-modal');
@@ -99,18 +105,21 @@ window.addEventListener('DOMContentLoaded', () => {
     const btnRespawn = document.getElementById('btn-respawn');
     const btnLeaveConfirm = document.getElementById('btn-leave-confirm');
     const btnLeaveCancel = document.getElementById('btn-leave-cancel');
-    const btnRematch = document.getElementById('btn-rematch');
+    const btnMatchStart = document.getElementById('btn-match-start');
     const btnGameOverMenu = document.getElementById('btn-gameover-menu');
 
     // Navigation & State
     let currentSelectedRoomId: string | null = null;
     let currentRoomName: string = '';
     let lobbyPollTimer: number | null = null;
+    let isLocalReady = false;
     let currentRoomConfig = {
         name: 'Основная арена',
         maxPlayers: 16,
         botCount: 8,
         fragLimit: 10,
+        breakSeconds: 15,
+        breakReadyCheck: false,
     };
 
     // Pre-fill server address input
@@ -401,6 +410,20 @@ window.addEventListener('DOMContentLoaded', () => {
             .map((room) => {
                 const statusClass = room.isMatchOver ? 'waiting' : 'in-battle';
                 const statusText = room.isMatchOver ? 'Ожидание' : 'В бою';
+                const breakSec = room.breakSeconds ?? 15;
+                const restartPart = breakSec > 0 ? `${breakSec}с` : '';
+                const readyPart = room.breakReadyCheck ? '100%' : '';
+                const combinedMeta = [readyPart, restartPart].filter(Boolean).join(' | ');
+
+                const tooltipParts: string[] = [];
+                if (room.breakReadyCheck) tooltipParts.push('по готовности');
+                if (breakSec > 0) tooltipParts.push(`${breakSec} сек`);
+                const combinedTitle = tooltipParts.join(' или ');
+
+                const startMetaBadge = combinedMeta
+                    ? `<span class="room-meta-item" title="Перерыв после боя: ${combinedTitle}">☕ ${combinedMeta}</span>`
+                    : '';
+
                 return `
                     <div class="room-row">
                         <div class="room-row-info">
@@ -411,6 +434,7 @@ window.addEventListener('DOMContentLoaded', () => {
                             <span class="room-meta-item" title="Занято слотов (игроки и боты)">👤 ${room.playerCount + room.botCount} / ${room.maxPlayers}</span>
                             <span class="room-meta-item" title="Боты">🤖 ${room.botCount}</span>
                             <span class="room-meta-item" title="Лимит фрагов">🎯 ${room.fragLimit}</span>
+                            ${startMetaBadge}
                         </div>
                         <button class="btn-bubble room-row-btn" data-room-id="${room.roomId}" data-room-name="${escapeHtml(room.name)}">
                             Войти в бой 🚀
@@ -469,6 +493,15 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (createRoomBreakTime) {
+        createRoomBreakTime.addEventListener('input', () => {
+            const val = parseInt(createRoomBreakTime.value, 10) || 0;
+            if (createRoomBreakTimeVal) {
+                createRoomBreakTimeVal.textContent = val === 0 ? 'Выкл' : `${val} сек`;
+            }
+        });
+    }
+
     if (btnOpenCreateRoom) {
         btnOpenCreateRoom.addEventListener('click', () => {
             if (createRoomNameInput) {
@@ -486,6 +519,13 @@ window.addEventListener('DOMContentLoaded', () => {
             if (createRoomFragLimit) {
                 createRoomFragLimit.value = '10';
                 if (createRoomFragLimitVal) createRoomFragLimitVal.textContent = '10';
+            }
+            if (createRoomBreakTime) {
+                createRoomBreakTime.value = '15';
+                if (createRoomBreakTimeVal) createRoomBreakTimeVal.textContent = '15 сек';
+            }
+            if (createRoomBreakReadyCheck) {
+                createRoomBreakReadyCheck.checked = false;
             }
             createRoomModal?.classList.remove('hidden');
             createRoomNameInput?.focus();
@@ -505,11 +545,15 @@ window.addEventListener('DOMContentLoaded', () => {
         const maxPlayers = createRoomMaxPlayers ? parseInt(createRoomMaxPlayers.value, 10) : 16;
         const botCount = createRoomBots ? parseInt(createRoomBots.value, 10) : 8;
         const fragLimit = createRoomFragLimit ? parseInt(createRoomFragLimit.value, 10) : 10;
+        const breakSeconds = createRoomBreakTime ? parseInt(createRoomBreakTime.value, 10) : 15;
+        const breakReadyCheck = createRoomBreakReadyCheck ? createRoomBreakReadyCheck.checked : false;
 
         networkManager.createRoom(roomName, {
             maxPlayers,
             botCount,
             fragLimit,
+            breakSeconds,
+            breakReadyCheck,
         });
         closeCreateModal();
     };
@@ -557,6 +601,15 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (editRoomBreakTime) {
+        editRoomBreakTime.addEventListener('input', () => {
+            const val = parseInt(editRoomBreakTime.value, 10) || 0;
+            if (editRoomBreakTimeVal) {
+                editRoomBreakTimeVal.textContent = val === 0 ? 'Выкл' : `${val} сек`;
+            }
+        });
+    }
+
     const openEditModal = () => {
         if (!networkManager.isHost) return;
         if (editRoomNameInput) editRoomNameInput.value = currentRoomConfig.name;
@@ -572,6 +625,18 @@ window.addEventListener('DOMContentLoaded', () => {
         if (editRoomFragLimit) {
             editRoomFragLimit.value = currentRoomConfig.fragLimit.toString();
             if (editRoomFragLimitVal) editRoomFragLimitVal.textContent = currentRoomConfig.fragLimit.toString();
+        }
+        if (editRoomBreakTime) {
+            editRoomBreakTime.value = currentRoomConfig.breakSeconds.toString();
+            if (editRoomBreakTimeVal) {
+                editRoomBreakTimeVal.textContent =
+                    currentRoomConfig.breakSeconds === 0
+                        ? 'Выкл'
+                        : `${currentRoomConfig.breakSeconds} сек`;
+            }
+        }
+        if (editRoomBreakReadyCheck) {
+            editRoomBreakReadyCheck.checked = currentRoomConfig.breakReadyCheck;
         }
         networkManager.setConfigEditing(true);
         editRoomModal?.classList.remove('hidden');
@@ -596,12 +661,20 @@ window.addEventListener('DOMContentLoaded', () => {
         const maxPlayers = editRoomMaxPlayers ? parseInt(editRoomMaxPlayers.value, 10) : currentRoomConfig.maxPlayers;
         const botCount = editRoomBots ? parseInt(editRoomBots.value, 10) : currentRoomConfig.botCount;
         const fragLimit = editRoomFragLimit ? parseInt(editRoomFragLimit.value, 10) : currentRoomConfig.fragLimit;
+        const breakSeconds = editRoomBreakTime
+            ? parseInt(editRoomBreakTime.value, 10)
+            : currentRoomConfig.breakSeconds;
+        const breakReadyCheck = editRoomBreakReadyCheck
+            ? editRoomBreakReadyCheck.checked
+            : currentRoomConfig.breakReadyCheck;
 
         networkManager.updateRoomConfig({
             name,
             maxPlayers,
             botCount,
             fragLimit,
+            breakSeconds,
+            breakReadyCheck,
         });
         editRoomModal?.classList.add('hidden');
     };
@@ -667,14 +740,77 @@ window.addEventListener('DOMContentLoaded', () => {
         tankSelectionManager.openModal();
     });
 
+    let isHostConfigEditing = false;
+
+    const updateMatchActionButtonUI = () => {
+        if (!btnMatchStart) return;
+        const btn = btnMatchStart as HTMLButtonElement;
+
+        if (isHostConfigEditing) {
+            btn.disabled = true;
+            btn.innerHTML = '⚙️ ХОСТ НАСТРАИВАЕТ АРЕНУ...';
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'not-allowed';
+            btn.classList.remove('ready-active');
+            return;
+        }
+
+        if (currentRoomConfig.breakReadyCheck) {
+            btn.disabled = false;
+            btn.style.opacity = '';
+            btn.style.cursor = '';
+            if (isLocalReady) {
+                btn.innerHTML = '⏳ ОТМЕНИТЬ ГОТОВНОСТЬ';
+                btn.classList.add('ready-active');
+            } else {
+                btn.innerHTML = '✅ ГОТОВ';
+                btn.classList.remove('ready-active');
+            }
+        } else if (currentRoomConfig.breakSeconds === 0) {
+            btn.classList.remove('ready-active');
+            if (networkManager.isHost) {
+                btn.disabled = false;
+                btn.style.opacity = '';
+                btn.style.cursor = '';
+                btn.innerHTML = '🚀 НАЧАТЬ МАТЧ';
+            } else {
+                btn.disabled = true;
+                btn.style.opacity = '0.6';
+                btn.style.cursor = 'not-allowed';
+                btn.innerHTML = '⏳ ОЖИДАНИЕ НАЧАЛА ИГРЫ';
+            }
+        } else {
+            btn.classList.remove('ready-active');
+            if (networkManager.isHost) {
+                btn.disabled = false;
+                btn.style.opacity = '';
+                btn.style.cursor = '';
+                btn.innerHTML = '🚀 НАЧАТЬ СЕЙЧАС';
+            } else {
+                btn.disabled = true;
+                btn.style.opacity = '0.6';
+                btn.style.cursor = 'not-allowed';
+                btn.innerHTML = '⏳ ОЖИДАНИЕ РЕСТАРТА';
+            }
+        }
+    };
+
     networkManager.on('room_joined', (msg) => {
         currentRoomConfig = {
             name: msg.roomName || currentRoomConfig.name,
             maxPlayers: msg.maxPlayers || currentRoomConfig.maxPlayers,
             botCount: msg.botCount !== undefined ? msg.botCount : currentRoomConfig.botCount,
             fragLimit: msg.fragLimit || currentRoomConfig.fragLimit,
+            breakSeconds:
+                msg.breakSeconds !== undefined
+                    ? msg.breakSeconds
+                    : currentRoomConfig.breakSeconds,
+            breakReadyCheck: msg.breakReadyCheck !== undefined ? msg.breakReadyCheck : currentRoomConfig.breakReadyCheck,
         };
         currentRoomName = msg.roomName || currentRoomName;
+        isLocalReady = false;
+        isHostConfigEditing = false;
+        updateMatchActionButtonUI();
         showScreen('game');
     });
 
@@ -684,25 +820,32 @@ window.addEventListener('DOMContentLoaded', () => {
             maxPlayers: msg.maxPlayers,
             botCount: msg.botCount,
             fragLimit: msg.fragLimit,
+            breakSeconds: msg.breakSeconds,
+            breakReadyCheck: msg.breakReadyCheck,
         };
         currentRoomName = msg.name;
+        updateMatchActionButtonUI();
+    });
+
+    networkManager.on('ready_state', (msg) => {
+        if (networkManager.playerId) {
+            isLocalReady = msg.readyPlayerIds.includes(networkManager.playerId);
+        }
+        updateMatchActionButtonUI();
+    });
+
+    networkManager.on('host_changed', () => {
+        updateMatchActionButtonUI();
+    });
+
+    networkManager.on('game_over', () => {
+        isLocalReady = false;
+        updateMatchActionButtonUI();
     });
 
     networkManager.on('room_config_editing_state', (msg) => {
-        if (btnRematch) {
-            const btn = btnRematch as HTMLButtonElement;
-            if (msg.isEditing) {
-                btn.disabled = true;
-                btn.innerHTML = '⚙️ ХОСТ НАСТРАИВАЕТ АРЕНУ...';
-                btn.style.opacity = '0.6';
-                btn.style.cursor = 'not-allowed';
-            } else {
-                btn.disabled = false;
-                btn.innerHTML = 'РЕВАНШ 🔄';
-                btn.style.opacity = '';
-                btn.style.cursor = '';
-            }
-        }
+        isHostConfigEditing = !!msg.isEditing;
+        updateMatchActionButtonUI();
     });
 
     networkManager.on('error', (msg) => {
@@ -765,11 +908,17 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (btnRematch) {
-        btnRematch.addEventListener('click', () => {
-            if ((btnRematch as HTMLButtonElement).disabled) return;
-            networkManager.rematch();
-            gameoverModal?.classList.add('hidden');
+    if (btnMatchStart) {
+        btnMatchStart.addEventListener('click', () => {
+            if ((btnMatchStart as HTMLButtonElement).disabled) return;
+            if (currentRoomConfig.breakReadyCheck) {
+                networkManager.sendReady(!isLocalReady);
+            } else {
+                if (networkManager.isHost) {
+                    networkManager.sendReady(true);
+                    gameoverModal?.classList.add('hidden');
+                }
+            }
         });
     }
 

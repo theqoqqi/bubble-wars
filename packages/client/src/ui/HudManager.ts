@@ -3,6 +3,7 @@ import {
     KillEventMessage,
     LeaderboardEntry,
     PlayerInfo,
+    ReadyStateMessage,
     tankBlueprintRegistry,
 } from '@bubble-wars/shared';
 import { hsla } from '../graphics/render.js';
@@ -32,6 +33,10 @@ export class HudManager {
     private gameoverSubtitle = document.getElementById('gameover-subtitle');
     private gameoverCrown = document.getElementById('gameover-crown');
     private gameoverLeaderboard = document.getElementById('gameover-leaderboard');
+    private gameoverTimerContainer = document.getElementById('gameover-timer-container');
+    private gameoverTimerBadge = document.getElementById('gameover-timer-badge');
+    private gameoverReadyBadge = document.getElementById('gameover-ready-badge');
+    private gameoverPauseBadge = document.getElementById('gameover-pause-badge');
     private btnGameOverHostConfig = document.getElementById('btn-gameover-host-config');
 
     // In-game Tab Overlay Elements & State
@@ -43,7 +48,18 @@ export class HudManager {
     private lastPlayersInfo: Map<string, PlayerInfo> = new Map();
     private lastMyId: string | null = null;
     private lastHostId: string | null = null;
+    private lastGameOverData: GameOverMessage | null = null;
+    private lastReadyState: ReadyStateMessage | null = null;
     private fragLimit: number = 10;
+    private breakReadyCheck: boolean = false;
+
+    public setReadyCheck(enabled: boolean): void {
+        this.breakReadyCheck = enabled;
+        this.renderGameOverTimerAndReady();
+        if (this.gameoverModal && !this.gameoverModal.classList.contains('hidden') && this.lastGameOverData) {
+            this.renderGameOverLeaderboard(this.lastGameOverData, this.lastMyId);
+        }
+    }
 
     public setHostId(hostId: string | null): void {
         this.lastHostId = hostId;
@@ -325,6 +341,122 @@ export class HudManager {
 
     public hideGameOverModal(): void {
         if (this.gameoverModal) this.gameoverModal.classList.add('hidden');
+        if (this.gameoverTimerContainer) this.gameoverTimerContainer.classList.add('hidden');
+        this.lastGameOverData = null;
+        this.lastReadyState = null;
+    }
+
+    public updateReadyState(state: ReadyStateMessage, myId: string | null): void {
+        this.lastReadyState = state;
+        if (myId) this.lastMyId = myId;
+
+        this.renderGameOverTimerAndReady();
+
+        if (this.gameoverModal && !this.gameoverModal.classList.contains('hidden') && this.lastGameOverData) {
+            this.renderGameOverLeaderboard(this.lastGameOverData, this.lastMyId);
+        }
+    }
+
+    private renderGameOverTimerAndReady(): void {
+        if (!this.gameoverTimerContainer) return;
+
+        const state = this.lastReadyState;
+        if (!state) {
+            this.gameoverTimerContainer.classList.add('hidden');
+            return;
+        }
+
+        if (state.isPaused) {
+            this.gameoverTimerContainer.classList.remove('hidden');
+            if (this.gameoverTimerBadge) this.gameoverTimerBadge.classList.add('hidden');
+            if (this.gameoverReadyBadge) this.gameoverReadyBadge.classList.add('hidden');
+            if (this.gameoverPauseBadge) {
+                this.gameoverPauseBadge.classList.remove('hidden');
+                this.gameoverPauseBadge.textContent = '⏸️ Пауза (хост в настройках)';
+            }
+            return;
+        }
+
+        if (this.gameoverPauseBadge) {
+            this.gameoverPauseBadge.classList.add('hidden');
+        }
+
+        const hasTimer = state.timeRemainingSeconds !== null;
+        const hasReady = this.breakReadyCheck && state.totalPlayers > 0;
+
+        if (hasTimer || hasReady) {
+            this.gameoverTimerContainer.classList.remove('hidden');
+        } else {
+            this.gameoverTimerContainer.classList.add('hidden');
+            return;
+        }
+
+        if (this.gameoverTimerBadge) {
+            if (hasTimer) {
+                this.gameoverTimerBadge.classList.remove('hidden');
+                this.gameoverTimerBadge.textContent = `☕ До начала: ${state.timeRemainingSeconds} сек`;
+            } else {
+                this.gameoverTimerBadge.classList.add('hidden');
+            }
+        }
+
+        if (this.gameoverReadyBadge) {
+            if (hasReady) {
+                this.gameoverReadyBadge.classList.remove('hidden');
+                const readyCount = state.readyPlayerIds.length;
+                this.gameoverReadyBadge.textContent = `✅ Готовы: ${readyCount} / ${state.totalPlayers}`;
+            } else {
+                this.gameoverReadyBadge.classList.add('hidden');
+            }
+        }
+    }
+
+    private renderGameOverLeaderboard(data: GameOverMessage, myId: string | null): void {
+        if (!this.gameoverLeaderboard || !data.leaderboard) return;
+
+        const list = data.leaderboard;
+        this.gameoverLeaderboard.innerHTML = list
+            .map((pl: LeaderboardEntry, i: number) => {
+                const isPlayer = pl.id === myId;
+                const isHost = pl.id === this.lastHostId;
+                const isReady = this.breakReadyCheck && !pl.isBot && !!this.lastReadyState?.readyPlayerIds.includes(pl.id);
+                const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+                const badge = isPlayer
+                    ? '<span class="gameover-badge-you">ВЫ</span>'
+                    : pl.isBot
+                    ? '<span class="gameover-badge-bot">BOT</span>'
+                    : '';
+                const hostBadge = isHost ? '<span class="gameover-badge-host" title="Хост арены">ХОСТ</span>' : '';
+                const readyBadge = isReady ? '<span class="gameover-badge-ready">ГОТОВ</span>' : '';
+                const bpId = this.lastPlayersInfo.get(pl.id)?.blueprintId;
+                const bp = bpId ? tankBlueprintRegistry.get(bpId) : null;
+                const tankName = bp ? bp.name : 'Танк';
+
+                return `
+      <div class="gameover-row ${isPlayer ? 'active' : ''}">
+        <span class="gameover-col-rank ${rankClass}">${i + 1}</span>
+        <div class="gameover-player-cell">
+          <span class="gameover-row-dot" style="--dot-color: ${hsla(pl.hue, 90, 65, 1)};"></span>
+          <div class="gameover-player-info">
+            <div class="gameover-name-row">
+              <span class="gameover-row-name">${pl.name}</span>
+              ${badge}
+              ${hostBadge}
+              ${readyBadge}
+            </div>
+            <span class="gameover-row-tank">${tankName}</span>
+          </div>
+        </div>
+        <span class="gameover-col-stat kills ${this.isBestStat(list, pl, 'kills') ? 'stat-best' : ''}">${pl.kills}</span>
+        <span class="gameover-col-stat deaths ${this.isBestStat(list, pl, 'deaths', 'min') ? 'stat-best' : ''}">${pl.deaths}</span>
+        <span class="gameover-col-stat assists ${this.isBestStat(list, pl, 'assists') ? 'stat-best' : ''}">${pl.assists ?? 0}</span>
+        <span class="gameover-col-stat damage-dealt ${this.isBestStat(list, pl, 'damageDealt') ? 'stat-best' : ''}">${pl.damageDealt ?? 0}</span>
+        <span class="gameover-col-stat damage-taken ${this.isBestStat(list, pl, 'damageTaken') ? 'stat-best' : ''}">${pl.damageTaken ?? 0}</span>
+        <span class="gameover-col-score ${this.isBestStat(list, pl, 'score') ? 'stat-best' : ''}">${pl.score}</span>
+      </div>
+    `;
+            })
+            .join('');
     }
 
     public showGameOverModal(
@@ -334,6 +466,8 @@ export class HudManager {
     ): void {
         this.hideDeathModal();
         this.lastPlayersInfo = playersInfo;
+        this.lastGameOverData = data;
+        this.lastMyId = myId;
         const isWinner = data.winnerId === myId;
 
         if (this.gameoverTitle) {
@@ -347,7 +481,7 @@ export class HudManager {
         if (this.gameoverSubtitle) {
             this.gameoverSubtitle.textContent = isWinner
                 ? `Вся арена в мыльной пене — вы чемпион с ${data.winnerKills} фрагами!`
-                : `Победил ${data.winnerName} (${data.winnerKills} фрагов). Реванш?`;
+                : `Победил ${data.winnerName} (${data.winnerKills} фрагов).`;
         }
 
         if (this.gameoverCrown) {
@@ -355,49 +489,8 @@ export class HudManager {
             this.gameoverCrown.setAttribute('stroke', hsla(data.winnerHue || 48, 95, 65, 1));
         }
 
-        if (this.gameoverLeaderboard && data.leaderboard) {
-            const list = data.leaderboard;
-
-            this.gameoverLeaderboard.innerHTML = list
-                .map((pl: LeaderboardEntry, i: number) => {
-                    const isPlayer = pl.id === myId;
-                    const isHost = pl.id === this.lastHostId;
-                    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
-                    const badge = isPlayer
-                        ? '<span class="gameover-badge-you">ВЫ</span>'
-                        : pl.isBot
-                        ? '<span class="gameover-badge-bot">BOT</span>'
-                        : '';
-                    const hostBadge = isHost ? '<span class="gameover-badge-host" title="Хост арены">ХОСТ</span>' : '';
-                    const bpId = this.lastPlayersInfo.get(pl.id)?.blueprintId;
-                    const bp = bpId ? tankBlueprintRegistry.get(bpId) : null;
-                    const tankName = bp ? bp.name : 'Танк';
-
-                    return `
-          <div class="gameover-row ${isPlayer ? 'active' : ''}">
-            <span class="gameover-col-rank ${rankClass}">${i + 1}</span>
-            <div class="gameover-player-cell">
-              <span class="gameover-row-dot" style="--dot-color: ${hsla(pl.hue, 90, 65, 1)};"></span>
-              <div class="gameover-player-info">
-                <div class="gameover-name-row">
-                  <span class="gameover-row-name">${pl.name}</span>
-                  ${badge}
-                  ${hostBadge}
-                </div>
-                <span class="gameover-row-tank">${tankName}</span>
-              </div>
-            </div>
-            <span class="gameover-col-stat kills ${this.isBestStat(list, pl, 'kills') ? 'stat-best' : ''}">${pl.kills}</span>
-            <span class="gameover-col-stat deaths ${this.isBestStat(list, pl, 'deaths', 'min') ? 'stat-best' : ''}">${pl.deaths}</span>
-            <span class="gameover-col-stat assists ${this.isBestStat(list, pl, 'assists') ? 'stat-best' : ''}">${pl.assists ?? 0}</span>
-            <span class="gameover-col-stat damage-dealt ${this.isBestStat(list, pl, 'damageDealt') ? 'stat-best' : ''}">${pl.damageDealt ?? 0}</span>
-            <span class="gameover-col-stat damage-taken ${this.isBestStat(list, pl, 'damageTaken') ? 'stat-best' : ''}">${pl.damageTaken ?? 0}</span>
-            <span class="gameover-col-score ${this.isBestStat(list, pl, 'score') ? 'stat-best' : ''}">${pl.score}</span>
-          </div>
-        `;
-                })
-                .join('');
-        }
+        this.renderGameOverLeaderboard(data, myId);
+        this.renderGameOverTimerAndReady();
 
         if (this.btnGameOverHostConfig) {
             const isHost = !!(this.lastHostId && myId && this.lastHostId === myId);

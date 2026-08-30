@@ -503,7 +503,7 @@
                     </div>
                     <div id="gameover-title" class="gameover-title">ПОБЕДА</div>
                     <div id="gameover-subtitle" class="gameover-subtitle">
-                        Победил игрок. Реванш?
+                        Победил игрок.
                     </div>
 
                     <!-- Match Leaderboard Table -->
@@ -523,13 +523,20 @@
                         </div>
                     </div>
 
+                    <!-- Break Status & Ready Progress -->
+                    <div id="gameover-timer-container" class="gameover-timer-container hidden">
+                        <div id="gameover-timer-badge" class="gameover-timer-badge hidden">☕ До начала: 15 сек</div>
+                        <div id="gameover-ready-badge" class="gameover-ready-badge hidden">✅ Готовы: 0 / 0</div>
+                        <div id="gameover-pause-badge" class="gameover-pause-badge hidden">⏸️ Пауза (хост в настройках)</div>
+                    </div>
+
                     <div class="gameover-actions-row">
                         <button
-                            id="btn-rematch"
+                            id="btn-match-start"
                             class="btn-bubble"
                             style="flex: 1; padding: 14px; font-size: 18px"
                         >
-                            РЕВАНШ
+                            🚀 НАЧАТЬ МАТЧ
                         </button>
                         <button
                             id="btn-gameover-host-config"
@@ -647,6 +654,35 @@
                     />
                 </div>
 
+                <div class="form-group">
+                    <div class="form-header-row">
+                        <label class="section-label" for="create-room-break-time">ПЕРЕРЫВ ПОСЛЕ БОЯ</label>
+                        <span id="create-room-break-time-val" class="setting-val-badge">10 сек</span>
+                    </div>
+                    <input
+                        id="create-room-break-time"
+                        type="range"
+                        class="bubble-slider"
+                        min="0"
+                        max="60"
+                        step="5"
+                        value="10"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label class="toggle-control" for="create-room-break-ready-check">
+                        <input id="create-room-break-ready-check" type="checkbox" class="toggle-checkbox" />
+                        <span class="toggle-track">
+                            <span class="toggle-thumb"></span>
+                        </span>
+                        <div class="toggle-label-wrap">
+                            <span class="toggle-title">ПОДТВЕРЖДЕНИЕ ГОТОВНОСТИ</span>
+                            <span class="toggle-desc">Требовать нажатия «Готов» от игроков перед стартом</span>
+                        </div>
+                    </label>
+                </div>
+
                 <div class="create-room-actions">
                     <button id="btn-create-room-submit" class="btn-bubble btn-full">СОЗДАТЬ АРЕНУ 🚀</button>
                     <button id="btn-create-room-cancel" class="btn-ghost btn-full">ОТМЕНА</button>
@@ -719,6 +755,35 @@
                         step="1"
                         value="10"
                     />
+                </div>
+
+                <div class="form-group">
+                    <div class="form-header-row">
+                        <label class="section-label" for="edit-room-break-time">ПЕРЕРЫВ ПОСЛЕ БОЯ</label>
+                        <span id="edit-room-break-time-val" class="setting-val-badge">10 сек</span>
+                    </div>
+                    <input
+                        id="edit-room-break-time"
+                        type="range"
+                        class="bubble-slider"
+                        min="0"
+                        max="60"
+                        step="5"
+                        value="10"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label class="toggle-control" for="edit-room-break-ready-check">
+                        <input id="edit-room-break-ready-check" type="checkbox" class="toggle-checkbox" />
+                        <span class="toggle-track">
+                            <span class="toggle-thumb"></span>
+                        </span>
+                        <div class="toggle-label-wrap">
+                            <span class="toggle-title">ПОДТВЕРЖДЕНИЕ ГОТОВНОСТИ</span>
+                            <span class="toggle-desc">Требовать нажатия «Готов» от игроков перед стартом</span>
+                        </div>
+                    </label>
                 </div>
 
                 <div class="create-room-actions">

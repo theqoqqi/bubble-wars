@@ -10,6 +10,7 @@ import {
     PlayerJoinedMessage,
     PlayerLeftMessage,
     ProjectilesSpawnMessage,
+    ReadyStateMessage,
     RoomConfigUpdatedMessage,
     TankDespawnMessage,
     TankSpawnMessage,
@@ -101,6 +102,7 @@ export class Game {
 
                 const myId = data.playerId;
                 this.hudManager.setHostId(data.hostId ?? null);
+                this.hudManager.setReadyCheck(data.breakReadyCheck ?? false);
                 const isMyTankAlive = (data.tanks ?? []).some(
                     (s) => s.id === myId || s.playerId === myId
                 );
@@ -117,6 +119,7 @@ export class Game {
             }),
             networkManager.on('host_changed', (data) => this.handleHostChanged(data)),
             networkManager.on('room_config_updated', (data) => this.handleRoomConfigUpdated(data)),
+            networkManager.on('ready_state', (data) => this.handleReadyState(data)),
             networkManager.on('world_state', (data) => this.handleWorldState(data)),
             networkManager.on('projectiles_spawn', (data) => this.handleProjectilesSpawn(data)),
             networkManager.on('player_joined', (data) => this.handlePlayerJoined(data)),
@@ -522,6 +525,14 @@ export class Game {
         if (data.fragLimit) {
             this.hudManager.updateFragLimit(data.fragLimit);
         }
+        if (data.breakReadyCheck !== undefined) {
+            this.hudManager.setReadyCheck(data.breakReadyCheck);
+        }
+    }
+
+    private handleReadyState(data: ReadyStateMessage): void {
+        const myId = networkManager.playerId;
+        this.hudManager.updateReadyState(data, myId);
     }
 
     private handlePlayerJoined(data: PlayerJoinedMessage): void {

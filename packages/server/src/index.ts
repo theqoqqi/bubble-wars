@@ -71,6 +71,8 @@ wss.on('connection', (ws: WebSocket) => {
                         maxPlayers: msg.maxPlayers,
                         botCount: msg.botCount,
                         fragLimit: msg.fragLimit,
+                        breakSeconds: msg.breakSeconds,
+                        breakReadyCheck: msg.breakReadyCheck,
                     });
 
                     if (ws.readyState === WebSocket.OPEN) {
@@ -131,7 +133,7 @@ wss.on('connection', (ws: WebSocket) => {
 
                 case 'input': {
                     const session = wsSessions.get(ws);
-                    if (session) {
+                    if (session && msg.input) {
                         session.room.handlePlayerInput(session.playerId, msg.input);
                     }
                     break;
@@ -145,10 +147,10 @@ wss.on('connection', (ws: WebSocket) => {
                     break;
                 }
 
-                case 'rematch': {
+                case 'ready': {
                     const session = wsSessions.get(ws);
                     if (session) {
-                        session.room.handlePlayerRematch(session.playerId);
+                        session.room.setPlayerReady(session.playerId, !!msg.isReady);
                     }
                     break;
                 }
@@ -161,6 +163,8 @@ wss.on('connection', (ws: WebSocket) => {
                             maxPlayers: msg.maxPlayers,
                             botCount: msg.botCount,
                             fragLimit: msg.fragLimit,
+                            breakSeconds: msg.breakSeconds,
+                            breakReadyCheck: msg.breakReadyCheck,
                         });
                     }
                     break;

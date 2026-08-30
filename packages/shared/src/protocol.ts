@@ -29,6 +29,8 @@ export interface RoomCreateMessage {
     maxPlayers?: number;
     botCount?: number;
     fragLimit?: number;
+    breakSeconds?: number;
+    breakReadyCheck?: boolean;
 }
 
 export interface RoomListRequestMessage {
@@ -49,8 +51,9 @@ export interface RespawnMessage {
     type: 'respawn';
 }
 
-export interface RematchMessage {
-    type: 'rematch';
+export interface ReadyMessage {
+    type: 'ready';
+    isReady: boolean;
 }
 
 export interface LeaveMessage {
@@ -63,6 +66,8 @@ export interface RoomConfigUpdateMessage {
     maxPlayers?: number;
     botCount?: number;
     fragLimit?: number;
+    breakSeconds?: number;
+    breakReadyCheck?: boolean;
 }
 
 export interface RoomConfigEditingMessage {
@@ -79,7 +84,7 @@ export type ClientMessage =
     | InputMessage
     | PingMessage
     | RespawnMessage
-    | RematchMessage
+    | ReadyMessage
     | LeaveMessage;
 
 export interface KillerInfo {
@@ -94,6 +99,8 @@ export interface RoomConfig {
     maxPlayers?: number;
     botCount?: number;
     fragLimit?: number;
+    breakSeconds?: number;
+    breakReadyCheck?: boolean;
 }
 
 export interface RoomInfo {
@@ -103,6 +110,8 @@ export interface RoomInfo {
     maxPlayers: number;
     botCount: number;
     fragLimit: number;
+    breakSeconds: number;
+    breakReadyCheck: boolean;
     isMatchOver: boolean;
 }
 
@@ -115,6 +124,8 @@ export interface RoomJoinedMessage {
     roomName: string;
     maxPlayers: number;
     botCount: number;
+    breakSeconds: number;
+    breakReadyCheck: boolean;
     reconnected?: boolean;
     arena: ArenaBounds;
     obstacles: ObstacleSnapshot[];
@@ -144,11 +155,21 @@ export interface RoomConfigUpdatedMessage {
     maxPlayers: number;
     botCount: number;
     fragLimit: number;
+    breakSeconds: number;
+    breakReadyCheck: boolean;
 }
 
 export interface RoomConfigEditingStateMessage {
     type: 'room_config_editing_state';
     isEditing: boolean;
+}
+
+export interface ReadyStateMessage {
+    type: 'ready_state';
+    readyPlayerIds: string[];
+    totalPlayers: number;
+    timeRemainingSeconds: number | null;
+    isPaused: boolean;
 }
 
 export interface RoomListMessage {
@@ -245,6 +266,7 @@ export type ServerMessage =
     | RoomListMessage
     | RoomConfigUpdatedMessage
     | RoomConfigEditingStateMessage
+    | ReadyStateMessage
     | HostChangedMessage
     | ErrorMessage
     | WorldStateMessage
