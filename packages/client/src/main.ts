@@ -45,6 +45,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const nameInput = document.getElementById('player-name-input') as HTMLInputElement;
     const btnRandomName = document.getElementById('btn-random-name');
     const serverInput = document.getElementById('server-url-input') as HTMLInputElement;
+    const serverConnectError = document.getElementById('server-connect-error');
     const hudPlayerName = document.getElementById('hud-player-name');
     const btnPlay = document.getElementById('btn-play');
     const colorDots = document.querySelectorAll('.color-dot, .color-btn');
@@ -253,6 +254,7 @@ window.addEventListener('DOMContentLoaded', () => {
             nameInput.value = savedPlayerName;
         }
         nameInput.addEventListener('input', () => {
+            serverConnectError?.classList.add('hidden');
             const trimmed = nameInput.value.trim();
             if (trimmed) {
                 localStorage.setItem('bubble_player_name', trimmed);
@@ -350,9 +352,16 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    if (serverInput) {
+        serverInput.addEventListener('input', () => {
+            serverConnectError?.classList.add('hidden');
+        });
+    }
+
     // Open Lobby Browser
     const openLobbyBrowser = async () => {
         soundFx.unlock();
+        serverConnectError?.classList.add('hidden');
 
         const name = nameInput?.value.trim() || 'SoapWarrior';
         localStorage.setItem('bubble_player_name', name);
@@ -366,9 +375,10 @@ window.addEventListener('DOMContentLoaded', () => {
             await networkManager.connect();
             showScreen('lobby');
         } catch (err) {
-            alert(
-                `Не удалось подключиться к серверу Bubble Wars (${networkManager.serverUrl}).\nУбедитесь, что сервер запущен и доступен!`
-            );
+            if (serverConnectError) {
+                serverConnectError.textContent = 'Не удалось подключиться к серверу';
+                serverConnectError.classList.remove('hidden');
+            }
             console.error('Connection to server failed:', err);
         }
     };
