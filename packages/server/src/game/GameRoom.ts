@@ -5,6 +5,7 @@ import {
     BubblePopEvent,
     ColorDef,
     GAME_CONFIG,
+    GameOverMessage,
     ImpactEvent,
     KILL_VERBS,
     LeaderboardEntry,
@@ -48,6 +49,7 @@ export class GameRoom {
     public isConfigEditing: boolean = false;
     public impactExecutor: ImpactEffectExecutor = new ImpactEffectExecutor();
     private readyPlayerIds: Set<string> = new Set();
+    private lastGameOverMessage: GameOverMessage | null = null;
     private breakCountdownSeconds: number = 0;
     private breakInterval: NodeJS.Timeout | null = null;
     private collisionHandler: CollisionHandler;
@@ -206,7 +208,7 @@ export class GameRoom {
 
         console.log(`🏆 [Game Over] Winner: "${winner.name}" with ${winner.kills} kills!`);
 
-        this.broadcast({
+        this.lastGameOverMessage = {
             type: 'game_over',
             winnerId: winner.id,
             winnerName: winner.name,
@@ -216,7 +218,9 @@ export class GameRoom {
             winnerKills: winner.kills,
             fragLimit: this.fragLimit,
             leaderboard,
-        });
+        };
+
+        this.broadcast(this.lastGameOverMessage);
 
         this.startBreakSequence();
     }
@@ -281,6 +285,11 @@ export class GameRoom {
                 score: player.tank.score,
                 killer: player.tank.lastKillerInfo,
             });
+
+            if (this.isMatchOver && this.lastGameOverMessage) {
+                this.sendTo(ws, this.lastGameOverMessage);
+                this.broadcastReadyState();
+            }
 
             console.log(
                 `[Server] Player reconnected: "${player.tank.name}" (${player.id}) [Score: ${player.tank.score}, Kills: ${player.tank.kills}]`
@@ -353,6 +362,11 @@ export class GameRoom {
             score: 0,
             killer: null,
         });
+
+        if (this.isMatchOver && this.lastGameOverMessage) {
+            this.sendTo(ws, this.lastGameOverMessage);
+            this.broadcastReadyState();
+        }
 
         // Broadcast player joined and tank spawn to all other clients
         this.broadcast({
@@ -1003,6 +1017,7 @@ export class GameRoom {
         this.readyPlayerIds.clear();
         this.isMatchOver = false;
         this.matchOverTime = 0;
+        this.lastGameOverMessage = null;
 
         // Generate fresh random obstacles for the new match
         this.physics.generateRandomObstacles();

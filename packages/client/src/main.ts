@@ -900,7 +900,6 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     networkManager.on('game_over', () => {
-        isLocalReady = false;
         updateMatchActionButtonUI();
     });
 
