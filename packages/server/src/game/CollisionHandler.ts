@@ -74,71 +74,66 @@ export class CollisionHandler {
     private handleProjectileProjectile(bodyA: Matter.Body, bodyB: Matter.Body): void {
         const projA = bodyA.projectileInstance;
         const projB = bodyB.projectileInstance;
-        if (projA && projB && !projA.isDestroyed && !projB.isDestroyed) {
-            // Projectiles from the same player never destroy each other
-            if (projA.ownerId === projB.ownerId) {
-                return;
-            }
 
-            const normalA = subPoints(bodyA.position, bodyB.position);
-            const normalB = subPoints(bodyB.position, bodyA.position);
-
-            const resA = projA.behaviors.handleCollision(projA, {
-                targetType: 'projectile',
-                target: { type: 'projectile', projectile: projB },
-                normal: normalA,
-            });
-            if (resA.reflect) projA.reflectVelocity(normalA);
-            if (!resA.preventDestroy) projA.isDestroyed = true;
-
-            const resB = projB.behaviors.handleCollision(projB, {
-                targetType: 'projectile',
-                target: { type: 'projectile', projectile: projA },
-                normal: normalB,
-            });
-            if (resB.reflect) projB.reflectVelocity(normalB);
-            if (!resB.preventDestroy) projB.isDestroyed = true;
-
-            const midX = (bodyA.position.x + bodyB.position.x) / 2;
-            const midY = (bodyA.position.y + bodyB.position.y) / 2;
-
-            const ctxA: ImpactContext = {
-                game: this.context.game,
-                position: { x: midX, y: midY },
-                sourceTank: this.context.findTankById(projA.ownerId),
-                target: { type: 'projectile', projectile: projB },
-            };
-            const ctxB: ImpactContext = {
-                game: this.context.game,
-                position: { x: midX, y: midY },
-                sourceTank: this.context.findTankById(projB.ownerId),
-                target: { type: 'projectile', projectile: projA },
-            };
-
-            this.context.impactExecutor.execute(projA.onHit, ctxA);
-            this.context.impactExecutor.execute(projB.onHit, ctxB);
-
-            this.context.addPopEvent({
-                id: `${Date.now()}_clash_${projA.id}`,
-                x: midX,
-                y: midY,
-                radius: projA.radius * 1.8,
-                hue: projA.hue,
-                color: projA.color,
-                isKill: false,
-                projectileTypeId: projA.projectileTypeId,
-            });
-            this.context.addPopEvent({
-                id: `${Date.now()}_clash_${projB.id}`,
-                x: midX,
-                y: midY,
-                radius: projB.radius * 1.8,
-                hue: projB.hue,
-                color: projB.color,
-                isKill: false,
-                projectileTypeId: projB.projectileTypeId,
-            });
+        if (!projA || !projB || projA.isDestroyed || projB.isDestroyed) {
+            return;
         }
+
+        // Projectiles from the same player never destroy each other
+        if (projA.ownerId === projB.ownerId) {
+            return;
+        }
+
+        const normalA = subPoints(bodyA.position, bodyB.position);
+        const normalB = subPoints(bodyB.position, bodyA.position);
+
+        const midX = (bodyA.position.x + bodyB.position.x) / 2;
+        const midY = (bodyA.position.y + bodyB.position.y) / 2;
+        const impactPos = { x: midX, y: midY };
+
+        this.resolveProjectileVsProjectile(projA, projB, normalA, impactPos);
+        this.resolveProjectileVsProjectile(projB, projA, normalB, impactPos);
+    }
+
+    private resolveProjectileVsProjectile(
+        proj: ServerProjectile,
+        targetProj: ServerProjectile,
+        normal: { x: number; y: number },
+        impactPos: { x: number; y: number }
+    ): void {
+        const res = proj.behaviors.handleCollision(proj, {
+            targetType: 'projectile',
+            target: { type: 'projectile', projectile: targetProj },
+            normal,
+        });
+
+        if (res.reflect) {
+            proj.reflectVelocity(normal);
+        }
+
+        if (!res.preventDestroy) {
+            proj.isDestroyed = true;
+        }
+
+        const ctx: ImpactContext = {
+            game: this.context.game,
+            position: impactPos,
+            sourceTank: this.context.findTankById(proj.ownerId),
+            target: { type: 'projectile', projectile: targetProj },
+        };
+
+        this.context.impactExecutor.execute(proj.onHit, ctx);
+
+        this.context.addPopEvent({
+            id: `${Date.now()}_clash_${proj.id}`,
+            x: impactPos.x,
+            y: impactPos.y,
+            radius: proj.radius * 1.8,
+            hue: proj.hue,
+            color: proj.color,
+            isKill: false,
+            projectileTypeId: proj.projectileTypeId,
+        });
     }
 
     private handleProjectileTank(
