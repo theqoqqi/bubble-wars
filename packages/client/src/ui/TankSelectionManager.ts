@@ -9,127 +9,20 @@ import {
 } from '@bubble-wars/shared';
 import { drawBubbleGraph } from '../graphics/render.js';
 
-export interface TankMetaInfo {
-    role: string;
-    description: string;
-    speedRating: number; // 1 to 5
-    damageRating: number; // 1 to 5
-    difficulty: 'Легко' | 'Средне' | 'Сложно';
-}
-
-export const TANK_META: Record<string, TankMetaInfo> = {
-    classic: {
-        role: 'УНИВЕРСАЛ',
-        description: 'Сбалансированный мыльный танк с хорошей подвижностью и надёжным орудием.',
-        speedRating: 3,
-        damageRating: 3,
-        difficulty: 'Легко',
-    },
-    twin: {
-        role: 'ШТУРМОВИК',
-        description: 'Двухъядерный корпус с двумя независимыми мыломётами для плотного огня.',
-        speedRating: 3,
-        damageRating: 4,
-        difficulty: 'Легко',
-    },
-    sniper: {
-        role: 'СНАЙПЕР',
-        description: 'Облегчённый подвижный корпус с длинноствольной трубкой. Высокий урон и скорость пули.',
-        speedRating: 4,
-        damageRating: 5,
-        difficulty: 'Сложно',
-    },
-    shotgun: {
-        role: 'ДРОБОВИК',
-        description: 'Утолщённый мыльный пузырь с широким раструбом. Смертоносен на ближней дистанции.',
-        speedRating: 3,
-        damageRating: 4,
-        difficulty: 'Средне',
-    },
-    machinegun: {
-        role: 'ПУЛЕМЁТЧИК',
-        description: 'Скорострельный пеногенератор с непрерывным потоком мелких мыльных пуль.',
-        speedRating: 3,
-        damageRating: 3,
-        difficulty: 'Средне',
-    },
-    heavy: {
-        role: 'ДЖАГГЕРНАУТ',
-        description: 'Трёхъядерный бронированный пузырь с мортирой. Запускает огромный разрушительный шар.',
-        speedRating: 1,
-        damageRating: 5,
-        difficulty: 'Средне',
-    },
-    popocalypse: {
-        role: 'СУДНЫЙ ДЕНЬ',
-        description: 'Запускает разрушительные мыльные заряды судного дня. Снаряд плавно замедляется и взрывается колоссальной ударной волной.',
-        speedRating: 2,
-        damageRating: 5,
-        difficulty: 'Сложно',
-    },
-};
-
 export class TankSelectionManager {
-    public selectedBlueprintId: string;
     private currentHue: number = 192;
     private modalEl: HTMLElement | null = null;
     private gridEl: HTMLElement | null = null;
-    private previewCardEl: HTMLElement | null = null;
-    private previewCanvasEl: HTMLCanvasElement | null = null;
-    private previewRoleEl: HTMLElement | null = null;
-    private previewNameEl: HTMLElement | null = null;
-    private previewDescEl: HTMLElement | null = null;
-    private previewValHpEl: HTMLElement | null = null;
-    private previewBarHpEl: HTMLElement | null = null;
-    private previewValSpeedEl: HTMLElement | null = null;
-    private previewBarSpeedEl: HTMLElement | null = null;
-    private previewValDamageEl: HTMLElement | null = null;
-    private previewBarDamageEl: HTMLElement | null = null;
-    private previewWeaponTextEl: HTMLElement | null = null;
-    private btnOpenHangarEl: HTMLElement | null = null;
+
+    public onSelectTank: ((blueprintId: string) => void) | null = null;
 
     constructor(initialColor: ColorDef = { hue: 192 }) {
         this.currentHue = initialColor.hue ?? 192;
-        const saved = localStorage.getItem('bubble_selected_tank');
-        this.selectedBlueprintId =
-            saved && tankBlueprintRegistry.has(saved) ? saved : 'classic';
     }
 
     public init(): void {
         this.modalEl = document.getElementById('tank-modal');
         this.gridEl = document.getElementById('tank-grid');
-        this.previewCardEl = document.getElementById('tank-preview-card');
-        this.previewCanvasEl = document.getElementById(
-            'tank-preview-canvas'
-        ) as HTMLCanvasElement;
-        this.previewRoleEl = document.getElementById('tank-preview-role');
-        this.previewNameEl = document.getElementById('tank-preview-name');
-        this.previewDescEl = document.getElementById('tank-preview-desc');
-        this.previewValHpEl = document.getElementById('tank-preview-val-hp');
-        this.previewBarHpEl = document.getElementById('tank-preview-bar-hp');
-        this.previewValSpeedEl = document.getElementById('tank-preview-val-speed');
-        this.previewBarSpeedEl = document.getElementById('tank-preview-bar-speed');
-        this.previewValDamageEl = document.getElementById('tank-preview-val-damage');
-        this.previewBarDamageEl = document.getElementById('tank-preview-bar-damage');
-        this.previewWeaponTextEl = document.getElementById('tank-preview-weapon-text');
-        this.btnOpenHangarEl = document.getElementById('btn-open-hangar');
-
-        // Click on panel or hangar button opens modal
-        if (this.previewCardEl) {
-            this.previewCardEl.addEventListener('click', () => this.openModal());
-            this.previewCardEl.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    this.openModal();
-                }
-            });
-        }
-        if (this.btnOpenHangarEl) {
-            this.btnOpenHangarEl.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.openModal();
-            });
-        }
 
         const btnClose = document.getElementById('btn-close-tank-modal');
         if (btnClose) {
@@ -155,88 +48,23 @@ export class TankSelectionManager {
             }
         });
 
-        this.renderMainPreview();
         this.buildModalGrid();
     }
 
     public setColor(color: ColorDef): void {
         this.currentHue = color.hue ?? 192;
-        this.renderMainPreview();
         this.redrawAllModalCanvases();
     }
 
     public openModal(): void {
         if (!this.modalEl) return;
         this.modalEl.classList.remove('hidden');
-        this.updateActiveCardClass();
         this.redrawAllModalCanvases();
     }
-
-    public onConfirm: ((blueprintId: string) => void) | null = null;
 
     public closeModal(): void {
         if (!this.modalEl) return;
         this.modalEl.classList.add('hidden');
-    }
-
-    public selectTank(blueprintId: string, triggerConfirm: boolean = true): void {
-        if (!tankBlueprintRegistry.has(blueprintId)) return;
-        this.selectedBlueprintId = blueprintId;
-        localStorage.setItem('bubble_selected_tank', blueprintId);
-        this.renderMainPreview();
-        this.updateActiveCardClass();
-        if (triggerConfirm && this.onConfirm) {
-            this.onConfirm(blueprintId);
-        }
-    }
-
-    public renderMainPreview(): void {
-        const bp = tankBlueprintRegistry.get(this.selectedBlueprintId);
-        const meta = TANK_META[bp.id] || {
-            role: 'БОЕВОЙ ТАНК',
-            description: bp.name,
-            speedRating: 3,
-            damageRating: 3,
-            difficulty: 'Средне',
-        };
-
-        const gunDef = bp.guns[0];
-        const gunSpec = gunTypeRegistry.get(gunDef.gunTypeId);
-        const barrel = gunSpec.barrels[0];
-        const projType = projectileTypeRegistry.get(barrel.projectileTypeId);
-
-        if (this.previewRoleEl) this.previewRoleEl.textContent = meta.role;
-        if (this.previewNameEl) this.previewNameEl.textContent = bp.name;
-        if (this.previewDescEl) this.previewDescEl.textContent = meta.description;
-
-        if (this.previewValHpEl) this.previewValHpEl.textContent = `${bp.maxHp}`;
-        if (this.previewBarHpEl) {
-            this.previewBarHpEl.style.width = `${Math.min(100, (bp.maxHp / 160) * 100)}%`;
-        }
-
-        if (this.previewValSpeedEl) this.previewValSpeedEl.textContent = `${meta.speedRating}/5`;
-        if (this.previewBarSpeedEl) {
-            this.previewBarSpeedEl.style.width = `${(meta.speedRating / 5) * 100}%`;
-        }
-
-        if (this.previewValDamageEl) this.previewValDamageEl.textContent = `${meta.damageRating}/5`;
-        if (this.previewBarDamageEl) {
-            this.previewBarDamageEl.style.width = `${(meta.damageRating / 5) * 100}%`;
-        }
-
-        if (this.previewWeaponTextEl) {
-            const countPrefix =
-                bp.guns.length > 1
-                    ? `${bp.guns.length}x `
-                    : barrel.bulletsPerShot && barrel.bulletsPerShot > 1
-                      ? `${barrel.bulletsPerShot}x `
-                      : '';
-            this.previewWeaponTextEl.textContent = `${countPrefix}${gunSpec.name} (${projType.damage} ур.)`;
-        }
-
-        if (this.previewCanvasEl) {
-            this.drawTankOnCanvas(this.previewCanvasEl, bp, this.currentHue);
-        }
     }
 
     private buildModalGrid(): void {
@@ -244,94 +72,100 @@ export class TankSelectionManager {
         this.gridEl.innerHTML = '';
 
         for (const bp of DEFAULT_TANK_BLUEPRINTS) {
-            const meta = TANK_META[bp.id] || {
-                role: 'ТАНК',
-                description: bp.name,
-                speedRating: 3,
-                damageRating: 3,
-                difficulty: 'Средне',
-            };
-
             const card = document.createElement('div');
-            card.className = `tank-card ${bp.id === this.selectedBlueprintId ? 'active' : ''}`;
+            card.className = 'tank-card';
             card.dataset.blueprintId = bp.id;
 
-            // Compute main gun details
+            // Compute combat parameters
             const gunDef = bp.guns[0];
             const gunSpec = gunTypeRegistry.get(gunDef.gunTypeId);
             const barrel = gunSpec.barrels[0];
             const projType = projectileTypeRegistry.get(barrel.projectileTypeId);
 
-            const countPrefix =
-                bp.guns.length > 1
-                    ? `${bp.guns.length}x `
-                    : barrel.bulletsPerShot && barrel.bulletsPerShot > 1
-                      ? `${barrel.bulletsPerShot}x `
-                      : '';
+            const bulletsCount =
+                (barrel.bulletsPerShot && barrel.bulletsPerShot > 1
+                    ? barrel.bulletsPerShot
+                    : 1) * bp.guns.length;
+            const splashBehavior = projType.onHit?.find((h: any) => h.type === 'splash') as
+                | { damage?: number }
+                | undefined;
+            const splashDamage = splashBehavior?.damage || 0;
+            const totalShotDamage = (projType.damage + splashDamage) * bulletsCount;
+            const shotsPerSec = 1000 / barrel.cooldownMs;
+            const dps = Math.round(totalShotDamage * shotsPerSec);
+            const fireRateStr = shotsPerSec.toFixed(1);
+
+            // Compute real physical steady-state speed
+            const totalArea = bp.body.bubbles.reduce(
+                (sum, b) => sum + Math.PI * b.radius * b.radius,
+                0
+            );
+            const mass = totalArea * 0.005;
+            const steadySpeed = Math.round(
+                ((bp as any).thrustForce / (mass * bp.linearDamping)) * 10000
+            );
+            const speedPercent = Math.min(100, Math.round((steadySpeed / 350) * 100));
 
             card.innerHTML = `
                 <div class="tank-card-header">
-                    <span class="tank-role-badge">${meta.role}</span>
-                    <span class="tank-diff-badge">${meta.difficulty}</span>
-                </div>
-                <div class="tank-card-canvas-box">
-                    <canvas class="tank-card-canvas" width="140" height="110" data-bp="${bp.id}"></canvas>
-                </div>
-                <div class="tank-card-body">
                     <h3 class="tank-card-title">${bp.name}</h3>
-                    <p class="tank-card-desc">${meta.description}</p>
+                </div>
 
-                    <div class="tank-stats-list">
-                        <div class="tank-stat-row">
-                            <span class="stat-label">Прочность (HP)</span>
+                <div class="tank-card-body-row">
+                    <!-- Колонка 1: Картинка танка -->
+                    <div class="tank-card-canvas-box">
+                        <canvas class="tank-card-canvas" width="100" height="100" data-bp="${bp.id}"></canvas>
+                    </div>
+
+                    <!-- Колонка 2: Названия и значения статов -->
+                    <div class="tank-stats-labels-col">
+                        <div class="tank-stat-text-row">
+                            <span class="stat-label">HP</span>
                             <span class="stat-val">${bp.maxHp}</span>
+                        </div>
+                        <div class="tank-stat-text-row">
+                            <span class="stat-label">ДПС</span>
+                            <span class="stat-val">${dps}/с</span>
+                        </div>
+                        <div class="tank-stat-text-row">
+                            <span class="stat-label">ТЕМП</span>
+                            <span class="stat-val">${fireRateStr} в/с</span>
+                        </div>
+                        <div class="tank-stat-text-row">
+                            <span class="stat-label">СКОР.</span>
+                            <span class="stat-val">${steadySpeed}</span>
+                        </div>
+                    </div>
+
+                    <!-- Колонка 3: Полоски прогресса -->
+                    <div class="tank-stats-bars-col">
+                        <div class="stat-bar-track">
                             <div class="stat-bar-bg"><div class="stat-bar-fill hp" style="width: ${Math.min(100, (bp.maxHp / 160) * 100)}%"></div></div>
                         </div>
-                        <div class="tank-stat-row">
-                            <span class="stat-label">Скорость</span>
-                            <span class="stat-val">${meta.speedRating}/5</span>
-                            <div class="stat-bar-bg"><div class="stat-bar-fill speed" style="width: ${(meta.speedRating / 5) * 100}%"></div></div>
+                        <div class="stat-bar-track">
+                            <div class="stat-bar-bg"><div class="stat-bar-fill damage" style="width: ${Math.min(100, (dps / 125) * 100)}%"></div></div>
                         </div>
-                        <div class="tank-stat-row">
-                            <span class="stat-label">Урон / Залп</span>
-                            <span class="stat-val">${meta.damageRating}/5</span>
-                            <div class="stat-bar-bg"><div class="stat-bar-fill damage" style="width: ${(meta.damageRating / 5) * 100}%"></div></div>
+                        <div class="stat-bar-track">
+                            <div class="stat-bar-bg"><div class="stat-bar-fill fire-rate" style="width: ${Math.min(100, (parseFloat(fireRateStr) / 10.5) * 100)}%"></div></div>
                         </div>
-                    </div>
-
-                    <div class="tank-weapon-info">
-                        <span class="weapon-icon">🫧</span>
-                        <span class="weapon-text">${countPrefix}${gunSpec.name} (${projType.damage} урона)</span>
+                        <div class="stat-bar-track">
+                            <div class="stat-bar-bg"><div class="stat-bar-fill speed" style="width: ${speedPercent}%"></div></div>
+                        </div>
                     </div>
                 </div>
-                <button class="btn-bubble btn-select-tank ${bp.id === this.selectedBlueprintId ? 'btn-active' : ''}">
-                    ${bp.id === this.selectedBlueprintId ? '✓ ВЫБРАН' : 'ВЫБРАТЬ'}
-                </button>
             `;
 
             card.addEventListener('click', () => {
-                this.selectTank(bp.id);
+                this.closeModal();
+                if (this.onSelectTank) {
+                    this.onSelectTank(bp.id);
+                }
             });
 
             this.gridEl.appendChild(card);
         }
 
         this.redrawAllModalCanvases();
-    }
-
-    private updateActiveCardClass(): void {
-        if (!this.gridEl) return;
-        const cards = this.gridEl.querySelectorAll('.tank-card');
-        cards.forEach((c) => {
-            const cardEl = c as HTMLElement;
-            const isCurrent = cardEl.dataset.blueprintId === this.selectedBlueprintId;
-            cardEl.classList.toggle('active', isCurrent);
-            const btn = cardEl.querySelector('.btn-select-tank');
-            if (btn) {
-                btn.textContent = isCurrent ? '✓ ВЫБРАН' : 'ВЫБРАТЬ';
-                btn.classList.toggle('btn-active', isCurrent);
-            }
-        });
     }
 
     private redrawAllModalCanvases(): void {

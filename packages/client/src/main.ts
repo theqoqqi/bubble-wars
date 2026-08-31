@@ -97,7 +97,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Tank Modal elements
     const tankModalSubtitle = document.getElementById('tank-modal-subtitle');
-    const btnTankConfirmJoin = document.getElementById('btn-tank-confirm-join');
     const btnCloseTankModal = document.getElementById('btn-close-tank-modal');
 
     // Sound elements
@@ -802,7 +801,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     // Join room with selected tank
-    const joinCurrentRoom = (sessionToken?: string) => {
+    const joinCurrentRoom = (blueprintId: string, sessionToken?: string) => {
         if (!currentSelectedRoomId) return;
 
         const name = nameInput?.value.trim() || 'SoapWarrior';
@@ -813,7 +812,7 @@ window.addEventListener('DOMContentLoaded', () => {
         networkManager.join(
             name,
             selectedColor,
-            tankSelectionManager.selectedBlueprintId,
+            blueprintId,
             currentSelectedRoomId,
             sessionToken
         );
@@ -821,15 +820,9 @@ window.addEventListener('DOMContentLoaded', () => {
         tankSelectionManager.closeModal();
     };
 
-    tankSelectionManager.onConfirm = () => {
-        joinCurrentRoom();
+    tankSelectionManager.onSelectTank = (blueprintId) => {
+        joinCurrentRoom(blueprintId);
     };
-
-    if (btnTankConfirmJoin) {
-        btnTankConfirmJoin.addEventListener('click', () => {
-            joinCurrentRoom();
-        });
-    }
 
     if (btnCloseTankModal) {
         btnCloseTankModal.addEventListener('click', () => {
