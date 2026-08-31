@@ -71,12 +71,8 @@ export class TankSelectionManager {
         if (!this.gridEl) return;
         this.gridEl.innerHTML = '';
 
-        for (const bp of DEFAULT_TANK_BLUEPRINTS) {
-            const card = document.createElement('div');
-            card.className = 'tank-card';
-            card.dataset.blueprintId = bp.id;
-
-            // Compute combat parameters
+        // 1. Предварительный расчет боевых характеристик для каждого доступного танка
+        const tankStats = DEFAULT_TANK_BLUEPRINTS.map((bp) => {
             const gunDef = bp.guns[0];
             const gunSpec = gunTypeRegistry.get(gunDef.gunTypeId);
             const barrel = gunSpec.barrels[0];
@@ -94,6 +90,32 @@ export class TankSelectionManager {
             const shotsPerSec = 1000 / barrel.cooldownMs;
             const dps = Math.round(totalShotDamage * shotsPerSec);
             const fireRateStr = shotsPerSec.toFixed(1);
+
+            return {
+                bp,
+                dps,
+                shotsPerSec,
+                fireRateStr,
+            };
+        });
+
+        // 2. Автоматическое вычисление максимальных значений среди всех танков
+        const maxHp = Math.max(1, ...tankStats.map((t) => t.bp.maxHp));
+        const maxDps = Math.max(1, ...tankStats.map((t) => t.dps));
+        const maxFireRate = Math.max(1, ...tankStats.map((t) => t.shotsPerSec));
+        const maxSpeed = Math.max(1, ...tankStats.map((t) => t.bp.speed));
+
+        // 3. Рендеринг карточек с автоматической нормализацией полос прогресса по максимумам
+        for (const item of tankStats) {
+            const { bp, dps, fireRateStr, shotsPerSec } = item;
+            const card = document.createElement('div');
+            card.className = 'tank-card';
+            card.dataset.blueprintId = bp.id;
+
+            const hpPercent = Math.min(100, Math.round((bp.maxHp / maxHp) * 100));
+            const dpsPercent = Math.min(100, Math.round((dps / maxDps) * 100));
+            const fireRatePercent = Math.min(100, Math.round((shotsPerSec / maxFireRate) * 100));
+            const speedPercent = Math.min(100, Math.round((bp.speed / maxSpeed) * 100));
 
             card.innerHTML = `
                 <div class="tank-card-header">
@@ -129,16 +151,16 @@ export class TankSelectionManager {
                     <!-- Колонка 3: Полоски прогресса -->
                     <div class="tank-stats-bars-col">
                         <div class="stat-bar-track">
-                            <div class="stat-bar-bg"><div class="stat-bar-fill hp" style="width: ${Math.min(100, (bp.maxHp / 160) * 100)}%"></div></div>
+                            <div class="stat-bar-bg"><div class="stat-bar-fill hp" style="width: ${hpPercent}%"></div></div>
                         </div>
                         <div class="stat-bar-track">
-                            <div class="stat-bar-bg"><div class="stat-bar-fill damage" style="width: ${Math.min(100, (dps / 125) * 100)}%"></div></div>
+                            <div class="stat-bar-bg"><div class="stat-bar-fill damage" style="width: ${dpsPercent}%"></div></div>
                         </div>
                         <div class="stat-bar-track">
-                            <div class="stat-bar-bg"><div class="stat-bar-fill fire-rate" style="width: ${Math.min(100, (parseFloat(fireRateStr) / 10.5) * 100)}%"></div></div>
+                            <div class="stat-bar-bg"><div class="stat-bar-fill fire-rate" style="width: ${fireRatePercent}%"></div></div>
                         </div>
                         <div class="stat-bar-track">
-                            <div class="stat-bar-bg"><div class="stat-bar-fill speed" style="width: ${Math.min(100, Math.round((bp.speed / 70) * 100))}%"></div></div>
+                            <div class="stat-bar-bg"><div class="stat-bar-fill speed" style="width: ${speedPercent}%"></div></div>
                         </div>
                     </div>
                 </div>
