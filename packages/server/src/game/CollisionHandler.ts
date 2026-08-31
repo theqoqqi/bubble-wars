@@ -3,7 +3,7 @@ import { BubblePopEvent, subPoints } from '@bubble-wars/shared';
 import { ServerProjectile } from './Projectile.js';
 import { ServerTank } from './ServerTank.js';
 import { GameRoom } from './GameRoom.js';
-import { ImpactContext, ImpactEffectExecutor } from './effects/ImpactEffectExecutor.js';
+import { ImpactEffectExecutor, ImpactTarget } from './effects/ImpactEffectExecutor.js';
 import './matterTypes.js';
 
 export interface CollisionContext {
@@ -12,6 +12,13 @@ export interface CollisionContext {
     findTankById(id: string): ServerTank | null;
     addPopEvent(event: BubblePopEvent): void;
     isMatchOver(): boolean;
+}
+
+interface ProcessProjectileHitOptions {
+    target: ImpactTarget;
+    popRadiusMultiplier?: number;
+    position?: { x: number; y: number };
+    beforeEffects?: (sourceTank: ServerTank | null) => void;
 }
 
 export class CollisionHandler {
@@ -26,48 +33,54 @@ export class CollisionHandler {
     }
 
     private handlePair(bodyA: Matter.Body, bodyB: Matter.Body): void {
-        // 1. Projectile vs Projectile (destroy each other on impact)
-        if (bodyA.label === 'projectile' && bodyB.label === 'projectile') {
-            this.handleProjectileProjectile(bodyA, bodyB);
+        const projPair = this.findPairByLabel(bodyA, bodyB, 'projectile');
+        if (projPair) {
+            this.handleProjectile(projPair[0], projPair[1]);
             return;
         }
 
-        // 2. Identify projectile and other entity
-        let projectileBody: Matter.Body | null = null;
-        let otherBody: Matter.Body | null = null;
-
-        if (bodyA.label === 'projectile') {
-            projectileBody = bodyA;
-            otherBody = bodyB;
-        } else if (bodyB.label === 'projectile') {
-            projectileBody = bodyB;
-            otherBody = bodyA;
+        const tankPair = this.findPairByLabel(bodyA, bodyB, 'tank');
+        if (tankPair) {
+            this.handleTank(tankPair[0], tankPair[1]);
         }
+    }
 
-        if (projectileBody && otherBody) {
-            const projectile = projectileBody.projectileInstance;
-            if (!projectile || projectile.isDestroyed) return;
-
-            if (otherBody.label === 'tank') {
-                const tank = otherBody.tankInstance;
-                if (tank) {
-                    this.handleProjectileTank(projectile, projectileBody, tank);
-                }
-            } else if (otherBody.label === 'obstacle') {
-                this.handleProjectileObstacle(projectile, projectileBody, otherBody);
-            } else if (otherBody.label === 'wall') {
-                this.handleProjectileMapBoundary(projectile, projectileBody);
-            }
+    private handleProjectile(projBody: Matter.Body, other: Matter.Body): void {
+        const projectile = projBody.projectileInstance;
+        if (!projectile || projectile.isDestroyed) {
             return;
         }
 
-        // 3. Tank vs Obstacle or Tank vs Tank (trigger bubble wobbles)
-        if (bodyA.label === 'tank' && bodyB.label === 'obstacle') {
-            this.handleTankObstacle(bodyA.tankInstance);
-        } else if (bodyB.label === 'tank' && bodyA.label === 'obstacle') {
-            this.handleTankObstacle(bodyB.tankInstance);
-        } else if (bodyA.label === 'tank' && bodyB.label === 'tank') {
-            this.handleTankTank(bodyA.tankInstance, bodyB.tankInstance);
+        if (other.label === 'tank' && other.tankInstance) {
+            this.handleProjectileTank(projectile, other.tankInstance);
+            return;
+        }
+
+        if (other.label === 'obstacle') {
+            this.handleProjectileObstacle(projectile, other);
+            return;
+        }
+
+        if (other.label === 'wall') {
+            this.handleProjectileMapBoundary(projectile);
+            return;
+        }
+
+        if (other.label === 'projectile') {
+            this.handleProjectileProjectile(projBody, other);
+            return;
+        }
+    }
+
+    private handleTank(tankBody: Matter.Body, other: Matter.Body): void {
+        if (other.label === 'obstacle') {
+            this.handleTankObstacle(tankBody.tankInstance);
+            return;
+        }
+
+        if (other.label === 'tank') {
+            this.handleTankTank(tankBody.tankInstance, other.tankInstance);
+            return;
         }
     }
 
@@ -75,204 +88,177 @@ export class CollisionHandler {
         const projA = bodyA.projectileInstance;
         const projB = bodyB.projectileInstance;
 
-        if (!projA || !projB || projA.isDestroyed || projB.isDestroyed) {
+        if (!projA || !projB || projA.isDestroyed || projB.isDestroyed || projA.ownerId === projB.ownerId) {
             return;
         }
 
-        // Projectiles from the same player never destroy each other
-        if (projA.ownerId === projB.ownerId) {
-            return;
-        }
+        const impactPos = {
+            x: (bodyA.position.x + bodyB.position.x) / 2,
+            y: (bodyA.position.y + bodyB.position.y) / 2,
+        };
 
-        const normalA = subPoints(bodyA.position, bodyB.position);
-        const normalB = subPoints(bodyB.position, bodyA.position);
-
-        const midX = (bodyA.position.x + bodyB.position.x) / 2;
-        const midY = (bodyA.position.y + bodyB.position.y) / 2;
-        const impactPos = { x: midX, y: midY };
-
-        this.resolveProjectileVsProjectile(projA, projB, normalA, impactPos);
-        this.resolveProjectileVsProjectile(projB, projA, normalB, impactPos);
-    }
-
-    private resolveProjectileVsProjectile(
-        proj: ServerProjectile,
-        targetProj: ServerProjectile,
-        normal: { x: number; y: number },
-        impactPos: { x: number; y: number }
-    ): void {
-        const res = proj.behaviors.handleCollision(proj, {
-            targetType: 'projectile',
-            target: { type: 'projectile', projectile: targetProj },
-            normal,
-        });
-
-        if (res.reflect) {
-            proj.reflectVelocity(normal);
-        }
-
-        if (!res.preventDestroy) {
-            proj.isDestroyed = true;
-        }
-
-        const ctx: ImpactContext = {
-            game: this.context.game,
+        this.processProjectileHit(projA, {
+            target: { type: 'projectile', projectile: projB },
             position: impactPos,
-            sourceTank: this.context.findTankById(proj.ownerId),
-            target: { type: 'projectile', projectile: targetProj },
-        };
-
-        this.context.impactExecutor.execute(proj.onHit, ctx);
-
-        this.context.addPopEvent({
-            id: `${Date.now()}_clash_${proj.id}`,
-            x: impactPos.x,
-            y: impactPos.y,
-            radius: proj.radius * 1.8,
-            hue: proj.hue,
-            color: proj.color,
-            isKill: false,
-            projectileTypeId: proj.projectileTypeId,
+            popRadiusMultiplier: 1.8,
+        });
+        this.processProjectileHit(projB, {
+            target: { type: 'projectile', projectile: projA },
+            position: impactPos,
+            popRadiusMultiplier: 1.8,
         });
     }
 
-    private handleProjectileTank(
-        projectile: ServerProjectile,
-        projectileBody: Matter.Body,
-        tank: ServerTank
-    ): void {
-        if (this.context.isMatchOver()) return;
-        if (!tank || tank.id === projectile.ownerId || tank.isDead) return;
-
-        const normal = subPoints(projectileBody.position, tank.body.position);
-
-        const collisionCtx = {
-            targetType: 'tank' as const,
-            target: { type: 'tank' as const, tank },
-            normal,
-        };
-        const result = projectile.behaviors.handleCollision(projectile, collisionCtx);
-        if (result.skip) return;
-        if (result.reflect) projectile.reflectVelocity(normal);
-        if (!result.preventDestroy) projectile.isDestroyed = true;
-
-        const killer = this.context.findTankById(projectile.ownerId);
-
-        const ctx: ImpactContext = {
-            game: this.context.game,
-            position: { x: projectileBody.position.x, y: projectileBody.position.y },
-            sourceTank: killer,
-            target: { type: 'tank', tank },
-        };
-
-        // 1. Direct projectile damage
-        if (projectile.damage > 0) {
-            tank.takeDamage(projectile.damage, killer);
+    private handleProjectileTank(projectile: ServerProjectile, tank: ServerTank): void {
+        if (this.context.isMatchOver() || !tank || tank.id === projectile.ownerId || tank.isDead) {
+            return;
         }
 
-        // 2. onHit impact effects
-        this.context.impactExecutor.execute(projectile.onHit, ctx);
-
-        // Small pop effect for hit
-        this.context.addPopEvent({
-            id: `${Date.now()}_${Math.random()}`,
-            x: projectileBody.position.x,
-            y: projectileBody.position.y,
-            radius: projectile.radius * 1.6,
-            hue: projectile.hue,
-            color: projectile.color,
-            isKill: false,
-            projectileTypeId: projectile.projectileTypeId,
+        this.processProjectileHit(projectile, {
+            target: { type: 'tank', tank },
+            popRadiusMultiplier: 1.6,
+            beforeEffects: (sourceTank) => {
+                if (projectile.damage > 0) {
+                    tank.takeDamage(projectile.damage, sourceTank);
+                }
+            },
         });
     }
 
     private handleProjectileObstacle(
         projectile: ServerProjectile,
-        projectileBody: Matter.Body,
         obstacleBody: Matter.Body
     ): void {
-        Matter.Body.applyForce(obstacleBody, projectileBody.position, {
-            x: projectileBody.velocity.x * 0.0006,
-            y: projectileBody.velocity.y * 0.0006,
+        Matter.Body.applyForce(obstacleBody, projectile.body.position, {
+            x: projectile.body.velocity.x * 0.0006,
+            y: projectile.body.velocity.y * 0.0006,
         });
 
-        const normal = subPoints(projectileBody.position, obstacleBody.position);
-
-        const collisionCtx = {
-            targetType: 'obstacle' as const,
-            target: { type: 'obstacle' as const, body: obstacleBody, obstacleId: obstacleBody.id },
-            normal,
-        };
-        const result = projectile.behaviors.handleCollision(projectile, collisionCtx);
-        if (result.skip) return;
-        if (result.reflect) projectile.reflectVelocity(normal);
-        if (!result.preventDestroy) projectile.isDestroyed = true;
-
-        const ctx: ImpactContext = {
-            game: this.context.game,
-            position: { x: projectileBody.position.x, y: projectileBody.position.y },
-            sourceTank: this.context.findTankById(projectile.ownerId),
-            target: { type: 'obstacle', body: obstacleBody, obstacleId: obstacleBody.id },
-        };
-        this.context.impactExecutor.execute(projectile.onHit, ctx);
-
-        this.context.addPopEvent({
-            id: `${Date.now()}_${Math.random()}`,
-            x: projectileBody.position.x,
-            y: projectileBody.position.y,
-            radius: projectile.radius * 1.5,
-            hue: projectile.hue,
-            color: projectile.color,
-            isKill: false,
-            projectileTypeId: projectile.projectileTypeId,
+        this.processProjectileHit(projectile, {
+            target: {
+                type: 'obstacle',
+                body: obstacleBody,
+                obstacleId: obstacleBody.id,
+            },
+            popRadiusMultiplier: 1.5,
         });
     }
 
-    private handleProjectileMapBoundary(
-        projectile: ServerProjectile,
-        projectileBody: Matter.Body
-    ): void {
-        const normal = {
-            x: -projectileBody.position.x,
-            y: -projectileBody.position.y,
-        };
-
-        const collisionCtx = {
-            targetType: 'map_boundary' as const,
-            target: { type: 'map_boundary' as const },
-            normal,
-        };
-        const result = projectile.behaviors.handleCollision(projectile, collisionCtx);
-        if (result.skip) return;
-        if (result.reflect) projectile.reflectVelocity(normal);
-        if (!result.preventDestroy) projectile.isDestroyed = true;
-
-        const ctx: ImpactContext = {
-            game: this.context.game,
-            position: { x: projectileBody.position.x, y: projectileBody.position.y },
-            sourceTank: this.context.findTankById(projectile.ownerId),
+    private handleProjectileMapBoundary(projectile: ServerProjectile): void {
+        this.processProjectileHit(projectile, {
             target: { type: 'map_boundary' },
-        };
-        this.context.impactExecutor.execute(projectile.onHit, ctx);
-
-        this.context.addPopEvent({
-            id: `${Date.now()}_${Math.random()}`,
-            x: projectileBody.position.x,
-            y: projectileBody.position.y,
-            radius: projectile.radius * 1.4,
-            hue: projectile.hue,
-            color: projectile.color,
-            isKill: false,
-            projectileTypeId: projectile.projectileTypeId,
+            popRadiusMultiplier: 1.4,
         });
     }
 
     private handleTankObstacle(tank?: ServerTank): void {
-        if (tank) tank.addWobble(Math.random() * Math.PI * 2, 0.18);
+        tank?.addRandomWobble(0.18);
     }
 
     private handleTankTank(tankA?: ServerTank, tankB?: ServerTank): void {
-        if (tankA) tankA.addWobble(Math.random() * Math.PI * 2, 0.22);
-        if (tankB) tankB.addWobble(Math.random() * Math.PI * 2, 0.22);
+        tankA?.addRandomWobble(0.22);
+        tankB?.addRandomWobble(0.22);
+    }
+
+    /**
+     * Централизованный конвейер попадания снаряда в любую цель
+     */
+    private processProjectileHit(
+        projectile: ServerProjectile,
+        options: ProcessProjectileHitOptions
+    ): boolean {
+        const { target } = options;
+        const normal = this.getCollisionNormal(projectile, target);
+
+        const result = projectile.behaviors.handleCollision(projectile, {
+            targetType: target.type,
+            target,
+            normal,
+        });
+
+        if (result.skip) {
+            return false;
+        }
+
+        if (result.reflect) {
+            projectile.reflectVelocity(normal);
+        }
+
+        if (!result.preventDestroy) {
+            projectile.isDestroyed = true;
+        }
+
+        const sourceTank = this.context.findTankById(projectile.ownerId);
+
+        options.beforeEffects?.(sourceTank);
+
+        const position = options.position ?? {
+            x: projectile.body.position.x,
+            y: projectile.body.position.y,
+        };
+
+        this.context.impactExecutor.execute(projectile.onHit, {
+            game: this.context.game,
+            position,
+            sourceTank,
+            target,
+        });
+
+        const multiplier = options.popRadiusMultiplier ?? 1.5;
+        this.emitPopEvent(projectile, position, multiplier);
+
+        return true;
+    }
+
+    private getCollisionNormal(
+        projectile: ServerProjectile,
+        target: ImpactTarget
+    ): { x: number; y: number } {
+        switch (target.type) {
+            case 'tank':
+                return subPoints(projectile.body.position, target.tank.body.position);
+            case 'obstacle':
+                return subPoints(projectile.body.position, target.body.position);
+            case 'projectile':
+                return subPoints(projectile.body.position, target.projectile.body.position);
+            case 'map_boundary':
+                return {
+                    x: -projectile.body.position.x,
+                    y: -projectile.body.position.y,
+                };
+        }
+    }
+
+    private emitPopEvent(
+        projectile: ServerProjectile,
+        position: { x: number; y: number },
+        radiusMultiplier: number
+    ): void {
+        this.context.addPopEvent({
+            id: `${Date.now()}_${Math.random()}`,
+            x: position.x,
+            y: position.y,
+            radius: projectile.radius * radiusMultiplier,
+            hue: projectile.hue,
+            color: projectile.color,
+            isKill: false,
+            projectileTypeId: projectile.projectileTypeId,
+        });
+    }
+
+    private findPairByLabel(
+        bodyA: Matter.Body,
+        bodyB: Matter.Body,
+        label: string
+    ): [Matter.Body, Matter.Body] | null {
+        if (bodyA.label === label) {
+            return [bodyA, bodyB];
+        }
+
+        if (bodyB.label === label) {
+            return [bodyB, bodyA];
+        }
+
+        return null;
     }
 }
