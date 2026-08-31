@@ -22,6 +22,7 @@ export class HudManager {
     private pingEl = document.getElementById('hud-ping');
     private netInEl = document.getElementById('hud-net-in');
     private netPacketEl = document.getElementById('hud-net-packet');
+    private tankSpeedEl = document.getElementById('hud-tank-speed');
     private hudHostBadge = document.getElementById('hud-host-badge');
     private leaderboardContainer = document.getElementById('leaderboard-container');
     private killFeed = document.getElementById('kill-feed');
@@ -135,6 +136,11 @@ export class HudManager {
         if (this.pingEl) {
             this.pingEl.textContent = `${latency} ms`;
         }
+    }
+
+    public updateTankSpeed(speed: number): void {
+        if (!this.tankSpeedEl) return;
+        this.tankSpeedEl.textContent = `${speed}`;
     }
 
     public updateLeaderboard(
@@ -509,6 +515,7 @@ export class HudManager {
         this.hideGameOverModal();
         this.hideTabStats();
         if (this.leaderboardContainer) this.leaderboardContainer.innerHTML = '';
+        if (this.tankSpeedEl) this.tankSpeedEl.textContent = '0';
     }
 
     private formatPlayersCount(count: number): string {

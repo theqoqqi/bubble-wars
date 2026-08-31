@@ -382,6 +382,9 @@ export class Game {
             // Update Local Player UI
             if (snap.id === myId) {
                 this.hudManager.updatePlayerHUD(snap.hp, t.maxHp);
+                const factor = CLIENT_CONFIG.HUD.VELOCITY_TO_BLUEPRINT_SPEED;
+                const currentSpeed = Math.round(Math.hypot(snap.vx, snap.vy) * factor);
+                this.hudManager.updateTankSpeed(currentSpeed);
             }
         }
 
@@ -625,6 +628,7 @@ export class Game {
         const myId = networkManager.playerId;
         if (data.tankId === myId && this.isPlayerAlive) {
             this.isPlayerAlive = false;
+            this.hudManager.updateTankSpeed(0);
             this.playerFlash = 1.0;
             this.shake = Math.min(
                 CLIENT_CONFIG.SHAKE.MAX,

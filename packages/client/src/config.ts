@@ -24,6 +24,15 @@ export const CLIENT_CONFIG = {
     HUD: {
         KILL_FEED_TIMEOUT_MS: 4000,
         KILL_ALERT_DURATION_SEC: 1.5,
+        /**
+         * Коэффициент перевода физической скорости Matter.js (body.velocity)
+         * в характеристику скорости из конфига танка (blueprint.speed):
+         * (60 * 60) / 1000 = 3600 / 1000 = 3.6
+         * - 60 — базовая частота Matter.js (Body._baseDelta = 1000 / 60 мс)
+         * - 60 * 60 = 3600 — квадрат частоты из квадратичного шага времени (deltaTime^2) в интеграторе Верле
+         * - 1000 — делитель миллисекунд в формуле тяги ServerTank.ts ((speed * mass * damping) / 1000)
+         */
+        VELOCITY_TO_BLUEPRINT_SPEED: (60 * 60) / 1000,
     },
     RENDER: {
         CAMERA_LERP: 0.1,
