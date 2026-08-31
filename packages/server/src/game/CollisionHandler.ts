@@ -192,6 +192,10 @@ export class CollisionHandler {
 
         options.beforeEffects?.(sourceTank);
 
+        if (!projectile.isDestroyed) {
+            return true;
+        }
+
         const position = options.position ?? {
             x: projectile.body.position.x,
             y: projectile.body.position.y,
