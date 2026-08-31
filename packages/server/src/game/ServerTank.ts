@@ -96,8 +96,7 @@ export class ServerTank {
             parts: partsList,
             restitution: 0.82,
             friction: 0.02,
-            frictionAir: this.blueprint.linearDamping,
-            density: 0.005,
+            frictionAir: GAME_CONFIG.TANK.LINEAR_DAMPING,
             collisionFilter: {
                 category: COLLISION_CATEGORIES.TANK,
                 mask:
@@ -113,8 +112,11 @@ export class ServerTank {
         for (const part of this.body.parts) {
             part.tankInstance = this;
         }
+
+        this.baseThrustForce = (this.blueprint.speed * this.body.mass * GAME_CONFIG.TANK.LINEAR_DAMPING) / 1000;
     }
 
+    public baseThrustForce: number;
     public thrustVector: { x: number; y: number } = { x: 0, y: 0 };
 
     public applyInput(input: PlayerInput, now: number): ServerProjectile[] {
@@ -139,8 +141,7 @@ export class ServerTank {
 
         if (fx !== 0 || fy !== 0) {
             const len = Math.hypot(fx, fy);
-            const baseThrust = this.blueprint.thrustForce;
-            const forceMag = this.statusEffects.modifyThrust(baseThrust);
+            const forceMag = this.statusEffects.modifyThrust(this.baseThrustForce);
             this.thrustVector = {
                 x: (fx / len) * forceMag,
                 y: (fy / len) * forceMag,
@@ -204,17 +205,6 @@ export class ServerTank {
 
         if (this.thrustVector.x !== 0 || this.thrustVector.y !== 0) {
             Matter.Body.applyForce(this.body, this.body.position, this.thrustVector);
-        }
-
-        // Clamp max velocity
-        const maxSpeed = GAME_CONFIG.TANK.MAX_SPEED;
-        const speed = Math.hypot(this.body.velocity.x, this.body.velocity.y);
-        if (speed > maxSpeed) {
-            const scale = maxSpeed / speed;
-            Matter.Body.setVelocity(this.body, {
-                x: this.body.velocity.x * scale,
-                y: this.body.velocity.y * scale,
-            });
         }
     }
 

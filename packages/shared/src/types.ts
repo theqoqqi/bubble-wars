@@ -156,8 +156,7 @@ export interface TankBlueprint {
     name: string;
     description?: string;
     maxHp: number;
-    thrustForce: number;
-    linearDamping: number;
+    speed: number;
     body: BubbleBodyDef;
     guns: TankGunDef[];
 }

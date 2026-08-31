@@ -95,17 +95,6 @@ export class TankSelectionManager {
             const dps = Math.round(totalShotDamage * shotsPerSec);
             const fireRateStr = shotsPerSec.toFixed(1);
 
-            // Compute real physical steady-state speed
-            const totalArea = bp.body.bubbles.reduce(
-                (sum, b) => sum + Math.PI * b.radius * b.radius,
-                0
-            );
-            const mass = totalArea * 0.005;
-            const steadySpeed = Math.round(
-                ((bp as any).thrustForce / (mass * bp.linearDamping)) * 10000
-            );
-            const speedPercent = Math.min(100, Math.round((steadySpeed / 350) * 100));
-
             card.innerHTML = `
                 <div class="tank-card-header">
                     <h3 class="tank-card-title">${bp.name}</h3>
@@ -133,7 +122,7 @@ export class TankSelectionManager {
                         </div>
                         <div class="tank-stat-text-row">
                             <span class="stat-label">СКОР.</span>
-                            <span class="stat-val">${steadySpeed}</span>
+                            <span class="stat-val">${bp.speed}</span>
                         </div>
                     </div>
 
@@ -149,7 +138,7 @@ export class TankSelectionManager {
                             <div class="stat-bar-bg"><div class="stat-bar-fill fire-rate" style="width: ${Math.min(100, (parseFloat(fireRateStr) / 10.5) * 100)}%"></div></div>
                         </div>
                         <div class="stat-bar-track">
-                            <div class="stat-bar-bg"><div class="stat-bar-fill speed" style="width: ${speedPercent}%"></div></div>
+                            <div class="stat-bar-bg"><div class="stat-bar-fill speed" style="width: ${Math.min(100, Math.round((bp.speed / 70) * 100))}%"></div></div>
                         </div>
                     </div>
                 </div>

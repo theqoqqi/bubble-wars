@@ -5,8 +5,7 @@ export const CLASSIC_TANK_BLUEPRINT: TankBlueprint = {
     id: 'classic',
     name: 'Классический пузырь',
     maxHp: 100,
-    thrustForce: 0.00701,
-    linearDamping: 0.04,
+    speed: 55,
     body: {
         bubbles: [{ id: 'b_0', radius: 32, offsetX: 0, offsetY: 0, color: { hue: 195, tint: 0.5 } }],
     },
@@ -24,8 +23,7 @@ export const TWIN_TANK_BLUEPRINT: TankBlueprint = {
     id: 'twin',
     name: 'Сдвоенный пузырь',
     maxHp: 105,
-    thrustForce: 0.00976,
-    linearDamping: 0.04,
+    speed: 50,
     body: {
         bubbles: [
             { id: 'b_main', radius: 28, offsetX: 0, offsetY: -20, color: { hue: 195, tint: 0.5 } },
@@ -52,8 +50,7 @@ export const SNIPER_TANK_BLUEPRINT: TankBlueprint = {
     id: 'sniper',
     name: 'Мыльный снайпер',
     maxHp: 75,
-    thrustForce: 0.00683,
-    linearDamping: 0.04,
+    speed: 70,
     body: {
         bubbles: [{ id: 'b_0', radius: 28, offsetX: 0, offsetY: 0, color: { hue: 195, tint: 0.5 } }],
     },
@@ -71,8 +68,7 @@ export const SHOTGUN_TANK_BLUEPRINT: TankBlueprint = {
     id: 'shotgun',
     name: 'Мыльный дробовик',
     maxHp: 125,
-    thrustForce: 0.00863,
-    linearDamping: 0.04,
+    speed: 60,
     body: {
         bubbles: [{ id: 'b_0', radius: 34, offsetX: 0, offsetY: 0, color: { hue: 195, tint: 0.5 } }],
     },
@@ -90,8 +86,7 @@ export const MACHINEGUN_TANK_BLUEPRINT: TankBlueprint = {
     id: 'machinegun',
     name: 'Пеномётчик',
     maxHp: 90,
-    thrustForce: 0.00728,
-    linearDamping: 0.04,
+    speed: 65,
     body: {
         bubbles: [{ id: 'b_0', radius: 30, offsetX: 0, offsetY: 0, color: { hue: 195, tint: 0.5 } }],
     },
@@ -109,8 +104,7 @@ export const HEAVY_TANK_BLUEPRINT: TankBlueprint = {
     id: 'heavy',
     name: 'Мыльный джаггернаут',
     maxHp: 160,
-    thrustForce: 0.01055,
-    linearDamping: 0.04,
+    speed: 40,
     body: {
         bubbles: [
             { id: 'b_center', radius: 34, offsetX: 0, offsetY: 0, color: { hue: 195, tint: 0.5 } },
@@ -132,8 +126,7 @@ export const POPOCALYPSE_TANK_BLUEPRINT: TankBlueprint = {
     id: 'popocalypse',
     name: 'Чпококалипсис',
     maxHp: 135,
-    thrustForce: 0.01602,
-    linearDamping: 0.04,
+    speed: 30,
     body: {
         bubbles: [
             { id: 'b_center', radius: 38, offsetX: 0, offsetY: 0, color: { hue: 195, tint: 0.5 } },
