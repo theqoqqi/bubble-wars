@@ -65,6 +65,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const createRoomMaxPlayersVal = document.getElementById('create-room-max-players-val');
     const createRoomBots = document.getElementById('create-room-bots') as HTMLInputElement | null;
     const createRoomBotsVal = document.getElementById('create-room-bots-val');
+    const createRoomObstacles = document.getElementById('create-room-obstacles') as HTMLInputElement | null;
+    const createRoomObstaclesVal = document.getElementById('create-room-obstacles-val');
     const createRoomFragLimit = document.getElementById('create-room-frag-limit') as HTMLInputElement | null;
     const createRoomFragLimitVal = document.getElementById('create-room-frag-limit-val');
     const createRoomBreakTime = document.getElementById('create-room-break-time') as HTMLInputElement | null;
@@ -81,6 +83,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const editRoomMaxPlayersVal = document.getElementById('edit-room-max-players-val');
     const editRoomBots = document.getElementById('edit-room-bots') as HTMLInputElement | null;
     const editRoomBotsVal = document.getElementById('edit-room-bots-val');
+    const editRoomObstacles = document.getElementById('edit-room-obstacles') as HTMLInputElement | null;
+    const editRoomObstaclesVal = document.getElementById('edit-room-obstacles-val');
     const editRoomFragLimit = document.getElementById('edit-room-frag-limit') as HTMLInputElement | null;
     const editRoomFragLimitVal = document.getElementById('edit-room-frag-limit-val');
     const editRoomBreakTime = document.getElementById('edit-room-break-time') as HTMLInputElement | null;
@@ -120,6 +124,7 @@ window.addEventListener('DOMContentLoaded', () => {
         name: 'Основная арена',
         maxPlayers: 16,
         botCount: 8,
+        obstacleCount: 8,
         fragLimit: 10,
         breakSeconds: 15,
         breakReadyCheck: false,
@@ -498,6 +503,13 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (createRoomObstacles) {
+        createRoomObstacles.addEventListener('input', () => {
+            const obsVal = parseInt(createRoomObstacles.value, 10) || 0;
+            if (createRoomObstaclesVal) createRoomObstaclesVal.textContent = obsVal.toString();
+        });
+    }
+
     if (createRoomFragLimit) {
         createRoomFragLimit.addEventListener('input', () => {
             const fragVal = parseInt(createRoomFragLimit.value, 10) || 10;
@@ -519,6 +531,7 @@ window.addEventListener('DOMContentLoaded', () => {
     interface LastSavedRoomConfig {
         maxPlayers?: number;
         botCount?: number;
+        obstacleCount?: number;
         fragLimit?: number;
         breakSeconds?: number;
         breakReadyCheck?: boolean;
@@ -536,6 +549,7 @@ window.addEventListener('DOMContentLoaded', () => {
         return {
             maxPlayers: 16,
             botCount: 8,
+            obstacleCount: 8,
             fragLimit: 10,
             breakSeconds: 15,
             breakReadyCheck: false,
@@ -555,6 +569,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const saved = loadLastSavedRoomConfig();
             const maxP = saved.maxPlayers !== undefined ? saved.maxPlayers : 16;
             const bots = saved.botCount !== undefined ? Math.min(saved.botCount, maxP) : 8;
+            const obstacles = saved.obstacleCount !== undefined ? saved.obstacleCount : 8;
             const frags = saved.fragLimit !== undefined ? saved.fragLimit : 10;
             const breakSec = saved.breakSeconds !== undefined ? saved.breakSeconds : 15;
             const breakReady = saved.breakReadyCheck !== undefined ? saved.breakReadyCheck : false;
@@ -570,6 +585,10 @@ window.addEventListener('DOMContentLoaded', () => {
                 createRoomBots.max = maxP.toString();
                 createRoomBots.value = bots.toString();
                 if (createRoomBotsVal) createRoomBotsVal.textContent = bots.toString();
+            }
+            if (createRoomObstacles) {
+                createRoomObstacles.value = obstacles.toString();
+                if (createRoomObstaclesVal) createRoomObstaclesVal.textContent = obstacles.toString();
             }
             if (createRoomFragLimit) {
                 createRoomFragLimit.value = frags.toString();
@@ -601,6 +620,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const roomName = createRoomNameInput?.value.trim() || 'Мыльная Арена';
         const maxPlayers = createRoomMaxPlayers ? parseInt(createRoomMaxPlayers.value, 10) : 16;
         const botCount = createRoomBots ? parseInt(createRoomBots.value, 10) : 8;
+        const obstacleCount = createRoomObstacles ? parseInt(createRoomObstacles.value, 10) : 8;
         const fragLimit = createRoomFragLimit ? parseInt(createRoomFragLimit.value, 10) : 10;
         const breakSeconds = createRoomBreakTime ? parseInt(createRoomBreakTime.value, 10) : 15;
         const breakReadyCheck = createRoomBreakReadyCheck ? createRoomBreakReadyCheck.checked : false;
@@ -608,6 +628,7 @@ window.addEventListener('DOMContentLoaded', () => {
         saveLastRoomConfig({
             maxPlayers,
             botCount,
+            obstacleCount,
             fragLimit,
             breakSeconds,
             breakReadyCheck,
@@ -616,6 +637,7 @@ window.addEventListener('DOMContentLoaded', () => {
         networkManager.createRoom(roomName, {
             maxPlayers,
             botCount,
+            obstacleCount,
             fragLimit,
             breakSeconds,
             breakReadyCheck,
@@ -659,6 +681,13 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (editRoomObstacles) {
+        editRoomObstacles.addEventListener('input', () => {
+            const obsVal = parseInt(editRoomObstacles.value, 10) || 0;
+            if (editRoomObstaclesVal) editRoomObstaclesVal.textContent = obsVal.toString();
+        });
+    }
+
     if (editRoomFragLimit) {
         editRoomFragLimit.addEventListener('input', () => {
             const fragVal = parseInt(editRoomFragLimit.value, 10) || 10;
@@ -686,6 +715,10 @@ window.addEventListener('DOMContentLoaded', () => {
             editRoomBots.max = currentRoomConfig.maxPlayers.toString();
             editRoomBots.value = currentRoomConfig.botCount.toString();
             if (editRoomBotsVal) editRoomBotsVal.textContent = currentRoomConfig.botCount.toString();
+        }
+        if (editRoomObstacles) {
+            editRoomObstacles.value = (currentRoomConfig.obstacleCount ?? 8).toString();
+            if (editRoomObstaclesVal) editRoomObstaclesVal.textContent = (currentRoomConfig.obstacleCount ?? 8).toString();
         }
         if (editRoomFragLimit) {
             editRoomFragLimit.value = currentRoomConfig.fragLimit.toString();
@@ -725,6 +758,9 @@ window.addEventListener('DOMContentLoaded', () => {
         const name = editRoomNameInput?.value.trim() || currentRoomConfig.name;
         const maxPlayers = editRoomMaxPlayers ? parseInt(editRoomMaxPlayers.value, 10) : currentRoomConfig.maxPlayers;
         const botCount = editRoomBots ? parseInt(editRoomBots.value, 10) : currentRoomConfig.botCount;
+        const obstacleCount = editRoomObstacles
+            ? parseInt(editRoomObstacles.value, 10)
+            : (currentRoomConfig.obstacleCount ?? 8);
         const fragLimit = editRoomFragLimit ? parseInt(editRoomFragLimit.value, 10) : currentRoomConfig.fragLimit;
         const breakSeconds = editRoomBreakTime
             ? parseInt(editRoomBreakTime.value, 10)
@@ -736,6 +772,7 @@ window.addEventListener('DOMContentLoaded', () => {
         saveLastRoomConfig({
             maxPlayers,
             botCount,
+            obstacleCount,
             fragLimit,
             breakSeconds,
             breakReadyCheck,
@@ -745,6 +782,7 @@ window.addEventListener('DOMContentLoaded', () => {
             name,
             maxPlayers,
             botCount,
+            obstacleCount,
             fragLimit,
             breakSeconds,
             breakReadyCheck,
@@ -873,6 +911,7 @@ window.addEventListener('DOMContentLoaded', () => {
             name: msg.roomName || currentRoomConfig.name,
             maxPlayers: msg.maxPlayers || currentRoomConfig.maxPlayers,
             botCount: msg.botCount !== undefined ? msg.botCount : currentRoomConfig.botCount,
+            obstacleCount: msg.obstacleCount !== undefined ? msg.obstacleCount : (currentRoomConfig.obstacleCount ?? 8),
             fragLimit: msg.fragLimit || currentRoomConfig.fragLimit,
             breakSeconds:
                 msg.breakSeconds !== undefined
@@ -892,6 +931,7 @@ window.addEventListener('DOMContentLoaded', () => {
             name: msg.name,
             maxPlayers: msg.maxPlayers,
             botCount: msg.botCount,
+            obstacleCount: msg.obstacleCount !== undefined ? msg.obstacleCount : (currentRoomConfig.obstacleCount ?? 8),
             fragLimit: msg.fragLimit,
             breakSeconds: msg.breakSeconds,
             breakReadyCheck: msg.breakReadyCheck,

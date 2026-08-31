@@ -28,6 +28,7 @@ export interface RoomCreateMessage {
     name: string;
     maxPlayers?: number;
     botCount?: number;
+    obstacleCount?: number;
     fragLimit?: number;
     breakSeconds?: number;
     breakReadyCheck?: boolean;
@@ -65,6 +66,7 @@ export interface RoomConfigUpdateMessage {
     name?: string;
     maxPlayers?: number;
     botCount?: number;
+    obstacleCount?: number;
     fragLimit?: number;
     breakSeconds?: number;
     breakReadyCheck?: boolean;
@@ -98,6 +100,7 @@ export interface RoomConfig {
     name?: string;
     maxPlayers?: number;
     botCount?: number;
+    obstacleCount?: number;
     fragLimit?: number;
     breakSeconds?: number;
     breakReadyCheck?: boolean;
@@ -109,6 +112,7 @@ export interface RoomInfo {
     playerCount: number;
     maxPlayers: number;
     botCount: number;
+    obstacleCount: number;
     fragLimit: number;
     breakSeconds: number;
     breakReadyCheck: boolean;
@@ -124,6 +128,7 @@ export interface RoomJoinedMessage {
     roomName: string;
     maxPlayers: number;
     botCount: number;
+    obstacleCount?: number;
     breakSeconds: number;
     breakReadyCheck: boolean;
     reconnected?: boolean;
@@ -154,6 +159,7 @@ export interface RoomConfigUpdatedMessage {
     name: string;
     maxPlayers: number;
     botCount: number;
+    obstacleCount?: number;
     fragLimit: number;
     breakSeconds: number;
     breakReadyCheck: boolean;

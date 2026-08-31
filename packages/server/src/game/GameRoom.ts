@@ -41,6 +41,7 @@ export class GameRoom {
     public readonly createdAt: number;
     public physics: PhysicsWorld;
     public botCount: number = GAME_CONFIG.BOT.SPAWN_COUNT;
+    public obstacleCount: number = GAME_CONFIG.OBSTACLE?.DEFAULT_COUNT ?? 8;
     public fragLimit: number = GAME_CONFIG.MATCH.DEFAULT_FRAG_LIMIT;
     public breakSeconds: number = GAME_CONFIG.MATCH.DEFAULT_BREAK_SECONDS;
     public breakReadyCheck: boolean = GAME_CONFIG.MATCH.DEFAULT_BREAK_READY_CHECK;
@@ -78,6 +79,10 @@ export class GameRoom {
         this.maxPlayers = Math.max(2, Math.min(32, config?.maxPlayers ?? 16));
         this.botCount = Math.max(0, Math.min(this.maxPlayers, config?.botCount ?? GAME_CONFIG.BOT.SPAWN_COUNT));
         this.fragLimit = Math.max(1, Math.min(100, config?.fragLimit ?? GAME_CONFIG.MATCH.DEFAULT_FRAG_LIMIT));
+        this.obstacleCount =
+            typeof config?.obstacleCount === 'number'
+                ? Math.max(0, Math.min(20, Math.floor(config.obstacleCount)))
+                : (GAME_CONFIG.OBSTACLE?.DEFAULT_COUNT ?? 8);
         this.breakSeconds =
             typeof config?.breakSeconds === 'number'
                 ? Math.max(0, Math.min(60, Math.floor(config.breakSeconds)))
@@ -89,6 +94,7 @@ export class GameRoom {
         this.createdAt = Date.now();
 
         this.physics = new PhysicsWorld();
+        this.physics.generateRandomObstacles(this.obstacleCount);
         initEffects(this.impactExecutor);
         initBehaviors();
         this.collisionHandler = new CollisionHandler({
@@ -273,6 +279,7 @@ export class GameRoom {
                 roomName: this.roomName,
                 maxPlayers: this.maxPlayers,
                 botCount: this.botCount,
+                obstacleCount: this.obstacleCount,
                 breakSeconds: this.breakSeconds,
                 breakReadyCheck: this.breakReadyCheck,
                 reconnected: true,
@@ -350,6 +357,7 @@ export class GameRoom {
             roomName: this.roomName,
             maxPlayers: this.maxPlayers,
             botCount: this.botCount,
+            obstacleCount: this.obstacleCount,
             breakSeconds: this.breakSeconds,
             breakReadyCheck: this.breakReadyCheck,
             reconnected: false,
@@ -421,6 +429,7 @@ export class GameRoom {
             playerCount: this.getActivePlayerCount(),
             maxPlayers: this.maxPlayers,
             botCount: this.bots.length,
+            obstacleCount: this.obstacleCount,
             fragLimit: this.fragLimit,
             breakSeconds: this.breakSeconds,
             breakReadyCheck: this.breakReadyCheck,
@@ -434,6 +443,7 @@ export class GameRoom {
             name?: string;
             maxPlayers?: number;
             botCount?: number;
+            obstacleCount?: number;
             fragLimit?: number;
             breakSeconds?: number;
             breakReadyCheck?: boolean;
@@ -466,6 +476,14 @@ export class GameRoom {
             this.botCount = Math.max(0, Math.min(this.maxPlayers, Math.floor(config.botCount)));
         }
 
+        if (typeof config.obstacleCount === 'number') {
+            const newObstacleCount = Math.max(0, Math.min(20, Math.floor(config.obstacleCount)));
+            if (this.obstacleCount !== newObstacleCount) {
+                this.obstacleCount = newObstacleCount;
+                this.physics.generateRandomObstacles(this.obstacleCount);
+            }
+        }
+
         if (typeof config.fragLimit === 'number') {
             this.fragLimit = Math.max(1, Math.min(100, Math.floor(config.fragLimit)));
         }
@@ -485,6 +503,7 @@ export class GameRoom {
             + ` Name="${this.roomName}",`
             + ` MaxPlayers=${this.maxPlayers},`
             + ` BotCount=${this.botCount},`
+            + ` ObstacleCount=${this.obstacleCount},`
             + ` FragLimit=${this.fragLimit},`
             + ` BreakSeconds=${this.breakSeconds}s,`
             + ` BreakReadyCheck=${this.breakReadyCheck}`
@@ -501,6 +520,7 @@ export class GameRoom {
             name: this.roomName,
             maxPlayers: this.maxPlayers,
             botCount: this.botCount,
+            obstacleCount: this.obstacleCount,
             fragLimit: this.fragLimit,
             breakSeconds: this.breakSeconds,
             breakReadyCheck: this.breakReadyCheck,
@@ -1020,7 +1040,7 @@ export class GameRoom {
         this.lastGameOverMessage = null;
 
         // Generate fresh random obstacles for the new match
-        this.physics.generateRandomObstacles();
+        this.physics.generateRandomObstacles(this.obstacleCount);
 
         // Reset all player tank scores and respawn
         for (const player of this.players.values()) {

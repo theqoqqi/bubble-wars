@@ -43,7 +43,6 @@ export class PhysicsWorld {
         });
         this.world = this.engine.world;
         this.createWalls();
-        this.generateRandomObstacles();
     }
 
     private createWalls(): void {
@@ -84,16 +83,24 @@ export class PhysicsWorld {
         Matter.Composite.add(this.world, this.walls);
     }
 
-    public generateRandomObstacles(): void {
+    public generateRandomObstacles(count?: number): void {
         // 1. Remove existing obstacles from Matter.js world
         for (const o of this.obstacles) {
             Matter.Composite.remove(this.world, o.body);
         }
         this.obstacles = [];
 
+        const defaultTarget = GAME_CONFIG.OBSTACLE?.DEFAULT_COUNT ?? 8;
+        const targetCount =
+            typeof count === 'number'
+                ? Math.max(0, Math.min(25, Math.floor(count)))
+                : defaultTarget;
+
+        if (targetCount === 0) {
+            return;
+        }
+
         const { radius } = GAME_CONFIG.ARENA;
-        // Random count of obstacles: 6 to 12
-        const targetCount = 6 + Math.floor(Math.random() * 7);
         const maxDistFromCenter = radius - 360;
         const obstacleHues = [185, 200, 215, 230, 245, 260, 275, 290];
 

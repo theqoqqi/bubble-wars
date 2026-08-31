@@ -124,6 +124,12 @@ export const GAME_CONFIG = {
         MIN_DISTANCE: 200,
     },
 
+    OBSTACLE: {
+        DEFAULT_COUNT: 8,
+        MIN_COUNT: 0,
+        MAX_COUNT: 20,
+    },
+
     OBSTACLES: [
         { x: -750, y: -600, r: 220, hue: 210 },
         { x: 750, y: -600, r: 195, hue: 250 },
