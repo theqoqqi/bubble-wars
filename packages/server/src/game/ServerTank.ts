@@ -222,6 +222,10 @@ export class ServerTank {
         this.wobbleS = Math.max(-0.45, Math.min(0.45, this.wobbleS + this.wobbleV * dt));
     }
 
+    public addRandomWobble(strength: number): void {
+        this.addWobble(Math.random() * Math.PI * 2, strength);
+    }
+
     public addWobble(angle: number, strength: number): void {
         this.wobbleS = Math.max(-0.45, Math.min(0.45, this.wobbleS + strength));
         this.wobbleA = angle;
@@ -252,7 +256,7 @@ export class ServerTank {
         this.damageTaken += actualDamage;
 
         this.flash = 1.0;
-        this.addWobble(Math.random() * Math.PI * 2, 0.25);
+        this.addRandomWobble(0.25);
         this.hp = Math.max(0, this.hp - effectiveDamage);
 
         if (this.hp <= 0) {
