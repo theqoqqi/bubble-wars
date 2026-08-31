@@ -9,7 +9,7 @@
     ],
     "scripts": {
         "build": "npm run build --workspaces --if-present",
-        "dev": "concurrently -n \"SERVER,CLIENT\" -c \"cyan,magenta\" \"npm run dev --workspace=packages/server\" \"npm run dev --workspace=packages/client\"",
+        "dev": "concurrently -n \"SHARED,SERVER,CLIENT\" -c \"yellow,cyan,magenta\" \"npm run watch --workspace=packages/shared\" \"npm run dev --workspace=packages/server\" \"npm run dev --workspace=packages/client\"",
         "dev:server": "npm run dev --workspace=packages/server",
         "dev:client": "npm run dev --workspace=packages/client"
     },
