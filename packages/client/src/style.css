@@ -29,6 +29,8 @@ body {
     font-family: var(--font-body);
     color: #d8f3ff;
     -webkit-font-smoothing: antialiased;
+    touch-action: none;
+    -webkit-touch-callout: none;
 }
 
 #game-container {
@@ -38,6 +40,7 @@ body {
     width: 100vw;
     height: 100vh;
     z-index: 1;
+    touch-action: none;
 }
 
 /* ---------- In-Game Custom Crosshair Mode ---------- */
@@ -718,6 +721,7 @@ body.crosshair-active .color-dot {
     display: flex;
     gap: 8px;
     align-items: center;
+    margin-left: auto;
 }
 
 /* ---------- Sound Volume Control Popup ---------- */
@@ -2677,4 +2681,129 @@ body.crosshair-active .color-dot {
     }
 }
 
+/* ---------- Virtual Touch Joysticks ---------- */
+.touch-controls-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 25;
+    user-select: none;
+    -webkit-user-select: none;
+    display: none;
+}
 
+body.is-touch-device .touch-controls-overlay {
+    display: block;
+}
+
+.touch-stick-base {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    margin-left: -60px;
+    margin-top: -60px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.14), rgba(16, 48, 78, 0.45) 60%, rgba(7, 22, 40, 0.7));
+    border: 2px solid rgba(53, 224, 255, 0.45);
+    box-shadow:
+        0 0 24px rgba(53, 224, 255, 0.2),
+        inset 0 0 16px rgba(53, 224, 255, 0.15);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    pointer-events: none;
+    display: block;
+    opacity: 0;
+    will-change: transform, left, top, opacity;
+}
+
+.touch-stick-base.is-idle {
+    opacity: 0.38;
+    transform: scale(0.92);
+    transition: opacity 0.3s ease, transform 0.3s ease, left 0.35s cubic-bezier(0.1, 0.85, 0.25, 1), top 0.35s cubic-bezier(0.1, 0.85, 0.25, 1);
+}
+
+.touch-stick-base.is-active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.touch-stick-base.touch-aim-base {
+    border-color: rgba(255, 110, 199, 0.45);
+    box-shadow:
+        0 0 24px rgba(255, 110, 199, 0.22),
+        inset 0 0 16px rgba(255, 110, 199, 0.15);
+}
+
+.touch-stick-glyph {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(154, 220, 240, 0.85);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.85;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.touch-stick-base.touch-aim-base .touch-stick-glyph {
+    color: rgba(255, 110, 199, 0.85);
+}
+
+.touch-stick-base.is-active .touch-stick-glyph {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.7);
+}
+
+.touch-stick-knob {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 52px;
+    height: 52px;
+    margin-left: -26px;
+    margin-top: -26px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.95), rgba(53, 224, 255, 0.75) 45%, rgba(13, 110, 150, 0.9) 100%);
+    border: 1.5px solid rgba(255, 255, 255, 0.8);
+    box-shadow:
+        0 4px 16px rgba(53, 224, 255, 0.55),
+        inset 0 -3px 6px rgba(0, 40, 60, 0.5);
+    pointer-events: none;
+    will-change: transform;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+.touch-stick-base.is-idle .touch-stick-knob {
+    opacity: 0;
+}
+
+.touch-aim-knob {
+    background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.95), rgba(255, 110, 199, 0.8) 45%, rgba(160, 20, 100, 0.9) 100%);
+    box-shadow:
+        0 4px 16px rgba(255, 110, 199, 0.55),
+        inset 0 -3px 6px rgba(60, 0, 40, 0.5);
+}
+
+.touch-aim-pointer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 38px;
+    height: 4px;
+    margin-top: -2px;
+    transform-origin: 0% 50%;
+    background: linear-gradient(90deg, rgba(255, 110, 199, 0.95), rgba(255, 227, 110, 0.9));
+    border-radius: 2px;
+    box-shadow: 0 0 10px rgba(255, 110, 199, 0.8);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+}

@@ -1,9 +1,12 @@
 import { PlayerInput } from '@bubble-wars/shared';
+import { TouchControls } from './TouchControls.js';
 
 export class InputManager {
     private keys = new Set<string>();
     private mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2, down: false };
+    private touchControls: TouchControls;
     private inputSeq: number = 0;
+    private lastAimAngle: number = 0;
 
     private onKeyDown = (e: KeyboardEvent) => this.keys.add(e.code);
     private onKeyUp = (e: KeyboardEvent) => this.keys.delete(e.code);
@@ -33,6 +36,7 @@ export class InputManager {
     };
 
     constructor() {
+        this.touchControls = new TouchControls();
         this.setupListeners();
     }
 
@@ -46,17 +50,41 @@ export class InputManager {
         window.addEventListener('auxclick', this.onAuxClick);
     }
 
+    public setTouchEnabled(enabled: boolean): void {
+        this.touchControls.setEnabled(enabled);
+    }
+
+    public isTouchDevice(): boolean {
+        return this.touchControls.getIsTouchDevice();
+    }
+
     public getInput(): PlayerInput {
-        const up = this.keys.has('KeyW') || this.keys.has('ArrowUp');
-        const down = this.keys.has('KeyS') || this.keys.has('ArrowDown');
-        const left = this.keys.has('KeyA') || this.keys.has('ArrowLeft');
-        const right = this.keys.has('KeyD') || this.keys.has('ArrowRight');
+        const keyUp = this.keys.has('KeyW') || this.keys.has('ArrowUp');
+        const keyDown = this.keys.has('KeyS') || this.keys.has('ArrowDown');
+        const keyLeft = this.keys.has('KeyA') || this.keys.has('ArrowLeft');
+        const keyRight = this.keys.has('KeyD') || this.keys.has('ArrowRight');
 
-        const screenCenterX = window.innerWidth / 2;
-        const screenCenterY = window.innerHeight / 2;
-        const aimAngle = Math.atan2(this.mouse.y - screenCenterY, this.mouse.x - screenCenterX);
+        const touch = this.touchControls.getState();
 
-        const shooting = this.mouse.down || this.keys.has('Space');
+        const up = keyUp || touch.up;
+        const down = keyDown || touch.down;
+        const left = keyLeft || touch.left;
+        const right = keyRight || touch.right;
+
+        let aimAngle: number;
+        if (touch.hasAim) {
+            aimAngle = touch.aimAngle;
+            this.lastAimAngle = aimAngle;
+        } else if (!this.touchControls.getIsTouchDevice() || this.mouse.down) {
+            const screenCenterX = window.innerWidth / 2;
+            const screenCenterY = window.innerHeight / 2;
+            aimAngle = Math.atan2(this.mouse.y - screenCenterY, this.mouse.x - screenCenterX);
+            this.lastAimAngle = aimAngle;
+        } else {
+            aimAngle = this.lastAimAngle;
+        }
+
+        const shooting = this.mouse.down || this.keys.has('Space') || touch.shooting;
 
         return {
             up: !!up,
@@ -76,6 +104,7 @@ export class InputManager {
     public reset(): void {
         this.keys.clear();
         this.mouse.down = false;
+        this.touchControls.reset();
     }
 
     public destroy(): void {
@@ -86,6 +115,8 @@ export class InputManager {
         window.removeEventListener('mouseup', this.onMouseUp);
         window.removeEventListener('contextmenu', this.onContextMenu);
         window.removeEventListener('auxclick', this.onAuxClick);
+        this.touchControls.destroy();
         this.reset();
     }
 }
+

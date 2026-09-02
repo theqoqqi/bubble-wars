@@ -284,7 +284,11 @@ export class Game {
             isDeathModalOpen ||
             isGameOverModalOpen;
 
-        const showCrosshair = !!myTank && !myTank.isDead && !this.isMatchOver && !isAnyModalOpen;
+        const isControlAllowed = !!myTank && !myTank.isDead && !this.isMatchOver && !isAnyModalOpen;
+        this.inputManager.setTouchEnabled(isControlAllowed);
+
+        const isTouch = this.inputManager.isTouchDevice();
+        const showCrosshair = !isTouch && isControlAllowed;
 
         if (showCrosshair) {
             document.body.classList.add('crosshair-active');

@@ -38,4 +38,10 @@ export const CLIENT_CONFIG = {
         CAMERA_LERP: 0.1,
         MAX_DPR: 2,
     },
+    TOUCH: {
+        MAX_STICK_RADIUS: 55,
+        DEADZONE_MOVE: 14,
+        DEADZONE_AIM: 12,
+        AUTOFIRE_THRESHOLD: 20,
+    },
 };
