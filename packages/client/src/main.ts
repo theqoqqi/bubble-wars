@@ -990,6 +990,31 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+    if (btnFullscreen) {
+        const iconExpand = btnFullscreen.querySelector('.icon-expand');
+        const iconCompress = btnFullscreen.querySelector('.icon-compress');
+
+        const toggleFullscreen = () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen().catch(() => {});
+            }
+        };
+
+        btnFullscreen.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleFullscreen();
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            const isFull = !!document.fullscreenElement;
+            if (iconExpand) iconExpand.classList.toggle('hidden', isFull);
+            if (iconCompress) iconCompress.classList.toggle('hidden', !isFull);
+        });
+    }
+
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             if (tankModal && !tankModal.classList.contains('hidden')) {
