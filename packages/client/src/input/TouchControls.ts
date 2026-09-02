@@ -189,7 +189,7 @@ export class TouchControls {
     };
 
     private isInteractiveElement(target: EventTarget | null): boolean {
-        if (!target || !(target instanceof HTMLElement)) return false;
+        if (!target || !(target instanceof Element)) return false;
         return !!target.closest(
             'button, input, a, select, textarea, .overlay:not(.hidden), .hud-actions, .sound-slider-popup, .name-input-row, .color-picker-row'
         );

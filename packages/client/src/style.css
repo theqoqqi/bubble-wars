@@ -447,6 +447,11 @@ body.crosshair-active .color-dot {
     justify-content: center;
     align-items: center;
     z-index: 100;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+    padding: 12px;
     transition:
         opacity 0.25s ease,
         visibility 0.25s ease;
@@ -959,6 +964,107 @@ body.crosshair-active .color-dot {
     color: rgba(154, 220, 240, 0.6);
     z-index: 10;
     pointer-events: none;
+}
+
+/* Touch Device HUD Layout: Brand badge hidden, HP in top-left, Sound in top-right */
+body.is-touch-device .hud-brand-badge {
+    display: none !important;
+}
+
+body.is-touch-device .hud-top-bar {
+    justify-content: flex-end;
+}
+
+body.is-touch-device .hud-actions {
+    margin-left: auto;
+}
+
+body.is-touch-device .hud-player-hull-panel {
+    bottom: auto;
+    right: auto;
+    top: 12px;
+    left: 14px;
+    width: 240px;
+}
+
+body.is-touch-device .hud-hull-card {
+    padding: 8px 12px;
+    border-radius: 16px;
+}
+
+body.is-touch-device .hud-hp-track {
+    height: 12px;
+}
+
+body.is-touch-device .hud-stats-row {
+    font-size: 10px;
+    margin-top: 4px;
+}
+
+body.is-touch-device .hud-leaderboard-bar {
+    top: auto;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+body.is-touch-device .hud-kill-feed {
+    display: none !important;
+}
+
+body.is-touch-device .hud-controls-hint {
+    display: none !important;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .hud-brand-badge {
+        display: none !important;
+    }
+
+    .hud-top-bar {
+        justify-content: flex-end;
+    }
+
+    .hud-actions {
+        margin-left: auto;
+    }
+
+    .hud-player-hull-panel {
+        bottom: auto;
+        right: auto;
+        top: 12px;
+        left: 14px;
+        width: 240px;
+    }
+
+    .hud-hull-card {
+        padding: 8px 12px;
+        border-radius: 16px;
+    }
+
+    .hud-hp-track {
+        height: 12px;
+    }
+
+    .hud-stats-row {
+        font-size: 10px;
+        margin-top: 4px;
+    }
+
+    .hud-leaderboard-bar {
+        top: auto;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .hud-kill-feed {
+        display: none !important;
+    }
+
+    .hud-controls-hint {
+        display: none !important;
+    }
 }
 
 /* Leaderboard Badges */
@@ -2807,3 +2913,227 @@ body.is-touch-device .touch-controls-overlay {
     opacity: 0;
     transition: opacity 0.12s ease;
 }
+
+/* ==========================================================================
+   Mobile & Low-Height (Landscape) Screen Adaptations
+   ========================================================================== */
+
+/* Touch-specific adaptations for Pilot Menu */
+body.is-touch-device .menu-grid {
+    grid-template-columns: 1fr;
+    max-width: 440px;
+}
+
+body.is-touch-device .menu-card.delayed-1 {
+    display: none;
+}
+
+/* Low-height landscape viewports (smartphones in landscape: 360px - 540px height) */
+@media (max-height: 560px) {
+    .menu-content {
+        gap: 8px;
+        padding: 8px 14px;
+        justify-content: center;
+        height: auto;
+        min-height: 100%;
+    }
+
+    .menu-badge {
+        display: none;
+    }
+
+    .menu-logo-icon {
+        margin-bottom: 0;
+        transform: scale(0.65);
+        transform-origin: center bottom;
+        height: 48px;
+    }
+
+    .menu-title {
+        font-size: 28px;
+        margin: 0;
+    }
+
+    .menu-desc {
+        display: none;
+    }
+
+    .menu-grid {
+        gap: 10px;
+        max-width: 440px;
+    }
+
+    .menu-card {
+        padding: 12px 18px;
+    }
+
+    .name-input-row {
+        margin-top: 6px;
+    }
+
+    .form-group {
+        margin-top: 6px;
+    }
+
+    .color-dot {
+        width: 30px;
+        height: 30px;
+    }
+
+    .color-picker-row {
+        margin: 6px 0;
+        gap: 8px;
+    }
+
+    #btn-play {
+        padding: 8px 18px;
+        font-size: 13px;
+        margin-top: 4px;
+    }
+
+    .menu-card-footer {
+        margin-top: 6px;
+        font-size: 11px;
+    }
+
+    /* Lobby modal in landscape */
+    .lobby-content {
+        padding: 10px 14px;
+        gap: 8px;
+    }
+
+    .lobby-header-row {
+        margin-bottom: 6px;
+        gap: 8px;
+    }
+
+    #btn-back-to-pilot {
+        min-width: 120px;
+        padding: 6px 14px;
+        font-size: 12px;
+    }
+
+    .lobby-header-titles h2 {
+        font-size: 20px;
+    }
+
+    .lobby-actions-bar {
+        padding: 6px 14px;
+        margin-bottom: 8px;
+    }
+
+    .lobby-stats-badge {
+        font-size: 12px;
+    }
+
+    .lobby-rooms-grid {
+        max-height: calc(100vh - 125px);
+        gap: 8px;
+        padding: 4px 6px 12px 6px;
+    }
+
+    .room-row {
+        padding: 8px 14px;
+        gap: 8px;
+    }
+
+    .room-row-title {
+        font-size: 14px;
+    }
+
+    .room-meta-item {
+        font-size: 11px;
+        padding: 3px 7px;
+    }
+
+    .room-row-btn {
+        padding: 6px 14px;
+        font-size: 12px;
+    }
+
+    /* Create & Edit Room Modals */
+    .create-room-card {
+        padding: 14px 20px;
+        max-height: 92vh;
+        overflow-y: auto;
+    }
+
+    .create-room-title {
+        font-size: 18px;
+    }
+
+    .create-room-actions {
+        margin-top: 12px;
+        gap: 8px;
+    }
+
+    .bubble-slider {
+        margin: 4px 0 2px;
+    }
+
+    /* Tank Selection Modal */
+    .tank-modal-content {
+        padding: 12px 18px;
+        max-height: 94vh;
+    }
+
+    .tank-modal-header {
+        margin-bottom: 8px;
+    }
+
+    .modal-main-title {
+        font-size: 19px;
+    }
+
+    .tank-grid {
+        gap: 10px;
+        padding: 4px 6px 10px 6px;
+    }
+
+    .tank-card {
+        padding: 10px 12px;
+        border-radius: 14px;
+    }
+
+    .tank-card-preview {
+        height: 75px;
+    }
+
+    .tank-card-title {
+        font-size: 15px;
+    }
+
+    .tank-stats-mini {
+        margin: 6px 0;
+        gap: 4px;
+    }
+
+    /* Result Modals */
+    .death-card,
+    .leave-card,
+    .gameover-card {
+        padding: 16px 20px;
+        max-height: 92vh;
+        overflow-y: auto;
+    }
+
+    .death-title,
+    .leave-title {
+        font-size: 20px;
+    }
+
+    .death-killer-name {
+        font-size: 22px;
+    }
+
+    .gameover-title {
+        font-size: 24px;
+    }
+
+    .gameover-table-container {
+        padding: 4px 6px;
+        margin-bottom: 8px;
+    }
+}
+
+
