@@ -971,6 +971,14 @@ window.addEventListener('DOMContentLoaded', () => {
         showScreen('lobby');
     };
 
+    const btnHudMenu = document.getElementById('btn-hud-menu');
+    if (btnHudMenu) {
+        btnHudMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleLeaveModal();
+        });
+    }
+
     const toggleLeaveModal = () => {
         const isGameVisible = gameHud && !gameHud.classList.contains('hidden');
         if (!isGameVisible || !leaveModal) return;
