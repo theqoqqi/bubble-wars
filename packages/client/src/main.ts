@@ -1070,6 +1070,23 @@ window.addEventListener('DOMContentLoaded', () => {
         game.hideTabStats();
     });
 
+    const btnHudStats = document.getElementById('btn-hud-stats');
+    if (btnHudStats) {
+        btnHudStats.addEventListener('click', (e) => {
+            e.stopPropagation();
+            game.toggleTabStats();
+        });
+    }
+
+    const tabStatsOverlay = document.getElementById('tab-stats-overlay');
+    if (tabStatsOverlay) {
+        tabStatsOverlay.addEventListener('click', (e) => {
+            if (e.target === tabStatsOverlay) {
+                game.hideTabStats();
+            }
+        });
+    }
+
     // Auto-reconnect if session was active in this tab before reload
     const isGameActive = sessionStorage.getItem('bubble_game_active') === 'true';
     const savedSessionToken = sessionStorage.getItem('bubble_session_token');

@@ -726,6 +726,12 @@ export class Game {
         this.hudManager.hideTabStats();
     }
 
+    public toggleTabStats(): void {
+        if (!this.isMatchOver && this.isRunning) {
+            this.hudManager.toggleTabStats();
+        }
+    }
+
     public leaveGame(): void {
         this.isPlayerAlive = false;
         this.isMatchOver = false;

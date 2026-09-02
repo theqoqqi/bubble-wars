@@ -240,6 +240,14 @@ export class HudManager {
         this.tabStatsOverlay.classList.add('hidden');
     }
 
+    public toggleTabStats(): void {
+        if (this.isTabVisible) {
+            this.hideTabStats();
+        } else {
+            this.showTabStats();
+        }
+    }
+
     private isBestStat(
         list: LeaderboardEntry[],
         player: LeaderboardEntry,
